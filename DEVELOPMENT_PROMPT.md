@@ -266,53 +266,63 @@ Standard media player interface (configurable via options above):
 Display all songs in the current playlist (respects display mode configuration):
 - Song name and duration (if enabled)
 - Two labeled actions per song (if enabled):
-  - **[▶ Play Now]**: Play this song immediately (`Play playlist step <playlist>,<step>`)
-  - **[+ Add to Queue]**: Add to queue (`Enqueue playlist step <playlist>,<step>`)
-- Collapsed mode: Shows "Songs: [12 items ▼]" with expand arrow
+  - **Play Now**: Use `mdi:play` icon with text label - Play this song immediately (`Play playlist step <playlist>,<step>`)
+  - **Add to Queue**: Use `mdi:playlist-plus` icon with text label - Add to queue (`Enqueue playlist step <playlist>,<step>`)
+- Collapsed mode: Shows "Songs: [12 items]" with `mdi:chevron-down` expand arrow
 - Hidden mode: Does not display songs list
-- Current song is highlighted with subtle background color
+- Current song is highlighted with subtle background color and `mdi:music` or `mdi:music-note` icon
 - Completed songs are dimmed, upcoming songs normal weight
 
 ### Queue Display
 Queue is displayed **above** the songs list (respects display mode configuration):
 - Visual divider line between queue and songs list
 - Display queued songs in order with their names and durations (if enabled)
-- Show "Clear Queue" button (if enabled) - API only supports clearing entire queue, not individual removal
+- Show "Clear Queue" button with `mdi:playlist-remove` icon (if enabled) - API only supports clearing entire queue, not individual removal
 - Auto mode: Expanded when has items, collapsed when empty, hidden when feature unused
-- Collapsed mode: Shows "Queue: [3 items ▼]" with count badge
+- Collapsed mode: Shows "Queue: [3 items]" with count badge and `mdi:chevron-down` arrow
 - Hidden mode: Does not display queue view
+- Queue items use `mdi:format-list-numbered` or similar icon to indicate order
 
 ### Action Clarity & Feedback
 
 **Button Labels:**
-- Always use text labels with icons (not icons alone)
-- Examples: "[▶ Play Now]", "[+ Add to Queue]", not just "[▶]" or "[+]"
+- Always use text labels with MDI icons (not icons alone)
+- Use Material Design Icons from Home Assistant's icon set
+- Examples:
+  - "Play Now" with `mdi:play` icon
+  - "Add to Queue" with `mdi:playlist-plus` icon
+  - "Pause" with `mdi:pause` icon
+  - "Stop" with `mdi:stop` icon
+  - "Next" with `mdi:skip-next` icon
+  - "Previous" with `mdi:skip-previous` icon
 - On hover/long-press: Show tooltip with additional context
 
 **User Feedback:**
-- **Success**: Show brief toast notification (2 seconds)
-  - "Added to queue ✓"
-  - "Now playing: [Song Name]"
-- **Duplicate Prevention**: Show toast when song already in queue
+- **Success**: Show brief toast notification (2 seconds) with `mdi:check-circle` icon
+  - "Added to queue" with checkmark
+  - "Now playing: [Song Name]" with `mdi:play-circle` icon
+- **Duplicate Prevention**: Show toast when song already in queue with `mdi:information` icon
   - "Already in queue"
-- **Errors**: Show clear error message
+- **Errors**: Show clear error message with `mdi:alert-circle` icon
   - "Failed to connect to xSchedule"
   - "Playlist not found"
 - **Confirmation**: For disruptive actions (replacing current song):
-  - Quick toast: "Replace current song? [Play Now] [Play Next] [Cancel]"
+  - Quick toast: "Replace current song?" with action buttons
+  - Use `mdi:alert` icon for confirmation dialogs
 
 **Visual Feedback:**
 - Song clicked: Briefly highlight with animation (200ms)
-- Adding to queue: Show loading spinner on button briefly
-- Current song: Highlight with accent color background
-- Queue items: Show drag handle icon (even if dragging not supported)
+- Adding to queue: Show loading spinner (`mdi:loading` or Home Assistant's standard spinner) on button briefly
+- Current song: Highlight with accent color background and `mdi:play-circle` or `mdi:music` icon
+- Queue items: Show `mdi:drag` or `mdi:drag-horizontal` handle icon (even if dragging not supported)
 
 ### Contextual UI & Empty States
 
 **No Playlist Selected:**
 ```
 ┌─────────────────────────────────┐
-│  🎵 Select a playlist to begin  │
+│  mdi:playlist-music             │
+│  Select a playlist to begin     │
 │                                 │
 │  Playlist: [Select... ▼]       │
 └─────────────────────────────────┘
@@ -321,8 +331,9 @@ Queue is displayed **above** the songs list (respects display mode configuration
 **Queue Empty (Auto Mode):**
 ```
 ┌─────────────────────────────────┐
+│  mdi:playlist-plus              │
 │  Queue (0)                      │
-│  Tap [+ Add to Queue] on any    │
+│  Tap "Add to Queue" on any      │
 │  song to play it next           │
 └─────────────────────────────────┘
 ```
@@ -330,16 +341,18 @@ Queue is displayed **above** the songs list (respects display mode configuration
 **Connection Lost:**
 ```
 ┌─────────────────────────────────┐
-│  ⚠️ Lost connection to xSchedule│
-│  [Retry] [Settings]             │
+│  mdi:lan-disconnect             │
+│  Lost connection to xSchedule   │
+│  [mdi:refresh Retry] [Settings] │
 └─────────────────────────────────┘
 ```
 
 **Loading State:**
 ```
 ┌─────────────────────────────────┐
+│  mdi:loading (spinning)         │
 │  Loading...                     │
-│  ⏳ Connecting to xSchedule     │
+│  Connecting to xSchedule        │
 └─────────────────────────────────┘
 ```
 
@@ -373,6 +386,69 @@ Queue is displayed **above** the songs list (respects display mode configuration
 - Show playback position updating in real-time
 - Respect user's configured display options for clean, customized appearance
 - Use Home Assistant's standard color scheme and spacing tokens
+
+### Material Design Icons (MDI) Reference
+
+All icons must use Home Assistant's built-in Material Design Icons. Key icons for this integration:
+
+**Playback Controls:**
+- `mdi:play` - Play button
+- `mdi:play-circle` - Play with emphasis
+- `mdi:pause` - Pause button
+- `mdi:stop` - Stop button
+- `mdi:skip-next` - Next song
+- `mdi:skip-previous` - Previous song
+- `mdi:replay` - Restart/replay
+
+**Playlist & Queue:**
+- `mdi:playlist-music` - Playlist/songs list
+- `mdi:playlist-play` - Active playlist
+- `mdi:playlist-plus` - Add to queue
+- `mdi:playlist-remove` - Clear queue/remove
+- `mdi:format-list-numbered` - Numbered list (queue order)
+- `mdi:music` - Music note (current song)
+- `mdi:music-note` - Alternative music icon
+
+**Schedule & Time:**
+- `mdi:clock` - Scheduled time
+- `mdi:clock-outline` - Scheduled (outline version)
+- `mdi:clock-alert` - Past schedule/alert
+- `mdi:calendar` - Date-related
+- `mdi:calendar-clock` - Scheduled event
+
+**Volume:**
+- `mdi:volume-high` - Volume icon
+- `mdi:volume-medium` - Mid volume
+- `mdi:volume-low` - Low volume
+- `mdi:volume-mute` - Muted
+- `mdi:volume-off` - Volume off
+
+**UI Elements:**
+- `mdi:chevron-down` - Expand/collapse arrow
+- `mdi:chevron-up` - Collapse arrow
+- `mdi:chevron-right` - Next/forward
+- `mdi:drag` - Drag handle (vertical)
+- `mdi:drag-horizontal` - Drag handle (horizontal)
+- `mdi:dots-vertical` - More options menu
+
+**Status & Feedback:**
+- `mdi:check-circle` - Success
+- `mdi:information` - Info message
+- `mdi:alert-circle` - Error
+- `mdi:alert` - Warning/confirmation
+- `mdi:loading` - Loading spinner
+- `mdi:refresh` - Retry/refresh
+
+**Connection:**
+- `mdi:lan-connect` - Connected
+- `mdi:lan-disconnect` - Disconnected
+- `mdi:wifi` - Wireless connection
+- `mdi:access-point` - Network access point
+
+**Settings:**
+- `mdi:cog` - Settings gear
+- `mdi:tune` - Adjust/configure
+- `mdi:wrench` - Tools/configuration
 
 ### Card Editor UI
 
@@ -453,23 +529,28 @@ In addition to the main media player card, provide a companion **Playlist Browse
 │                                 │
 │ Sort: [By Schedule ▼]           │
 │                                 │
-│ ▶ Christmas Lights    [Playing] │
-│   Duration: 45:30               │
+│ mdi:play Christmas Lights       │
+│                        [Playing] │
+│ Duration: 45:30                 │
 │                                 │
-│ ⏰ New Year Show  [Today 11:30PM]│
-│   Duration: 1:15:00             │
+│ mdi:clock New Year Show         │
+│                 [Today 11:30PM] │
+│ Duration: 1:15:00               │
 │                                 │
-│ ⏰ Holiday Party [Tomorrow 6:00PM]│
-│   Duration: 52:45               │
+│ mdi:clock Holiday Party         │
+│              [Tomorrow 6:00PM]  │
+│ Duration: 52:45                 │
 │                                 │
-│ ⏰ Halloween      [Friday 8:00PM]│
-│   Duration: 38:20               │
+│ mdi:clock Halloween             │
+│                [Friday 8:00PM]  │
+│ Duration: 38:20                 │
 │                                 │
-│ ⏰ Thanksgiving   [Nov 28 7:00PM]│
-│   Duration: 1:05:15             │
+│ mdi:clock Thanksgiving          │
+│               [Nov 28 7:00PM]   │
+│ Duration: 1:05:15               │
 │                                 │
-│   Birthday Party                │
-│   Duration: 22:15               │
+│ mdi:playlist-music Birthday     │
+│ Duration: 22:15                 │
 └─────────────────────────────────┘
 ```
 
@@ -487,14 +568,14 @@ In addition to the main media player card, provide a companion **Playlist Browse
 **Playlist Display:**
 - Playlist name (prominent)
 - Duration (total length of all songs in playlist)
-- Status indicators:
-  - **[Playing]** badge for active playlist
-  - **[⏰ Time]** for scheduled playlists with smart date formatting:
+- Status indicators with MDI icons:
+  - **[Playing]** badge for active playlist with `mdi:play` or `mdi:play-circle` icon
+  - **[Scheduled Time]** for scheduled playlists with `mdi:clock` or `mdi:clock-outline` icon and smart date formatting:
     - Same day: "Today 11:30 PM"
     - Next day: "Tomorrow 8:00 AM"
     - Within 7 days: "[Day of week] 9:00 PM" (e.g., "Friday 9:00 PM")
     - Beyond 7 days: "[Month Day] [Time]" (e.g., "Oct 31 8:00 PM")
-  - No indicator for unscheduled playlists
+  - No icon/indicator for unscheduled playlists (use `mdi:playlist-music` as default)
 
 **Interactions:**
 - Tap playlist: Play immediately (shows confirmation if something is playing)
@@ -504,10 +585,10 @@ In addition to the main media player card, provide a companion **Playlist Browse
   - View Schedule Info (if scheduled)
 
 **Visual Design:**
-- Currently playing playlist: Highlighted with accent color, play icon ▶
-- Scheduled playlists: Clock icon ⏰ with time
-- Past-schedule/inactive: Dimmed appearance
-- Unscheduled: Normal appearance
+- Currently playing playlist: Highlighted with accent color, `mdi:play` or `mdi:play-circle` icon
+- Scheduled playlists: `mdi:clock` or `mdi:clock-outline` icon with time
+- Past-schedule/inactive: Dimmed appearance with `mdi:clock-alert` icon
+- Unscheduled: Normal appearance with `mdi:playlist-music` icon
 
 ### Configuration Options
 
