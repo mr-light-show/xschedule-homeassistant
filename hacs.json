@@ -1,0 +1,6 @@
+{
+  "name": "xSchedule",
+  "render_readme": true,
+  "domains": ["media_player"],
+  "homeassistant": "2024.1.0"
+}
