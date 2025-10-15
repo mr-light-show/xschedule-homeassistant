@@ -106,7 +106,7 @@ By default, the card should show a clean, collapsed view:
 │ [Step/Song Name]                │
 │ ━━━━━━━━━━━━━━━━━━━━━━ 0:45/2:30│
 │                                 │
-│  ⏮  ⏯  ⏹  ⏭     🔊 ▓▓▓▓▓▓▓░    │
+│       ⏮  ⏯  ⏹  ⏭               │
 │                                 │
 │ Playlist: [Christmas ▼]         │
 │ Queue: [3 items ▼]              │
@@ -117,7 +117,8 @@ By default, the card should show a clean, collapsed view:
 **Key Features:**
 - Current playlist and song names prominently displayed (separate lines)
 - Progress bar with time display
-- Primary controls (prev/play/stop/next) and volume
+- Primary controls (prev/play/stop/next) centered
+- Volume control hidden by default (accessible in settings/custom mode)
 - Everything else collapsed but accessible with one tap
 - Queue positioned above Songs (queue is "what's next", songs are "browse")
 
@@ -127,8 +128,8 @@ To simplify configuration, provide preset modes that configure multiple options 
 
 #### **Simple Mode (Default)**
 Best for: "Just play my playlist" users
-- Shows: Playlist selector (collapsed), basic controls, now playing
-- Hides: Song list browser, queue, advanced controls
+- Shows: Playlist selector (collapsed), basic playback controls, now playing, progress bar
+- Hides: Song list browser, queue, volume controls, advanced controls
 - Configuration:
   ```yaml
   type: custom:xschedule-card
@@ -219,8 +220,8 @@ When in **Custom Mode**, the card is highly configurable via the Home Assistant 
 - Show/hide seek/progress bar
 
 **Volume Controls:**
-- Show/hide volume slider
-- Show/hide mute toggle
+- Show/hide volume slider (hidden by default)
+- Show/hide mute toggle (hidden by default)
 - Volume slider orientation (horizontal/vertical)
 
 **Queue Controls:**
@@ -257,9 +258,9 @@ When in **Custom Mode**, the card is highly configurable via the Home Assistant 
 Standard media player interface (configurable via options above):
 - Play/pause/stop buttons
 - **Previous/next song buttons** (both supported by API)
-- Volume slider with mute toggle
 - **Seekable progress bar** showing current position and total duration (using `Set step position ms` command)
 - Currently playing song name
+- Volume slider with mute toggle (hidden by default, can be enabled in custom mode)
 
 ### Songs List (Current Playlist)
 Display all songs in the current playlist (respects display mode configuration):
@@ -415,8 +416,8 @@ Playback Controls:
   [✓] Show seek bar
 
 Volume:
-  [✓] Show volume slider
-  [✓] Show mute button
+  [ ] Show volume slider
+  [ ] Show mute button
   Orientation: [Horizontal ▼]
 
 Song Actions:
