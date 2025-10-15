@@ -140,3 +140,12 @@ yarn-error.log*
 # Build artifacts
 *.js.map
 dist/
+
+# Package lock files
+package-lock.json
+yarn.lock
+
+# Release artifacts
+release/
+*.zip
+*.tar.gz

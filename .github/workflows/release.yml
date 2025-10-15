@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build card
+        run: npm run build
+
+      - name: Create distribution archive
+        run: |
+          mkdir -p release
+          cp -r custom_components release/
+          cp -r dist release/
+          cp hacs.json release/
+          cp README.md release/
+          cp LICENSE release/
+          cd release
+          zip -r ../xschedule-homeassistant.zip .
+          cd ..
+          tar -czf xschedule-homeassistant.tar.gz -C release .
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            xschedule-homeassistant.zip
+            xschedule-homeassistant.tar.gz
+            dist/xschedule-card.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release body
+        uses: softprops/action-gh-release@v1
+        with:
+          append_body: true
+          body: |
+
+            ## Installation
+
+            ### HACS (Recommended)
+            1. Add this repository as a custom repository in HACS
+            2. Search for "xSchedule" in HACS integrations
+            3. Install the integration
+            4. Restart Home Assistant
+
+            ### Manual Installation
+            1. Download `xschedule-homeassistant.zip`
+            2. Extract to your Home Assistant config directory
+            3. Restart Home Assistant
+
+            ### Card Installation
+            The bundled card (`xschedule-card.js`) is included in the release assets.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

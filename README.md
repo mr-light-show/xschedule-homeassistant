@@ -105,6 +105,25 @@ The card offers extensive configuration organized into logical groups:
 
 ## Development
 
+### Building the Card
+
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Development mode with watch
+npm run watch
+```
+
+The built card will be in `dist/xschedule-card.js`.
+
+### Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
+
 See [DEVELOPMENT_PROMPT.md](DEVELOPMENT_PROMPT.md) for detailed implementation specifications.
 
 ## Requirements
