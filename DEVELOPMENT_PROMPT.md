@@ -1,6 +1,6 @@
 # xSchedule Home Assistant Integration & Dashboard Card
 
-You are developing a Home Assistant integration and custom dashboard card for xSchedule, a lighting sequencer system.
+You are developing a Home Assistant integration and custom dashboard card for xSchedule, a lighting sequencer playback system.
 
 ## Integration Requirements
 
@@ -29,10 +29,11 @@ Implement as a full-featured `media_player` entity with:
 
 **Playlists:**
 - Surface xSchedule playlists as media player sources (via `GetPlayLists` query)
-- Map playlist "steps" (xSchedule's term for individual songs/sequences) to tracks (via `GetPlayListSteps` query)
+- Map playlist "steps" (xSchedule's internal API term) to songs/tracks for user display (via `GetPlayListSteps` query)
+- **Note**: While the API uses "step" terminology, the UI should use "song" for better user experience
 
 **Playback Controls:**
-- **Play**: `Play specified playlist <playlist name>`
+- **Play**: `Play the selected playlist <playlist name>`
 - **Pause**: `Pause` command
 - **Stop**: `Stop` command
 - **Next**: `Next step in current playlist` command
@@ -55,17 +56,18 @@ Implement as a full-featured `media_player` entity with:
 
 **State Attributes:**
 - Current playlist name
-- Current step/song name
-- List of steps in active playlist (from `GetPlayListSteps`)
-- Queue contents (from `GetQueuedSteps`)
+- Current song name (API: step name)
+- List of songs in active playlist (API: steps from `GetPlayListSteps`)
+- Queue contents (API: from `GetQueuedSteps`)
 - Playback position, duration, and time remaining
 - Volume level and mute state
 
 ### Queue Management
-- **Add to queue**: `Enqueue playlist step <playlist>,<step>` command
+- **Add to queue**: `Enqueue playlist step <playlist>,<step>` command (display as "Add to Queue" in UI)
 - **Clear queue**: `Clear playlist queue` command
-- **Query queue**: `GetQueuedSteps` query returns step name, unique ID, and length
-- **Duplicate prevention**: xSchedule API automatically prevents adding steps if they are already the last song in the queue (per API documentation)
+- **Query queue**: `GetQueuedSteps` query returns song info (API: step name, unique ID, and length)
+- **Duplicate prevention**: xSchedule API automatically prevents adding songs if they are already the last song in the queue (per API documentation)
+- **Card-level duplicate checking**: The card should implement full queue duplicate checking (not just last song)
 - **Note**: API does not support removing individual queue items or reordering queue
 
 ### Events
@@ -85,26 +87,126 @@ Fire Home Assistant events for all actions:
 
 ## Dashboard Card Requirements
 
+### User Experience Principles
+
+The card should follow these UX principles:
+1. **Simple by default**: Most users should never need to configure anything
+2. **Progressive disclosure**: Advanced features available but not overwhelming
+3. **Clear feedback**: Always show what's happening (loading, success, errors)
+4. **Mobile-first**: Touch-friendly with appropriate spacing and gestures
+5. **Contextual UI**: Adapt display based on state (empty, playing, error)
+
+### Default Card Layout
+
+By default, the card should show a clean, collapsed view:
+
+```
+┌─────────────────────────────────┐
+│ [Playlist Name]                 │
+│ [Step/Song Name]                │
+│ ━━━━━━━━━━━━━━━━━━━━━━ 0:45/2:30│
+│                                 │
+│  ⏮  ⏯  ⏹  ⏭     🔊 ▓▓▓▓▓▓▓░    │
+│                                 │
+│ Playlist: [Christmas ▼]         │
+│ Queue: [3 items ▼]              │
+│ Songs: [12 items ▼]             │
+└─────────────────────────────────┘
+```
+
+**Key Features:**
+- Current playlist and song names prominently displayed (separate lines)
+- Progress bar with time display
+- Primary controls (prev/play/stop/next) and volume
+- Everything else collapsed but accessible with one tap
+- Queue positioned above Songs (queue is "what's next", songs are "browse")
+
+### Card Modes (Presets)
+
+To simplify configuration, provide preset modes that configure multiple options at once:
+
+#### **Simple Mode (Default)**
+Best for: "Just play my playlist" users
+- Shows: Playlist selector (collapsed), basic controls, now playing
+- Hides: Song list browser, queue, advanced controls
+- Configuration:
+  ```yaml
+  type: custom:xschedule-card
+  entity: media_player.xschedule
+  mode: simple
+  ```
+
+#### **DJ Mode**
+Best for: Live performance, manual control
+- Shows: All playlists expanded, queue prominent, song actions visible
+- Auto-opens: Next 5 songs in playlist
+- Quick actions: Play Now, Add to Queue buttons are larger
+- Configuration:
+  ```yaml
+  type: custom:xschedule-card
+  entity: media_player.xschedule
+  mode: dj
+  ```
+
+#### **Jukebox Mode**
+Best for: Party mode, collaborative queuing
+- Shows: All songs expanded, prominent queue section
+- Emphasizes: "Add to Queue" actions (larger, more visible)
+- Shows: Queue count badge prominently
+- Configuration:
+  ```yaml
+  type: custom:xschedule-card
+  entity: media_player.xschedule
+  mode: jukebox
+  ```
+
+#### **Minimal Mode**
+Best for: Dashboard widgets, small spaces
+- Shows: Only playback controls and now playing info
+- Hides: Everything else
+- Configuration:
+  ```yaml
+  type: custom:xschedule-card
+  entity: media_player.xschedule
+  mode: minimal
+  ```
+
+#### **Custom Mode**
+Unlocks all configuration options for power users
+- Configuration:
+  ```yaml
+  type: custom:xschedule-card
+  entity: media_player.xschedule
+  mode: custom
+  # ... full configuration options below
+  ```
+
 ### Card Configuration Options
 
-The card must be highly configurable via the Home Assistant UI (card editor). Organize configuration options into logical groups:
+When in **Custom Mode**, the card is highly configurable via the Home Assistant UI (card editor). Organize configuration options into logical groups:
 
 #### **Display Options Group**
 
-**Playlist Display Mode:**
-- `expanded` (default): Show full list of all steps/songs in current playlist
-- `collapsed`: Show as dropdown/expandable section
-- `hidden`: Hide playlist view entirely
+**Playlist Selection Mode:**
+- `collapsed` (default): Show as dropdown selector
+- `expanded`: Show full list of all playlists
+- `hidden`: Hide playlist selector entirely
+
+**Songs Display Mode:**
+- `collapsed` (default): Show as expandable section with count (e.g., "Songs: [12 items ▼]")
+- `expanded`: Show full list of all songs in current playlist
+- `hidden`: Hide songs list entirely
 
 **Queue Display Mode:**
-- `expanded` (default): Show full list of queued steps when queue is not empty
-- `collapsed`: Show as dropdown/expandable section with count badge
+- `auto` (default): Show expanded when queue has items, collapsed when empty, hidden when unused
+- `expanded`: Always show full list of queued songs
+- `collapsed`: Show as expandable section with count badge (e.g., "Queue: [3 items ▼]")
 - `hidden`: Hide queue view entirely
 
-**Step/Song List Options:**
-- Show/hide step duration
-- Show/hide step actions (play icon, queue icon)
-- Maximum number of visible items (before scrolling)
+**Song List Options:**
+- Show/hide song duration
+- Show/hide song actions (Play Now button, Add to Queue button)
+- Maximum number of visible items before scrolling (default: 10)
 
 #### **Control Options Group**
 
@@ -154,49 +256,187 @@ The card must be highly configurable via the Home Assistant UI (card editor). Or
 ### Media Player Controls
 Standard media player interface (configurable via options above):
 - Play/pause/stop buttons
-- **Previous/next step buttons** (both supported by API)
+- **Previous/next song buttons** (both supported by API)
 - Volume slider with mute toggle
 - **Seekable progress bar** showing current position and total duration (using `Set step position ms` command)
-- Currently playing step/song name
+- Currently playing song name
 
-### Playlist View
-Display all steps/songs in the current playlist (respects display mode configuration):
-- Step name and duration (if enabled)
-- Two actions per step (if enabled):
-  - **Play icon**: Play this step immediately (`Play playlist step <playlist>,<step>`)
-  - **Queue icon**: Add to queue (`Enqueue playlist step <playlist>,<step>`)
-- Collapsed mode: Shows dropdown with current playlist name and step count
-- Hidden mode: Does not display playlist view
+### Songs List (Current Playlist)
+Display all songs in the current playlist (respects display mode configuration):
+- Song name and duration (if enabled)
+- Two labeled actions per song (if enabled):
+  - **[▶ Play Now]**: Play this song immediately (`Play playlist step <playlist>,<step>`)
+  - **[+ Add to Queue]**: Add to queue (`Enqueue playlist step <playlist>,<step>`)
+- Collapsed mode: Shows "Songs: [12 items ▼]" with expand arrow
+- Hidden mode: Does not display songs list
+- Current song is highlighted with subtle background color
+- Completed songs are dimmed, upcoming songs normal weight
 
 ### Queue Display
-When steps are in the queue (respects display mode configuration):
-- Show queue section **above** the playlist section
-- Visual divider line between queue and playlist
-- Display queued steps in order with their names and durations (if enabled)
+Queue is displayed **above** the songs list (respects display mode configuration):
+- Visual divider line between queue and songs list
+- Display queued songs in order with their names and durations (if enabled)
 - Show "Clear Queue" button (if enabled) - API only supports clearing entire queue, not individual removal
-- Collapsed mode: Shows dropdown with "Queue (N)" badge
+- Auto mode: Expanded when has items, collapsed when empty, hidden when feature unused
+- Collapsed mode: Shows "Queue: [3 items ▼]" with count badge
 - Hidden mode: Does not display queue view
 
-### Queue Logic
-- When adding a step to the queue via the card, check if it's already in the queue
-- If step already exists in queue, **do not add duplicate** and optionally show a notification
-- **Note**: The xSchedule API itself prevents adding a step if it's already the last song in the queue
+### Action Clarity & Feedback
+
+**Button Labels:**
+- Always use text labels with icons (not icons alone)
+- Examples: "[▶ Play Now]", "[+ Add to Queue]", not just "[▶]" or "[+]"
+- On hover/long-press: Show tooltip with additional context
+
+**User Feedback:**
+- **Success**: Show brief toast notification (2 seconds)
+  - "Added to queue ✓"
+  - "Now playing: [Song Name]"
+- **Duplicate Prevention**: Show toast when song already in queue
+  - "Already in queue"
+- **Errors**: Show clear error message
+  - "Failed to connect to xSchedule"
+  - "Playlist not found"
+- **Confirmation**: For disruptive actions (replacing current song):
+  - Quick toast: "Replace current song? [Play Now] [Play Next] [Cancel]"
+
+**Visual Feedback:**
+- Song clicked: Briefly highlight with animation (200ms)
+- Adding to queue: Show loading spinner on button briefly
+- Current song: Highlight with accent color background
+- Queue items: Show drag handle icon (even if dragging not supported)
+
+### Contextual UI & Empty States
+
+**No Playlist Selected:**
+```
+┌─────────────────────────────────┐
+│  🎵 Select a playlist to begin  │
+│                                 │
+│  Playlist: [Select... ▼]       │
+└─────────────────────────────────┘
+```
+
+**Queue Empty (Auto Mode):**
+```
+┌─────────────────────────────────┐
+│  Queue (0)                      │
+│  Tap [+ Add to Queue] on any    │
+│  song to play it next           │
+└─────────────────────────────────┘
+```
+
+**Connection Lost:**
+```
+┌─────────────────────────────────┐
+│  ⚠️ Lost connection to xSchedule│
+│  [Retry] [Settings]             │
+└─────────────────────────────────┘
+```
+
+**Loading State:**
+```
+┌─────────────────────────────────┐
+│  Loading...                     │
+│  ⏳ Connecting to xSchedule     │
+└─────────────────────────────────┘
+```
+
+### Mobile-First Interactions
+
+**Touch Targets:**
+- Minimum 44px height for all interactive elements
+- Adequate spacing between buttons (8px minimum)
+- Larger tap areas for primary controls
+
+**Responsive Behavior:**
+- **Desktop (>1024px)**: Can show more expanded by default, 3-column layout if needed
+- **Tablet (768px-1024px)**: 2-column layout, moderate defaults
+- **Mobile (<768px)**: Single column, everything collapsed by default, stack vertically
+
+**Optional Gestures** (if feasible):
+- Swipe song right: Add to queue
+- Swipe song left: Play now
+- Long press song: Show context menu with all actions
+- Pull down queue section: Refresh
 
 ### Visual Design
 - Clean, modern interface consistent with Home Assistant design language
-- Clear visual hierarchy: controls → now playing → queue → playlist (when all visible)
+- Clear visual hierarchy:
+  1. **Primary**: Now playing info + playback controls
+  2. **Secondary**: Queue (what's next)
+  3. **Tertiary**: Songs list (browsing)
+  4. **Utility**: Playlist selector, volume, settings
 - Responsive layout for different screen sizes
-- Loading states and error messages
+- Loading states and error messages with clear icons
 - Show playback position updating in real-time
 - Respect user's configured display options for clean, customized appearance
+- Use Home Assistant's standard color scheme and spacing tokens
 
 ### Card Editor UI
-Provide a visual editor in Home Assistant with organized tabs/sections:
-- **Display** tab: Playlist/Queue/Song display modes
-- **Controls** tab: Show/hide individual control elements
-- **Status** tab: Now playing information display options
-- **Layout** tab: Overall card layout and theme options
+
+The card editor should be simple and approachable:
+
+**For Simple/DJ/Jukebox/Minimal Modes:**
+Show only mode selector:
+```
+Card Mode: [Simple ▼]
+  • Simple (default)
+  • DJ Mode
+  • Jukebox Mode
+  • Minimal
+  • Custom
+
+[Save]
+```
+
+**For Custom Mode:**
+Provide organized tabs with advanced options:
+
+**Tab 1: Appearance**
+```
+Display Options:
+  Playlist Selector: [Collapsed ▼]
+  Songs List: [Collapsed ▼]
+  Queue: [Auto ▼]
+
+Visual Options:
+  [✓] Show song duration
+  [✓] Show progress bar
+  [✓] Show time remaining
+  [ ] Compact mode
+```
+
+**Tab 2: Controls**
+```
+Playback Controls:
+  [✓] Show previous/next buttons
+  [✓] Show stop button
+  [✓] Show seek bar
+
+Volume:
+  [✓] Show volume slider
+  [✓] Show mute button
+  Orientation: [Horizontal ▼]
+
+Song Actions:
+  [✓] Show "Play Now" buttons
+  [✓] Show "Add to Queue" buttons
+```
+
+**Tab 3: Advanced**
+```
+Behavior:
+  Max visible songs: [10]
+  Confirm disruptive actions: [✓]
+  Show tooltips: [✓]
+
+[Save] [Reset to Defaults]
+```
+
 - Preview of changes in real-time where possible
+- "Reset to Defaults" button to revert to Simple mode
+- Help text for each option explaining what it does
 
 ---
 
