@@ -43,6 +43,7 @@ jobs:
             xschedule-homeassistant.zip
             xschedule-homeassistant.tar.gz
             dist/xschedule-card.js
+            dist/xschedule-playlist-browser.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -66,6 +67,8 @@ jobs:
             3. Restart Home Assistant
 
             ### Card Installation
-            The bundled card (`xschedule-card.js`) is included in the release assets.
+            Two custom Lovelace cards are included:
+            - `xschedule-card.js` - Main media player card
+            - `xschedule-playlist-browser.js` - Playlist browser card
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -40,8 +40,13 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 
 1. Download the latest release
 2. Copy the `custom_components/xschedule` folder to your Home Assistant `config/custom_components/` directory
-3. Copy the `www/xschedule-card.js` file to your `config/www/` directory
+3. Copy the card files from `dist/` to your `config/www/` directory:
+   - `xschedule-card.js`
+   - `xschedule-playlist-browser.js`
 4. Restart Home Assistant
+5. Add the cards to your Lovelace resources:
+   - `/local/xschedule-card.js`
+   - `/local/xschedule-playlist-browser.js`
 
 ## Configuration
 
@@ -55,8 +60,13 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 
 ### Dashboard Card Setup
 
-Add the card via the UI:
+This integration includes **two custom Lovelace cards**:
 
+#### xSchedule Media Player Card
+
+The main playback control card.
+
+Add via UI:
 1. Edit your dashboard
 2. Click **Add Card**
 3. Search for "xSchedule Media Player"
@@ -68,12 +78,27 @@ Or add manually to your dashboard YAML:
 ```yaml
 type: custom:xschedule-card
 entity: media_player.xschedule
-show_playlist: true
-playlist_mode: expanded  # expanded, collapsed, or hidden
-show_queue: true
-queue_mode: expanded
-show_volume: true
-show_seek: true
+mode: simple  # simple (default), dj, jukebox, minimal, or custom
+```
+
+#### xSchedule Playlist Browser Card
+
+A companion card for browsing all playlists with schedule information.
+
+Add via UI:
+1. Edit your dashboard
+2. Click **Add Card**
+3. Search for "xSchedule Playlist Browser"
+4. Select your xSchedule entity
+
+Or add manually to your dashboard YAML:
+
+```yaml
+type: custom:xschedule-playlist-browser
+entity: media_player.xschedule
+sort_by: schedule  # schedule (default) or alphabetical
+show_duration: true
+show_status: true
 ```
 
 ## Card Configuration Options

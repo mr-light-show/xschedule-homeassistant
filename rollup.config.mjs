@@ -6,10 +6,10 @@ import json from '@rollup/plugin-json';
 
 const dev = process.env.ROLLUP_WATCH;
 
-export default {
-  input: 'src/xschedule-card.js',
+const createConfig = (inputFile, outputFile) => ({
+  input: inputFile,
   output: {
-    file: 'dist/xschedule-card.js',
+    file: outputFile,
     format: 'es',
     sourcemap: dev ? true : false,
   },
@@ -36,4 +36,9 @@ export default {
     }),
     !dev && terser(),
   ],
-};
+});
+
+export default [
+  createConfig('src/xschedule-card.js', 'dist/xschedule-card.js'),
+  createConfig('src/xschedule-playlist-browser.js', 'dist/xschedule-playlist-browser.js'),
+];
