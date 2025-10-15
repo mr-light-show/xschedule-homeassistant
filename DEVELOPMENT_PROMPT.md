@@ -106,7 +106,7 @@ By default, the card should show a clean, collapsed view:
 │ [Step/Song Name]                │
 │ ━━━━━━━━━━━━━━━━━━━━━━ 0:45/2:30│
 │                                 │
-│       ⏮  ⏯  ⏹  ⏭               │
+│       ⏮  ⏯  ⏹  ⏭              │
 │                                 │
 │ Playlist: [Christmas ▼]         │
 │ Queue: [3 items ▼]              │
@@ -441,6 +441,138 @@ Behavior:
 
 ---
 
+## Playlist Browser Card (Companion Card)
+
+In addition to the main media player card, provide a companion **Playlist Browser Card** for users who want a dedicated view of all available playlists.
+
+### Playlist Browser Card Layout
+
+```
+┌─────────────────────────────────┐
+│ xSchedule Playlists             │
+│                                 │
+│ Sort: [By Schedule ▼]           │
+│                                 │
+│ ▶ Christmas Lights    [Playing] │
+│   Duration: 45:30               │
+│                                 │
+│ ⏰ New Year Show      [12:00 AM]│
+│   Duration: 1:15:00             │
+│                                 │
+│   Halloween           [Oct 31]  │
+│   Duration: 38:20               │
+│                                 │
+│   Birthday Party                │
+│   Duration: 22:15               │
+│                                 │
+│   Summer Vibes                  │
+│   Duration: 51:40               │
+└─────────────────────────────────┘
+```
+
+### Features
+
+**Sorting Options:**
+- **By Schedule** (default): Shows playlists ordered by next scheduled time
+  - Currently playing playlist shown at top with "Playing" badge
+  - Scheduled playlists show time/date of next run
+  - Unscheduled playlists at bottom (no time shown)
+- **Alphabetical**: Shows all playlists in A-Z order
+  - Currently playing playlist still has visual indicator
+  - Simple, predictable ordering
+
+**Playlist Display:**
+- Playlist name (prominent)
+- Duration (total length of all songs in playlist)
+- Status indicators:
+  - **[Playing]** badge for active playlist
+  - **[⏰ Time]** for scheduled playlists (e.g., "12:00 AM", "Oct 31 8:00 PM")
+  - **[Date]** for playlists scheduled more than 24 hours away
+  - No indicator for unscheduled playlists
+
+**Interactions:**
+- Tap playlist: Play immediately (shows confirmation if something is playing)
+- Long press: Show context menu:
+  - Play Now
+  - View Songs
+  - View Schedule Info (if scheduled)
+
+**Visual Design:**
+- Currently playing playlist: Highlighted with accent color, play icon ▶
+- Scheduled playlists: Clock icon ⏰ with time
+- Past-schedule/inactive: Dimmed appearance
+- Unscheduled: Normal appearance
+
+### Configuration Options
+
+```yaml
+type: custom:xschedule-playlist-browser
+entity: media_player.xschedule
+sort_by: schedule  # schedule | alphabetical
+show_duration: true
+show_status: true
+compact_mode: false
+confirm_play: true  # Show confirmation when switching playlists
+```
+
+**Configuration UI:**
+```
+┌─────────────────────────────────┐
+│ Playlist Browser Card Settings  │
+│                                 │
+│ Sort by: [Schedule ▼]           │
+│   • By Schedule (next playing)  │
+│   • Alphabetical                │
+│                                 │
+│ Display:                        │
+│   [✓] Show playlist duration    │
+│   [✓] Show schedule times       │
+│   [✓] Show status badges        │
+│   [ ] Compact mode              │
+│                                 │
+│ Behavior:                       │
+│   [✓] Confirm before playing    │
+│   [✓] Show context menu         │
+│                                 │
+│ [Save]                          │
+└─────────────────────────────────┘
+```
+
+### API Requirements
+
+To implement this card, need to query:
+- **GetPlayLists**: List of all available playlists
+- **GetPlayListSchedules <playlist_name>**: Schedule information for each playlist
+  - Returns: name, unique ID, enabled flag, active flag, looping, randomization, **next active time**, end time
+- **GetPlayingStatus**: Currently playing playlist
+- **GetPlayListSteps <playlist_name>**: To calculate total duration for each playlist
+
+**Schedule Sorting Logic:**
+1. Query `GetPlayListSchedules` for each playlist
+2. Extract "next active time" field
+3. Sort by:
+   - Currently playing: Always at top
+   - Scheduled playlists: By next active time (soonest first)
+   - Unscheduled playlists: Alphabetically at bottom
+4. Format time display:
+   - Within 24 hours: Show time only (e.g., "11:30 PM")
+   - Beyond 24 hours: Show date and time (e.g., "Oct 31 8:00 PM")
+
+### Use Cases
+
+**When to use this card:**
+- Dashboard overview: See all playlists at a glance
+- Planning view: See what's scheduled to play when
+- Quick playlist switching: Fast access to any playlist
+- Seasonal content: Easily see holiday playlists and when they're scheduled
+
+**Layout suggestions:**
+- **Desktop**: Place alongside main media player card in 2-column layout
+- **Mobile**: Separate tab or view from main player
+- **Dashboard**: Use as a standalone widget for playlist management
+
+---
+
 ## API Capabilities Summary
 
 ✅ **Supported Features:**
@@ -568,6 +700,17 @@ GetPlayListSteps <playlist_name>
 
 GetQueuedSteps
   Returns: Array of queued steps with name, unique ID, and length
+
+GetPlayListSchedules <playlist_name>
+  Returns: Schedule details including:
+    - name: Schedule name
+    - id: Unique schedule ID
+    - enabled: Whether schedule is enabled
+    - active: Whether schedule is currently active
+    - loop: Looping enabled
+    - random: Randomization enabled
+    - nextactivetime: Next time this schedule will activate
+    - endtime: Schedule end time
 ```
 
 ### Status Fields Explanation
