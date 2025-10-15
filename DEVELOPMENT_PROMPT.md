@@ -456,17 +456,20 @@ In addition to the main media player card, provide a companion **Playlist Browse
 │ ▶ Christmas Lights    [Playing] │
 │   Duration: 45:30               │
 │                                 │
-│ ⏰ New Year Show      [12:00 AM]│
+│ ⏰ New Year Show  [Today 11:30PM]│
 │   Duration: 1:15:00             │
 │                                 │
-│   Halloween           [Oct 31]  │
+│ ⏰ Holiday Party [Tomorrow 6:00PM]│
+│   Duration: 52:45               │
+│                                 │
+│ ⏰ Halloween      [Friday 8:00PM]│
 │   Duration: 38:20               │
+│                                 │
+│ ⏰ Thanksgiving   [Nov 28 7:00PM]│
+│   Duration: 1:05:15             │
 │                                 │
 │   Birthday Party                │
 │   Duration: 22:15               │
-│                                 │
-│   Summer Vibes                  │
-│   Duration: 51:40               │
 └─────────────────────────────────┘
 ```
 
@@ -486,8 +489,11 @@ In addition to the main media player card, provide a companion **Playlist Browse
 - Duration (total length of all songs in playlist)
 - Status indicators:
   - **[Playing]** badge for active playlist
-  - **[⏰ Time]** for scheduled playlists (e.g., "12:00 AM", "Oct 31 8:00 PM")
-  - **[Date]** for playlists scheduled more than 24 hours away
+  - **[⏰ Time]** for scheduled playlists with smart date formatting:
+    - Same day: "Today 11:30 PM"
+    - Next day: "Tomorrow 8:00 AM"
+    - Within 7 days: "[Day of week] 9:00 PM" (e.g., "Friday 9:00 PM")
+    - Beyond 7 days: "[Month Day] [Time]" (e.g., "Oct 31 8:00 PM")
   - No indicator for unscheduled playlists
 
 **Interactions:**
@@ -554,9 +560,12 @@ To implement this card, need to query:
    - Currently playing: Always at top
    - Scheduled playlists: By next active time (soonest first)
    - Unscheduled playlists: Alphabetically at bottom
-4. Format time display:
-   - Within 24 hours: Show time only (e.g., "11:30 PM")
-   - Beyond 24 hours: Show date and time (e.g., "Oct 31 8:00 PM")
+4. Format time display (smart relative formatting):
+   - Same day: "Today [time]" (e.g., "Today 11:30 PM")
+   - Next day: "Tomorrow [time]" (e.g., "Tomorrow 8:00 AM")
+   - 2-7 days away: "[Day of week] [time]" (e.g., "Friday 9:00 PM", "Wednesday 6:30 PM")
+   - 8+ days away: "[Month Day] [time]" (e.g., "Oct 31 8:00 PM", "Dec 25 12:00 AM")
+5. Time format: Use 12-hour format with AM/PM
 
 ### Use Cases
 
