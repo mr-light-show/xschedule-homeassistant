@@ -121,11 +121,11 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         cards = [
             {
                 "url": f"/local/xschedule-card.js?t={timestamps.get('xschedule-card.js', 0)}",
-                "type": "module"
+                "res_type": "module"
             },
             {
                 "url": f"/local/xschedule-playlist-browser.js?t={timestamps.get('xschedule-playlist-browser.js', 0)}",
-                "type": "module"
+                "res_type": "module"
             },
         ]
 
