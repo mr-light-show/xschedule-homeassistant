@@ -115,6 +115,8 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
             _LOGGER.warning("Lovelace not loaded, skipping resource registration")
             return
 
+        _LOGGER.info("Lovelace config found, attempting to register resources")
+
         # Cards to register with cache-busting timestamps
         cards = [
             {
@@ -128,43 +130,56 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         ]
 
         # Try to access lovelace resources
-        if hasattr(lovelace_config, "resources"):
-            resources = lovelace_config.resources
+        if not hasattr(lovelace_config, "resources"):
+            _LOGGER.warning("Lovelace resources not accessible (might be in YAML mode)")
+            return
 
-            for card in cards:
-                # Check if already registered (check base URL without timestamp)
-                base_url = card["url"].split("?")[0]
+        resources = lovelace_config.resources
+        _LOGGER.info("Lovelace resources object found: %s", type(resources))
 
-                if hasattr(resources, "async_items"):
-                    existing = await resources.async_items()
+        if not hasattr(resources, "async_items"):
+            _LOGGER.warning("Resources does not have async_items method")
+            return
 
-                    # Find and update/remove old entries with different timestamps
-                    for existing_resource in existing:
-                        existing_url = existing_resource.get("url", "")
-                        existing_base = existing_url.split("?")[0]
+        if not hasattr(resources, "async_create_item"):
+            _LOGGER.warning("Resources does not have async_create_item method")
+            return
 
-                        if existing_base == base_url:
-                            # Remove old entry if timestamp changed
-                            if existing_url != card["url"]:
-                                if hasattr(resources, "async_delete_item"):
-                                    await resources.async_delete_item(existing_resource.get("id"))
-                                    _LOGGER.info("Removed old resource: %s", existing_url)
-                            else:
-                                # Already registered with correct timestamp
-                                _LOGGER.debug("Resource already registered: %s", card["url"])
-                                continue
+        for card in cards:
+            # Check if already registered (check base URL without timestamp)
+            base_url = card["url"].split("?")[0]
+            already_registered = False
 
-                # Add the resource with new timestamp
-                if hasattr(resources, "async_create_item"):
-                    await resources.async_create_item(card)
-                    _LOGGER.info("Registered lovelace resource: %s", card["url"])
-                else:
-                    _LOGGER.warning("Cannot register resource, async_create_item not available")
-        else:
-            _LOGGER.warning("Lovelace resources not accessible, resources must be added manually")
+            existing = await resources.async_items()
+            _LOGGER.debug("Found %d existing resources", len(existing))
+
+            # Find and update/remove old entries with different timestamps
+            for existing_resource in existing:
+                existing_url = existing_resource.get("url", "")
+                existing_base = existing_url.split("?")[0]
+
+                if existing_base == base_url:
+                    # Remove old entry if timestamp changed
+                    if existing_url != card["url"]:
+                        if hasattr(resources, "async_delete_item"):
+                            resource_id = existing_resource.get("id")
+                            await resources.async_delete_item(resource_id)
+                            _LOGGER.info("Removed old resource: %s (id: %s)", existing_url, resource_id)
+                    else:
+                        # Already registered with correct timestamp
+                        _LOGGER.info("Resource already registered with correct timestamp: %s", card["url"])
+                        already_registered = True
+                        break
+
+            # Add the resource if not already registered
+            if not already_registered:
+                await resources.async_create_item(card)
+                _LOGGER.info("Successfully registered lovelace resource: %s", card["url"])
+
+        _LOGGER.info("Frontend resource registration completed")
 
     except Exception as err:
-        _LOGGER.warning("Could not register frontend resources: %s. Resources must be added manually.", err)
+        _LOGGER.error("Error registering frontend resources: %s", err, exc_info=True)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
