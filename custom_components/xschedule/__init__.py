@@ -150,7 +150,12 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
             base_url = card["url"].split("?")[0]
             already_registered = False
 
-            existing = await resources.async_items()
+            # Get existing resources (async_items() is not actually async, it returns a list)
+            if callable(resources.async_items):
+                existing = resources.async_items()
+            else:
+                existing = []
+
             _LOGGER.debug("Found %d existing resources", len(existing))
 
             # Find and update/remove old entries with different timestamps
