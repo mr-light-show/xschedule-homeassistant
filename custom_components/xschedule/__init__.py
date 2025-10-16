@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
-import shutil
-from pathlib import Path
+# import shutil  # Only needed for Option 2 fallback
+# from pathlib import Path  # Only needed for Option 2 fallback
 from typing import Any
 
 import voluptuous as vol
@@ -63,70 +63,83 @@ SCHEMA_GET_PLAYLIST_STEPS = vol.Schema(
 )
 
 
-async def _copy_cards_to_www(hass: HomeAssistant) -> None:
-    """Copy card files to www directory if they don't exist."""
-    try:
-        # Source directory (integration's www folder)
-        source_dir = Path(__file__).parent / "www"
+# NOTE: The following functions are kept for potential fallback if manifest.json
+# frontend registration doesn't work as expected (Option 2 fallback).
 
-        # Destination directory (Home Assistant's www folder)
-        dest_dir = Path(hass.config.path("www"))
-        dest_dir.mkdir(exist_ok=True)
-
-        # Cards to copy
-        cards = ["xschedule-card.js", "xschedule-playlist-browser.js"]
-
-        for card in cards:
-            source_file = source_dir / card
-            dest_file = dest_dir / card
-
-            # Only copy if source exists and dest doesn't exist or is older
-            if source_file.exists():
-                if not dest_file.exists() or source_file.stat().st_mtime > dest_file.stat().st_mtime:
-                    await hass.async_add_executor_job(shutil.copy2, source_file, dest_file)
-                    _LOGGER.info("Copied %s to www directory", card)
-    except Exception as err:
-        _LOGGER.error("Error copying cards to www directory: %s", err)
+# async def _copy_cards_to_www(hass: HomeAssistant) -> None:
+#     """Copy card files to www directory if they don't exist."""
+#     try:
+#         # Source directory (integration's www folder)
+#         source_dir = Path(__file__).parent / "www"
+#
+#         # Destination directory (Home Assistant's www folder)
+#         dest_dir = Path(hass.config.path("www"))
+#         dest_dir.mkdir(exist_ok=True)
+#
+#         # Cards to copy
+#         cards = ["xschedule-card.js", "xschedule-playlist-browser.js"]
+#
+#         for card in cards:
+#             source_file = source_dir / card
+#             dest_file = dest_dir / card
+#
+#             # Only copy if source exists and dest doesn't exist or is older
+#             if source_file.exists():
+#                 if not dest_file.exists() or source_file.stat().st_mtime > dest_file.stat().st_mtime:
+#                     await hass.async_add_executor_job(shutil.copy2, source_file, dest_file)
+#                     _LOGGER.info("Copied %s to www directory", card)
+#     except Exception as err:
+#         _LOGGER.error("Error copying cards to www directory: %s", err)
 
 
 async def _register_frontend_resources(hass: HomeAssistant) -> None:
-    """Register frontend resources with Home Assistant."""
-    try:
-        # Get the lovelace configuration
-        lovelace_config = hass.data.get("lovelace")
-        if not lovelace_config:
-            _LOGGER.warning("Lovelace not loaded, skipping resource registration")
-            return
+    """
+    Register frontend resources with Home Assistant (Option 2 - HACS-style).
 
-        # Cards to register
-        cards = [
-            {"url": "/local/xschedule-card.js", "type": "module"},
-            {"url": "/local/xschedule-playlist-browser.js", "type": "module"},
-        ]
-
-        # Try to access lovelace resources
-        if hasattr(lovelace_config, "resources"):
-            resources = lovelace_config.resources
-
-            for card in cards:
-                # Check if already registered
-                if hasattr(resources, "async_items"):
-                    existing = await resources.async_items()
-                    if any(r.get("url") == card["url"] for r in existing):
-                        _LOGGER.debug("Resource already registered: %s", card["url"])
-                        continue
-
-                # Add the resource
-                if hasattr(resources, "async_create_item"):
-                    await resources.async_create_item(card)
-                    _LOGGER.info("Registered lovelace resource: %s", card["url"])
-                else:
-                    _LOGGER.warning("Cannot register resource, async_create_item not available")
-        else:
-            _LOGGER.warning("Lovelace resources not accessible, resources must be added manually")
-
-    except Exception as err:
-        _LOGGER.warning("Could not register frontend resources: %s. Resources must be added manually.", err)
+    This is kept as a fallback if manifest.json frontend registration doesn't work.
+    To enable this method:
+    1. Uncomment this function body
+    2. Uncomment _copy_cards_to_www() above
+    3. Uncomment the calls in async_setup_entry()
+    4. Remove or comment out the "frontend" key in manifest.json
+    """
+    pass
+    # try:
+    #     # Get the lovelace configuration
+    #     lovelace_config = hass.data.get("lovelace")
+    #     if not lovelace_config:
+    #         _LOGGER.warning("Lovelace not loaded, skipping resource registration")
+    #         return
+    #
+    #     # Cards to register
+    #     cards = [
+    #         {"url": "/local/xschedule-card.js", "type": "module"},
+    #         {"url": "/local/xschedule-playlist-browser.js", "type": "module"},
+    #     ]
+    #
+    #     # Try to access lovelace resources
+    #     if hasattr(lovelace_config, "resources"):
+    #         resources = lovelace_config.resources
+    #
+    #         for card in cards:
+    #             # Check if already registered
+    #             if hasattr(resources, "async_items"):
+    #                 existing = await resources.async_items()
+    #                 if any(r.get("url") == card["url"] for r in existing):
+    #                     _LOGGER.debug("Resource already registered: %s", card["url"])
+    #                     continue
+    #
+    #             # Add the resource
+    #             if hasattr(resources, "async_create_item"):
+    #                 await resources.async_create_item(card)
+    #                 _LOGGER.info("Registered lovelace resource: %s", card["url"])
+    #             else:
+    #                 _LOGGER.warning("Cannot register resource, async_create_item not available")
+    #     else:
+    #         _LOGGER.warning("Lovelace resources not accessible, resources must be added manually")
+    #
+    # except Exception as err:
+    #     _LOGGER.warning("Could not register frontend resources: %s. Resources must be added manually.", err)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -136,11 +149,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    # Copy card files to www directory for user access
-    await _copy_cards_to_www(hass)
-
-    # Register frontend resources
-    await _register_frontend_resources(hass)
+    # NOTE: Card registration now handled by manifest.json "frontend" key (Option 1)
+    # If this doesn't work, uncomment the following lines for Option 2 fallback:
+    # await _copy_cards_to_www(hass)
+    # await _register_frontend_resources(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
