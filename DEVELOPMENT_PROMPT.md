@@ -324,7 +324,7 @@ Queue is displayed **above** the songs list (respects display mode configuration
 │  mdi:playlist-music             │
 │  Select a playlist to begin     │
 │                                 │
-│  Playlist: [Select... ▼]       │
+│  Playlist: [Select... ▼]        │
 └─────────────────────────────────┘
 ```
 

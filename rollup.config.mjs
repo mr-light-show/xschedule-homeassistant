@@ -12,6 +12,7 @@ const createConfig = (inputFile, outputFile) => ({
     file: outputFile,
     format: 'es',
     sourcemap: dev ? true : false,
+    inlineDynamicImports: true,
   },
   plugins: [
     resolve({

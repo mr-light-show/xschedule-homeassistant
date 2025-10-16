@@ -18,11 +18,20 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 - **Event System**: Fire Home Assistant events for all actions
 
 ### Dashboard Card
+- **5 Preset Modes**: Simple, DJ, Jukebox, Minimal, and Custom modes for different use cases
+- **Visual Configuration**: Configure cards with a built-in visual editor (no YAML editing needed!)
+- **Long-Press Context Menu**: Long-press any song for quick actions (mobile & desktop)
 - **Highly Configurable**: Show/hide any control or display element
 - **Multiple Display Modes**: Expanded, collapsed, or hidden views for playlists and queue
 - **Modern UI**: Clean, responsive interface consistent with Home Assistant design
 - **Real-time Position**: Live playback position updates via WebSocket
 - **Quick Actions**: Play songs immediately or add to queue with one tap
+
+### Playlist Browser Card
+- **Smart Scheduling**: See when playlists are scheduled to run (Today 8PM, Tomorrow 9AM, etc.)
+- **Duration Display**: Shows total playlist duration calculated from all songs
+- **Two Sort Modes**: By schedule (next to play) or alphabetical
+- **Status Badges**: Visual indicators for playing and scheduled playlists
 
 ## Installation
 
@@ -64,22 +73,168 @@ This integration includes **two custom Lovelace cards**:
 
 #### xSchedule Media Player Card
 
-The main playback control card.
+The main playback control card with 5 preset modes.
 
-Add via UI:
+**Add via UI (Recommended):**
 1. Edit your dashboard
 2. Click **Add Card**
 3. Search for "xSchedule Media Player"
 4. Select your xSchedule entity
-5. Configure display options as desired
+5. Choose a mode or configure with visual editor
 
-Or add manually to your dashboard YAML:
+**Or add manually to your dashboard YAML:**
 
 ```yaml
 type: custom:xschedule-card
 entity: media_player.xschedule
 mode: simple  # simple (default), dj, jukebox, minimal, or custom
 ```
+
+### Card Modes
+
+Choose the mode that best fits your use case:
+
+#### Simple Mode (Default)
+**Best for:** Basic playback control
+
+Perfect for users who just want to select a playlist and control playback. Clean and uncluttered.
+
+**What you see:**
+- Now playing info (playlist + song)
+- Progress bar with time
+- Playback controls (prev, play/pause, stop, next)
+- Playlist selector (dropdown)
+
+**What's hidden:**
+- Songs list
+- Queue
+- Volume controls
+
+```yaml
+type: custom:xschedule-card
+entity: media_player.xschedule
+mode: simple
+```
+
+#### DJ Mode
+**Best for:** Live performance and manual control
+
+Ideal for DJs and live operators who need quick access to playlists, songs, and queue management.
+
+**What you see:**
+- All playlists in an expanded list
+- All songs in current playlist with action buttons
+- Queue section (prominent)
+- Playback controls
+
+**Perfect for:**
+- Live shows
+- Real-time playlist switching
+- Quick song selection
+- Managing what plays next
+
+```yaml
+type: custom:xschedule-card
+entity: media_player.xschedule
+mode: dj
+```
+
+#### Jukebox Mode
+**Best for:** Party mode and collaborative queuing
+
+Great for parties where guests can browse songs and add them to the queue.
+
+**What you see:**
+- Songs list (expanded with all songs visible)
+- Queue section (prominent with count badge)
+- "Add to Queue" buttons highlighted
+- Playlist selector (dropdown)
+
+**Perfect for:**
+- Parties and gatherings
+- Let guests pick songs
+- Building a playlist on the fly
+- Seeing what's coming up next
+
+```yaml
+type: custom:xschedule-card
+entity: media_player.xschedule
+mode: jukebox
+```
+
+#### Minimal Mode
+**Best for:** Small spaces and dashboard widgets
+
+Stripped-down interface showing only essential controls. Perfect for compact dashboard layouts.
+
+**What you see:**
+- Now playing info
+- Playback controls
+- Progress bar
+
+**What's hidden:**
+- Playlist selector
+- Songs list
+- Queue
+- Volume controls
+
+**Perfect for:**
+- Dashboard widgets
+- Mobile dashboards
+- Picture frames
+- Small screens
+
+```yaml
+type: custom:xschedule-card
+entity: media_player.xschedule
+mode: minimal
+```
+
+#### Custom Mode
+**Best for:** Power users who want complete control
+
+Unlocks all configuration options. Use the visual editor or configure via YAML.
+
+**What you can customize:**
+- Which sections to show/hide
+- Expanded, collapsed, or hidden for each section
+- Volume controls visibility
+- Song action buttons
+- Maximum visible items
+- Confirmation dialogs
+- And much more!
+
+**Configure with visual editor:**
+1. Add card with Custom mode
+2. Click Configure
+3. Use the 4-tab editor (General, Appearance, Controls, Advanced)
+
+**Or configure via YAML:**
+
+```yaml
+type: custom:xschedule-card
+entity: media_player.xschedule
+mode: custom
+playlistDisplay: expanded    # expanded, collapsed, or hidden
+songsDisplay: collapsed       # expanded, collapsed, or hidden
+queueDisplay: auto            # auto, expanded, collapsed, or hidden
+showVolumeControl: true       # true or false
+showSongActions: true         # true or false
+showProgressBar: true         # true or false
+maxVisibleSongs: 10           # number of songs before scrolling
+confirmDisruptive: true       # confirm before replacing current song
+```
+
+### Quick Comparison
+
+| Feature | Simple | DJ | Jukebox | Minimal | Custom |
+|---------|--------|----|---------|---------| -------|
+| Playlist Selector | Dropdown | Expanded | Dropdown | Hidden | Your choice |
+| Songs List | Hidden | Expanded | Expanded | Hidden | Your choice |
+| Queue | Hidden | Expanded | Expanded | Hidden | Your choice |
+| Volume Controls | Hidden | Hidden | Hidden | Hidden | Your choice |
+| Song Actions | N/A | Visible | Visible | N/A | Your choice |
+| Best For | Simple playback | Live shows | Parties | Widgets | Power users |
 
 #### xSchedule Playlist Browser Card
 
@@ -101,32 +256,43 @@ show_duration: true
 show_status: true
 ```
 
-## Card Configuration Options
+## Advanced Features
 
-The card offers extensive configuration organized into logical groups:
+### Long-Press Context Menu
 
-### Display Options
-- Playlist display mode (expanded/collapsed/hidden)
-- Queue display mode (expanded/collapsed/hidden)
-- Show/hide step duration
-- Show/hide step actions (play/queue icons)
+Long-press (500ms) any song to bring up a quick action menu:
+- **Play Now** - Play this song immediately
+- **Add to Queue** - Add to the playback queue
+- **Song Info** - View song details
 
-### Control Options
-- Show/hide individual playback buttons
-- Show/hide volume controls
-- Show/hide seek bar
-- Show/hide queue controls
+Works on both mobile (with haptic feedback) and desktop!
 
-### Status Display
-- Show/hide now playing information
-- Show/hide playlist name
-- Show/hide time remaining
-- Time format options
+### Visual Configuration Editor
 
-### Layout Options
-- Card layout presets (default/compact/minimal)
-- Custom colors and icons
-- Card height settings
+For Custom mode, use the built-in visual editor instead of editing YAML:
+
+1. Add card or click Configure on existing card
+2. Select "Custom" mode
+3. Use the 4-tab editor:
+   - **General**: Playlist, songs, and queue display modes
+   - **Appearance**: Show/hide visual elements
+   - **Controls**: Enable/disable playback and volume controls
+   - **Advanced**: Fine-tune behavior and limits
+
+### Smart Queue Management
+
+The card includes intelligent duplicate prevention:
+- Checks entire queue (not just last song)
+- Shows "Already in queue" message
+- Prevents accidental duplicates
+
+### Real-Time Updates
+
+All cards update in real-time via WebSocket:
+- Position updates as song plays
+- Queue changes reflect immediately
+- State changes across all cards
+- No polling - efficient and responsive
 
 ## Development
 

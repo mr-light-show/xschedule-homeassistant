@@ -1,0 +1,70 @@
+# xSchedule custom services
+play_song:
+  name: Play Song
+  description: Play a specific song from a playlist
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
+    playlist:
+      name: Playlist
+      description: Name of the playlist containing the song
+      required: true
+      example: "Christmas Lights"
+      selector:
+        text:
+    song:
+      name: Song
+      description: Name of the song to play
+      required: true
+      example: "Jingle Bells"
+      selector:
+        text:
+
+add_to_queue:
+  name: Add to Queue
+  description: Add a song to the playback queue
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
+    playlist:
+      name: Playlist
+      description: Name of the playlist containing the song
+      required: true
+      example: "Christmas Lights"
+      selector:
+        text:
+    song:
+      name: Song
+      description: Name of the song to add to queue
+      required: true
+      example: "Silent Night"
+      selector:
+        text:
+
+clear_queue:
+  name: Clear Queue
+  description: Clear all songs from the playback queue
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+
+get_playlist_schedules:
+  name: Get Playlist Schedules
+  description: Get schedule information for a playlist (returns schedule data)
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
+    playlist:
+      name: Playlist
+      description: Name of the playlist to get schedules for
+      required: true
+      example: "Christmas Lights"
+      selector:
+        text:

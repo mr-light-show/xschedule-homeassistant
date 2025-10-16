@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up xSchedule",
+        "description": "Enter your xSchedule connection details",
+        "data": {
+          "host": "Host (IP address or hostname)",
+          "port": "Port",
+          "password": "Password (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to xSchedule. Please check the host and port.",
+      "invalid_auth": "Invalid password. Please check your xSchedule password.",
+      "unknown": "Unexpected error occurred. Please try again."
+    },
+    "abort": {
+      "already_configured": "This xSchedule instance is already configured."
+    }
+  }
+}
