@@ -64,33 +64,35 @@ class XSchedulePlaylistBrowser extends LitElement {
     // Fetch schedule info for each playlist
     for (const playlist of this._playlists) {
       try {
-        const response = await this._hass.callService(
-          'xschedule',
-          'get_playlist_schedules',
-          {
+        const response = await this._hass.callWS({
+          type: 'call_service',
+          domain: 'xschedule',
+          service: 'get_playlist_schedules',
+          service_data: {
             entity_id: this.config.entity,
             playlist: playlist,
           },
-          { return_response: true }
-        );
+          return_response: true,
+        });
 
-        if (response && response.schedules && response.schedules.length > 0) {
-          const schedule = response.schedules[0]; // Use first schedule
+        if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
+          const schedule = response.response.schedules[0]; // Use first schedule
 
           // Calculate total duration from playlist steps
-          const stepsResponse = await this._hass.callService(
-            'xschedule',
-            'get_playlist_steps',
-            {
+          const stepsResponse = await this._hass.callWS({
+            type: 'call_service',
+            domain: 'xschedule',
+            service: 'get_playlist_steps',
+            service_data: {
               entity_id: this.config.entity,
               playlist: playlist,
             },
-            { return_response: true }
-          );
+            return_response: true,
+          });
 
           let totalDuration = 0;
-          if (stepsResponse && stepsResponse.steps) {
-            totalDuration = stepsResponse.steps.reduce(
+          if (stepsResponse && stepsResponse.response && stepsResponse.response.steps) {
+            totalDuration = stepsResponse.response.steps.reduce(
               (sum, step) => sum + (step.duration || 0),
               0
             );
