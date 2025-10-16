@@ -5,8 +5,10 @@ on:
     types: [published]
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,8 +22,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build card
+      - name: Build cards
         run: npm run build
+
+      - name: Verify built files
+        run: |
+          echo "Checking for built card files..."
+          ls -lh dist/
+          if [ ! -f "dist/xschedule-card.js" ]; then
+            echo "ERROR: xschedule-card.js not found!"
+            exit 1
+          fi
+          if [ ! -f "dist/xschedule-playlist-browser.js" ]; then
+            echo "ERROR: xschedule-playlist-browser.js not found!"
+            exit 1
+          fi
+          echo "✓ All card files built successfully"
 
       - name: Create distribution archive
         run: |
@@ -36,39 +52,91 @@ jobs:
           cd ..
           tar -czf xschedule-homeassistant.tar.gz -C release .
 
+          # Verify archives were created
+          ls -lh xschedule-homeassistant.zip xschedule-homeassistant.tar.gz
+
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             xschedule-homeassistant.zip
             xschedule-homeassistant.tar.gz
             dist/xschedule-card.js
             dist/xschedule-playlist-browser.js
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update release body
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           append_body: true
           body: |
 
-            ## Installation
+            ## 📦 Release Assets
+
+            This release includes:
+            - **xschedule-homeassistant.zip** - Complete integration + cards (for manual installation)
+            - **xschedule-homeassistant.tar.gz** - Complete integration + cards (alternative format)
+            - **xschedule-card.js** - Main media player card only
+            - **xschedule-playlist-browser.js** - Playlist browser card only
+
+            ## 🚀 Installation
 
             ### HACS (Recommended)
             1. Add this repository as a custom repository in HACS
-            2. Search for "xSchedule" in HACS integrations
-            3. Install the integration
-            4. Restart Home Assistant
+            2. Go to HACS → Integrations
+            3. Search for "xSchedule"
+            4. Click Install
+            5. Restart Home Assistant
+            6. Go to Settings → Devices & Services → Add Integration
+            7. Search for "xSchedule" and configure
 
             ### Manual Installation
-            1. Download `xschedule-homeassistant.zip`
-            2. Extract to your Home Assistant config directory
+            1. Download **xschedule-homeassistant.zip**
+            2. Extract to your Home Assistant config directory:
+               - `custom_components/xschedule/` → `config/custom_components/xschedule/`
+               - `dist/*.js` → `config/www/` (for Lovelace cards)
             3. Restart Home Assistant
+            4. Add Lovelace resources:
+               - `/local/xschedule-card.js`
+               - `/local/xschedule-playlist-browser.js`
+            5. Go to Settings → Devices & Services → Add Integration
+            6. Search for "xSchedule" and configure
 
-            ### Card Installation
-            Two custom Lovelace cards are included:
-            - `xschedule-card.js` - Main media player card
-            - `xschedule-playlist-browser.js` - Playlist browser card
+            ### Card-Only Installation
+            If you already have the integration installed and only need to update the cards:
+            1. Download **xschedule-card.js** and/or **xschedule-playlist-browser.js**
+            2. Copy to `config/www/` directory
+            3. Clear browser cache (Ctrl+F5 or Cmd+Shift+R)
+            4. Refresh your dashboard
+
+            ## 📝 Card Modes
+
+            The main xSchedule card supports 5 modes:
+            - **Simple** (default) - Basic playback control
+            - **DJ** - Live performance with expanded playlists
+            - **Jukebox** - Party mode with prominent queue
+            - **Minimal** - Compact for small spaces
+            - **Custom** - Full control with visual editor
+
+            See the [README](https://github.com/mr-light-show/xschedule-homeassistant#card-modes) for detailed mode descriptions.
+
+            ## ✨ Features
+
+            - 🎮 Full media player controls (play, pause, stop, next, previous, seek)
+            - 📡 Real-time WebSocket updates (no polling!)
+            - 🎵 Queue management with duplicate prevention
+            - 📱 Mobile-responsive design with long-press context menu
+            - 🎨 Visual configuration editor (no YAML editing needed!)
+            - 📅 Smart playlist scheduling display
+            - 🔊 Volume control
+            - 🎯 5 preset card modes for different use cases
+
+            ## 📚 Documentation
+
+            - [README](https://github.com/mr-light-show/xschedule-homeassistant/blob/main/README.md) - Full documentation
+            - [Implementation Details](https://github.com/mr-light-show/xschedule-homeassistant/blob/main/IMPLEMENTATION_SUMMARY.md)
+            - [Enhancement Details](https://github.com/mr-light-show/xschedule-homeassistant/blob/main/ENHANCEMENTS_SUMMARY.md)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
