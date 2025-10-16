@@ -89,6 +89,46 @@ async def _copy_cards_to_www(hass: HomeAssistant) -> None:
         _LOGGER.error("Error copying cards to www directory: %s", err)
 
 
+async def _register_frontend_resources(hass: HomeAssistant) -> None:
+    """Register frontend resources with Home Assistant."""
+    try:
+        # Get the lovelace configuration
+        lovelace_config = hass.data.get("lovelace")
+        if not lovelace_config:
+            _LOGGER.warning("Lovelace not loaded, skipping resource registration")
+            return
+
+        # Cards to register
+        cards = [
+            {"url": "/local/xschedule-card.js", "type": "module"},
+            {"url": "/local/xschedule-playlist-browser.js", "type": "module"},
+        ]
+
+        # Try to access lovelace resources
+        if hasattr(lovelace_config, "resources"):
+            resources = lovelace_config.resources
+
+            for card in cards:
+                # Check if already registered
+                if hasattr(resources, "async_items"):
+                    existing = await resources.async_items()
+                    if any(r.get("url") == card["url"] for r in existing):
+                        _LOGGER.debug("Resource already registered: %s", card["url"])
+                        continue
+
+                # Add the resource
+                if hasattr(resources, "async_create_item"):
+                    await resources.async_create_item(card)
+                    _LOGGER.info("Registered lovelace resource: %s", card["url"])
+                else:
+                    _LOGGER.warning("Cannot register resource, async_create_item not available")
+        else:
+            _LOGGER.warning("Lovelace resources not accessible, resources must be added manually")
+
+    except Exception as err:
+        _LOGGER.warning("Could not register frontend resources: %s. Resources must be added manually.", err)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up xSchedule from a config entry."""
     _LOGGER.debug("Setting up xSchedule integration")
@@ -98,6 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Copy card files to www directory for user access
     await _copy_cards_to_www(hass)
+
+    # Register frontend resources
+    await _register_frontend_resources(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -12,7 +12,8 @@
       "Bash(gh run list:*)",
       "Bash(gh release view:*)",
       "Bash(git tag:*)",
-      "Bash(gh release list:*)"
+      "Bash(gh release list:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

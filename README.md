@@ -45,12 +45,16 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 6. Click "Install"
 7. Restart Home Assistant
 8. Add the integration: Settings → Devices & Services → Add Integration → "xSchedule"
-9. Add the custom cards as Lovelace resources:
+   - The cards will be automatically registered and copied to your `www/` directory
+9. Clear your browser cache (Ctrl+F5 or Cmd+Shift+R)
+10. The cards should now be available in the card picker!
+
+**If cards don't appear automatically**, add them manually as Lovelace resources:
    - Go to Settings → Dashboards → Resources (three-dot menu → Resources)
    - Click "Add Resource"
    - Add `/local/xschedule-card.js` as JavaScript Module
    - Add `/local/xschedule-playlist-browser.js` as JavaScript Module
-10. Clear your browser cache (Ctrl+F5 or Cmd+Shift+R)
+   - Clear browser cache again
 
 ### Manual Installation
 
@@ -58,12 +62,16 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 2. Copy the `custom_components/xschedule` folder (including the `www/` subdirectory) to your Home Assistant `config/custom_components/` directory
 3. Restart Home Assistant
 4. Add the integration: Settings → Devices & Services → Add Integration → Search for "xSchedule"
-5. Add the custom cards as Lovelace resources:
+   - The cards will be automatically registered and copied to your `www/` directory
+5. Clear your browser cache (Ctrl+F5 or Cmd+Shift+R)
+6. The cards should now be available in the card picker!
+
+**If cards don't appear automatically**, add them manually as Lovelace resources:
    - Go to Settings → Dashboards → Resources (three-dot menu → Resources)
    - Click "Add Resource"
    - Add `/local/xschedule-card.js` as JavaScript Module
    - Add `/local/xschedule-playlist-browser.js` as JavaScript Module
-6. Clear your browser cache (Ctrl+F5 or Cmd+Shift+R)
+   - Clear browser cache again
 
 ## Configuration
 
