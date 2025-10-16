@@ -70,6 +70,8 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._loading = true;
     const newSchedules = {};
 
+    console.log('xSchedule Playlist Browser: Fetching schedule info for playlists:', this._playlists);
+
     // Fetch schedule info for each playlist
     for (const playlist of this._playlists) {
       try {
@@ -83,6 +85,8 @@ class XSchedulePlaylistBrowser extends LitElement {
           },
           return_response: true,
         });
+
+        console.log(`xSchedule Playlist Browser: Response for "${playlist}":`, response);
 
         if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
           const schedule = response.response.schedules[0]; // Use first schedule
@@ -113,6 +117,7 @@ class XSchedulePlaylistBrowser extends LitElement {
             active: schedule.active,
             duration: totalDuration,
           };
+          console.log(`xSchedule Playlist Browser: Added schedule for "${playlist}":`, newSchedules[playlist]);
         }
       } catch (err) {
         console.error(`Failed to fetch schedule for ${playlist}:`, err);
@@ -120,6 +125,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     this._playlistSchedules = newSchedules;
+    console.log('xSchedule Playlist Browser: All schedules:', this._playlistSchedules);
     this._loading = false;
     this.requestUpdate();
   }
