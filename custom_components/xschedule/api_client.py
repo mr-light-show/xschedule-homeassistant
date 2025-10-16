@@ -124,9 +124,13 @@ class XScheduleAPIClient:
     async def get_playlists(self) -> list[str]:
         """Get list of all playlists."""
         result = await self.query("GetPlayLists")
-        # API returns dict with 'playlists' key containing list
+        # API returns dict with 'playlists' key containing list of playlist objects
         if isinstance(result, dict) and "playlists" in result:
-            return result["playlists"]
+            playlists = result["playlists"]
+            # Extract playlist names from objects (handle both string and object formats)
+            if playlists and isinstance(playlists[0], dict):
+                return [p.get("name", p) for p in playlists]
+            return playlists
         return []
 
     async def get_playlist_steps(self, playlist_name: str) -> list[dict[str, Any]]:
