@@ -388,29 +388,25 @@ class XScheduleCard extends LitElement {
                       @mouseup=${this._handleLongPressEnd}
                       @mouseleave=${this._handleLongPressEnd}
                     >
-                      <div class="song-info">
-                        ${song.name === currentSong ? html`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
-                        <span class="song-name">${song.name}</span>
-                        ${song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
-                      </div>
+                      ${song.name === currentSong ? html`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
+                      <span class="song-name">${song.name}</span>
+                      ${song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
                       ${this.config.showSongActions !== false
                         ? html`
                             <div class="song-actions">
                               <button
                                 @click=${() => this._playSong(song.name)}
-                                class="action-btn"
+                                class="action-btn-compact"
                                 title="Play Now"
                               >
                                 <ha-icon icon="mdi:play"></ha-icon>
-                                <span>Play Now</span>
                               </button>
                               <button
                                 @click=${() => this._addToQueue(song.name)}
-                                class="action-btn"
+                                class="action-btn-compact"
                                 title="Add to Queue"
                               >
                                 <ha-icon icon="mdi:playlist-plus"></ha-icon>
-                                <span>Add to Queue</span>
                               </button>
                             </div>
                           `
@@ -865,8 +861,8 @@ class XScheduleCard extends LitElement {
       }
 
       .song-item {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         cursor: default;
       }
 
@@ -875,25 +871,31 @@ class XScheduleCard extends LitElement {
         color: white;
       }
 
-      .song-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+      .song-item .current-icon {
+        --mdc-icon-size: 18px;
+        flex-shrink: 0;
       }
 
       .song-name {
         flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .song-duration,
       .queue-duration {
         font-size: 0.85em;
         color: var(--secondary-text-color);
+        flex-shrink: 0;
       }
 
       .song-actions {
         display: flex;
-        gap: 8px;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: auto;
       }
 
       .action-btn {
@@ -914,6 +916,27 @@ class XScheduleCard extends LitElement {
 
       .action-btn:hover {
         background: var(--dark-primary-color);
+      }
+
+      .action-btn-compact {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .action-btn-compact:hover {
+        background: var(--dark-primary-color);
+      }
+
+      .action-btn-compact ha-icon {
+        --mdc-icon-size: 18px;
       }
 
       .queue-number {

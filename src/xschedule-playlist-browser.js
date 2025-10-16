@@ -23,6 +23,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlists = [];
     this._playlistSchedules = {};
     this._loading = true;
+    this._lastSourceList = null; // Track last source_list to detect changes
   }
 
   setConfig(config) {
@@ -50,10 +51,18 @@ class XSchedulePlaylistBrowser extends LitElement {
 
     if (this._entity) {
       // Extract playlists from source_list
-      this._playlists = this._entity.attributes.source_list || [];
+      const newSourceList = this._entity.attributes.source_list || [];
 
-      // Fetch schedule information for each playlist
-      this._fetchScheduleInfo();
+      // Only fetch schedule info if source_list has changed
+      const sourceListChanged = JSON.stringify(this._lastSourceList) !== JSON.stringify(newSourceList);
+
+      if (sourceListChanged) {
+        this._playlists = newSourceList;
+        this._lastSourceList = [...newSourceList]; // Store copy for comparison
+
+        // Fetch schedule information for each playlist
+        this._fetchScheduleInfo();
+      }
     }
   }
 
