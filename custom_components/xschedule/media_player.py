@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api_client import XScheduleAPIClient, XScheduleAPIError
@@ -89,6 +90,13 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         # Entity attributes
         self._attr_name = DEFAULT_NAME
         self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=DEFAULT_NAME,
+            manufacturer="xLights",
+            model="xSchedule",
+            configuration_url=f"http://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}",
+        )
 
         # State tracking
         self._attr_state = MediaPlayerState.IDLE
