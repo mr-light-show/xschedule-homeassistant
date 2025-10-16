@@ -280,7 +280,7 @@ const A=globalThis,x=A.trustedTypes,S=x?x.createPolicy("lit-html",{createHTML:t=
           padding: 4px 8px;
         }
       }
-    `}}customElements.define("xschedule-playlist-browser-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object}}}setConfig(t){this.config=t}_valueChanged(t){if(!this.config||!this.hass)return;const e=t.target,i="checkbox"===e.type?e.checked:e.value;if(this.config[e.configValue]===i)return;const s={...this.config,[e.configValue]:i},o=new CustomEvent("config-changed",{detail:{config:s},bubbles:!0,composed:!0});this.dispatchEvent(o)}render(){if(!this.hass||!this.config)return I``;const t=Object.keys(this.hass.states).filter(t=>t.startsWith("media_player.")&&"xschedule"===this.hass.states[t].attributes.integration).sort();return I`
+    `}}customElements.define("xschedule-playlist-browser-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object}}}setConfig(t){this.config=t}_valueChanged(t){if(!this.config||!this.hass)return;const e=t.target,i="checkbox"===e.type?e.checked:e.value;if(this.config[e.configValue]===i)return;const s={...this.config,[e.configValue]:i},o=new CustomEvent("config-changed",{detail:{config:s},bubbles:!0,composed:!0});this.dispatchEvent(o)}render(){if(!this.hass||!this.config)return I``;const t=Object.keys(this.hass.states).filter(t=>t.startsWith("media_player.")&&(void 0!==this.hass.states[t].attributes.playlist_songs||t.includes("xschedule"))).sort();return I`
       <div class="card-config">
         <div class="form-group">
           <label for="entity">Entity (Required)</label>

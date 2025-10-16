@@ -587,7 +587,8 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
     const entities = Object.keys(this.hass.states)
       .filter(entityId =>
         entityId.startsWith('media_player.') &&
-        this.hass.states[entityId].attributes.integration === 'xschedule'
+        (this.hass.states[entityId].attributes.playlist_songs !== undefined ||
+         entityId.includes('xschedule'))
       )
       .sort();
 
