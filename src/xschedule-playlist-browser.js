@@ -207,22 +207,19 @@ class XSchedulePlaylistBrowser extends LitElement {
             class="playlist-icon"
           ></ha-icon>
           <div class="playlist-name">${playlistName}</div>
-          ${this.config.show_status ? this._renderStatus(isPlaying, scheduleInfo) : ''}
         </div>
 
-        ${scheduleInfo?.duration
-          ? html`<div class="playlist-duration">Duration: ${this._formatDuration(scheduleInfo.duration)}</div>`
-          : ''}
+        ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
       </div>
     `;
   }
 
-  _renderStatus(isPlaying, scheduleInfo) {
+  _renderScheduleInfo(isPlaying, scheduleInfo) {
+    // Always show schedule time as the most important info
     if (isPlaying) {
       return html`
-        <div class="status-badge playing">
-          <ha-icon icon="mdi:play"></ha-icon>
-          Playing
+        <div class="playlist-info-line playing-status">
+          [Playing]
         </div>
       `;
     }
@@ -230,9 +227,8 @@ class XSchedulePlaylistBrowser extends LitElement {
     if (scheduleInfo && scheduleInfo.nextActiveTime) {
       const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
       return html`
-        <div class="status-badge scheduled">
-          <ha-icon icon="mdi:clock"></ha-icon>
-          ${timeStr}
+        <div class="playlist-info-line schedule-time">
+          [${timeStr}]
         </div>
       `;
     }
@@ -445,45 +441,28 @@ class XSchedulePlaylistBrowser extends LitElement {
         white-space: nowrap;
       }
 
-      .playlist-duration {
-        font-size: 0.85em;
-        opacity: 0.8;
+      .playlist-info-line {
+        font-size: 0.9em;
         margin-top: 4px;
         margin-left: 36px;
+        text-align: right;
       }
 
-      .status-badge {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 6px 12px;
-        border-radius: 16px;
-        font-size: 0.85em;
+      .playlist-info-line.playing-status {
+        color: var(--accent-color);
         font-weight: 600;
-        white-space: nowrap;
-        flex-shrink: 0;
       }
 
-      .playlist-item.compact .status-badge {
-        padding: 4px 8px;
-        font-size: 0.75em;
-      }
-
-      .status-badge ha-icon {
-        --mdc-icon-size: 16px;
-      }
-
-      .status-badge.playing {
-        background: var(--light-primary-color, rgba(255, 255, 255, 0.3));
-      }
-
-      .playlist-item.playing .status-badge.playing {
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-      .status-badge.scheduled {
-        background: var(--info-color, #2196f3);
+      .playlist-item.playing .playlist-info-line.playing-status {
         color: white;
+      }
+
+      .playlist-info-line.schedule-time {
+        color: var(--secondary-text-color);
+      }
+
+      .playlist-item.playing .playlist-info-line.schedule-time {
+        color: rgba(255, 255, 255, 0.8);
       }
 
       @media (max-width: 768px) {
@@ -497,9 +476,8 @@ class XSchedulePlaylistBrowser extends LitElement {
           width: 100%;
         }
 
-        .status-badge {
-          font-size: 0.75em;
-          padding: 4px 8px;
+        .playlist-info-line {
+          font-size: 0.85em;
         }
       }
     `;
