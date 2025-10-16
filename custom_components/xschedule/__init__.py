@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import shutil
+from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
@@ -61,12 +63,41 @@ SCHEMA_GET_PLAYLIST_STEPS = vol.Schema(
 )
 
 
+async def _copy_cards_to_www(hass: HomeAssistant) -> None:
+    """Copy card files to www directory if they don't exist."""
+    try:
+        # Source directory (integration's www folder)
+        source_dir = Path(__file__).parent / "www"
+
+        # Destination directory (Home Assistant's www folder)
+        dest_dir = Path(hass.config.path("www"))
+        dest_dir.mkdir(exist_ok=True)
+
+        # Cards to copy
+        cards = ["xschedule-card.js", "xschedule-playlist-browser.js"]
+
+        for card in cards:
+            source_file = source_dir / card
+            dest_file = dest_dir / card
+
+            # Only copy if source exists and dest doesn't exist or is older
+            if source_file.exists():
+                if not dest_file.exists() or source_file.stat().st_mtime > dest_file.stat().st_mtime:
+                    await hass.async_add_executor_job(shutil.copy2, source_file, dest_file)
+                    _LOGGER.info("Copied %s to www directory", card)
+    except Exception as err:
+        _LOGGER.error("Error copying cards to www directory: %s", err)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up xSchedule from a config entry."""
     _LOGGER.debug("Setting up xSchedule integration")
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
+
+    # Copy card files to www directory for user access
+    await _copy_cards_to_www(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
