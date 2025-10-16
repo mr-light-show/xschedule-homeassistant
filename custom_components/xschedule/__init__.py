@@ -254,15 +254,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_id = call.data["entity_id"]
         playlist = call.data["playlist"]
 
-        entity = hass.states.get(entity_id)
-        if entity and entity.platform == DOMAIN:
-            # Get the media player entity
-            component = hass.data.get("media_player")
-            if component:
-                entity_obj = component.get_entity(entity_id)
-                if entity_obj and hasattr(entity_obj, "async_get_playlist_schedules"):
-                    schedules = await entity_obj.async_get_playlist_schedules(playlist)
-                    return {"schedules": schedules}
+        # Get the media player entity directly from the component
+        component = hass.data.get("media_player")
+        if component:
+            entity_obj = component.get_entity(entity_id)
+            if entity_obj and hasattr(entity_obj, "async_get_playlist_schedules"):
+                schedules = await entity_obj.async_get_playlist_schedules(playlist)
+                return {"schedules": schedules}
 
         return {"schedules": []}
 
@@ -271,15 +269,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_id = call.data["entity_id"]
         playlist = call.data["playlist"]
 
-        entity = hass.states.get(entity_id)
-        if entity and entity.platform == DOMAIN:
-            # Get the media player entity
-            component = hass.data.get("media_player")
-            if component:
-                entity_obj = component.get_entity(entity_id)
-                if entity_obj and hasattr(entity_obj, "_api_client"):
-                    steps = await entity_obj._api_client.get_playlist_steps(playlist)
-                    return {"steps": steps}
+        # Get the media player entity directly from the component
+        component = hass.data.get("media_player")
+        if component:
+            entity_obj = component.get_entity(entity_id)
+            if entity_obj and hasattr(entity_obj, "_api_client"):
+                steps = await entity_obj._api_client.get_playlist_steps(playlist)
+                return {"steps": steps}
 
         return {"steps": []}
 
