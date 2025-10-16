@@ -44,18 +44,17 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 5. Add `https://github.com/mr-light-show/xschedule-homeassistant` as an integration
 6. Click "Install"
 7. Restart Home Assistant
+8. The custom cards will be automatically registered and available in the card picker
 
 ### Manual Installation
 
 1. Download the latest release
-2. Copy the `custom_components/xschedule` folder to your Home Assistant `config/custom_components/` directory
-3. Copy the card files from `dist/` to your `config/www/` directory:
-   - `xschedule-card.js`
-   - `xschedule-playlist-browser.js`
-4. Restart Home Assistant
-5. Add the cards to your Lovelace resources:
-   - `/local/xschedule-card.js`
-   - `/local/xschedule-playlist-browser.js`
+2. Copy the `custom_components/xschedule` folder (including the `www/` subdirectory) to your Home Assistant `config/custom_components/` directory
+3. Restart Home Assistant
+4. The cards will be automatically registered and available at:
+   - `/hacsfiles/xschedule/xschedule-card.js`
+   - `/hacsfiles/xschedule/xschedule-playlist-browser.js`
+5. Add the integration: Settings → Devices & Services → Add Integration → Search for "xSchedule"
 
 ## Configuration
 

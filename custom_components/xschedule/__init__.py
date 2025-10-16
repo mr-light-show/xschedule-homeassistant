@@ -68,6 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
+    # Register frontend resources
+    hass.http.register_static_path(
+        f"/hacsfiles/{DOMAIN}/xschedule-card.js",
+        hass.config.path(f"custom_components/{DOMAIN}/www/xschedule-card.js"),
+        True,
+    )
+    hass.http.register_static_path(
+        f"/hacsfiles/{DOMAIN}/xschedule-playlist-browser.js",
+        hass.config.path(f"custom_components/{DOMAIN}/www/xschedule-playlist-browser.js"),
+        True,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services
