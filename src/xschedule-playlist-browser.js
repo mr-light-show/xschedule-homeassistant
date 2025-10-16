@@ -200,26 +200,19 @@ class XSchedulePlaylistBrowser extends LitElement {
     const hasSchedule = scheduleInfo && scheduleInfo.nextActiveTime;
 
     return html`
-      <div
-        class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''}"
-        @click=${() => this._handlePlaylistClick(playlistName)}
-      >
-        <div class="playlist-main">
+      <div class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''}">
+        <div class="playlist-header">
           <ha-icon
             icon=${isPlaying ? 'mdi:play-circle' : hasSchedule ? 'mdi:clock-outline' : 'mdi:playlist-music'}
             class="playlist-icon"
           ></ha-icon>
-
-          <div class="playlist-info">
-            <div class="playlist-name">${playlistName}</div>
-
-            ${this.config.show_duration && scheduleInfo?.duration
-              ? html`<div class="playlist-duration">Duration: ${this._formatDuration(scheduleInfo.duration)}</div>`
-              : ''}
-          </div>
-
+          <div class="playlist-name">${playlistName}</div>
           ${this.config.show_status ? this._renderStatus(isPlaying, scheduleInfo) : ''}
         </div>
+
+        ${scheduleInfo?.duration
+          ? html`<div class="playlist-duration">Duration: ${this._formatDuration(scheduleInfo.duration)}</div>`
+          : ''}
       </div>
     `;
   }
@@ -329,24 +322,6 @@ class XSchedulePlaylistBrowser extends LitElement {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
-  async _handlePlaylistClick(playlistName) {
-    // Show confirmation if something is playing and confirm_play is enabled
-    if (this.config.confirm_play && this._entity.state === 'playing') {
-      if (!confirm(`Switch to ${playlistName}?`)) {
-        return;
-      }
-    }
-
-    // Play the playlist
-    try {
-      await this._hass.callService('media_player', 'select_source', {
-        entity_id: this.config.entity,
-        source: playlistName,
-      });
-    } catch (err) {
-      console.error('Failed to play playlist:', err);
-    }
-  }
 
   _handleSortChange(e) {
     this.config = {
@@ -437,13 +412,12 @@ class XSchedulePlaylistBrowser extends LitElement {
       .playlist-item {
         background: var(--primary-background-color);
         border-radius: 8px;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.1s;
+        padding: 12px;
+        transition: background 0.2s;
       }
 
-      .playlist-item:hover {
-        background: var(--secondary-background-color);
-        transform: translateX(4px);
+      .playlist-item.compact {
+        padding: 8px;
       }
 
       .playlist-item.playing {
@@ -451,51 +425,31 @@ class XSchedulePlaylistBrowser extends LitElement {
         color: white;
       }
 
-      .playlist-item.playing:hover {
-        background: var(--dark-primary-color, var(--accent-color));
-      }
-
-      .playlist-main {
+      .playlist-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 14px;
-      }
-
-      .playlist-item.compact .playlist-main {
-        padding: 10px;
       }
 
       .playlist-icon {
-        --mdc-icon-size: 32px;
+        --mdc-icon-size: 24px;
         flex-shrink: 0;
       }
 
-      .playlist-item.compact .playlist-icon {
-        --mdc-icon-size: 24px;
-      }
-
-      .playlist-info {
-        flex: 1;
-        min-width: 0;
-      }
-
       .playlist-name {
-        font-size: 1.1em;
-        font-weight: 600;
+        flex: 1;
+        font-size: 1em;
+        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .playlist-item.compact .playlist-name {
-        font-size: 1em;
-      }
-
       .playlist-duration {
         font-size: 0.85em;
         opacity: 0.8;
-        margin-top: 2px;
+        margin-top: 4px;
+        margin-left: 36px;
       }
 
       .status-badge {
