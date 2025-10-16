@@ -541,7 +541,192 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 }
 
+// Configuration Editor
+class XSchedulePlaylistBrowserEditor extends LitElement {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      config: { type: Object },
+    };
+  }
+
+  setConfig(config) {
+    this.config = config;
+  }
+
+  _valueChanged(ev) {
+    if (!this.config || !this.hass) {
+      return;
+    }
+    const target = ev.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+
+    if (this.config[target.configValue] === value) {
+      return;
+    }
+
+    const newConfig = {
+      ...this.config,
+      [target.configValue]: value,
+    };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  render() {
+    if (!this.hass || !this.config) {
+      return html``;
+    }
+
+    // Get all xSchedule media_player entities
+    const entities = Object.keys(this.hass.states)
+      .filter(entityId =>
+        entityId.startsWith('media_player.') &&
+        this.hass.states[entityId].attributes.integration === 'xschedule'
+      )
+      .sort();
+
+    return html`
+      <div class="card-config">
+        <div class="form-group">
+          <label for="entity">Entity (Required)</label>
+          <select
+            id="entity"
+            .configValue=${'entity'}
+            .value=${this.config.entity || ''}
+            @change=${this._valueChanged}
+          >
+            <option value="">Select an xSchedule entity...</option>
+            ${entities.map(entityId => html`
+              <option value="${entityId}" ?selected=${this.config.entity === entityId}>
+                ${this.hass.states[entityId].attributes.friendly_name || entityId}
+              </option>
+            `)}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sort_by">Sort By</label>
+          <select
+            id="sort_by"
+            .configValue=${'sort_by'}
+            .value=${this.config.sort_by || 'schedule'}
+            @change=${this._valueChanged}
+          >
+            <option value="schedule">Schedule (Next to Play)</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input
+              type="checkbox"
+              .configValue=${'show_duration'}
+              .checked=${this.config.show_duration !== false}
+              @change=${this._valueChanged}
+            />
+            Show Duration
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input
+              type="checkbox"
+              .configValue=${'show_status'}
+              .checked=${this.config.show_status !== false}
+              @change=${this._valueChanged}
+            />
+            Show Status Badges
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input
+              type="checkbox"
+              .configValue=${'compact_mode'}
+              .checked=${this.config.compact_mode || false}
+              @change=${this._valueChanged}
+            />
+            Compact Mode
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input
+              type="checkbox"
+              .configValue=${'confirm_play'}
+              .checked=${this.config.confirm_play !== false}
+              @change=${this._valueChanged}
+            />
+            Confirm Before Playing
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  static get styles() {
+    return css`
+      .card-config {
+        padding: 16px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 500;
+      }
+
+      .form-group select,
+      .form-group input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        font-size: 14px;
+      }
+
+      .form-group label input[type="checkbox"] {
+        margin-right: 8px;
+      }
+    `;
+  }
+}
+
+customElements.define('xschedule-playlist-browser-editor', XSchedulePlaylistBrowserEditor);
 customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
+
+// Register editor
+XSchedulePlaylistBrowser.getConfigElement = function() {
+  return document.createElement('xschedule-playlist-browser-editor');
+};
+
+// Provide stub config for card picker
+XSchedulePlaylistBrowser.getStubConfig = function() {
+  return {
+    entity: '',
+    sort_by: 'schedule',
+    show_duration: true,
+    show_status: true,
+    compact_mode: false,
+    confirm_play: true,
+  };
+};
 
 window.customCards = window.customCards || [];
 window.customCards.push({

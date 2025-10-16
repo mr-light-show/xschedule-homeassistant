@@ -348,7 +348,9 @@ class XScheduleCardEditor extends LitElement {
   _getMediaPlayerEntities() {
     if (!this.hass) return [];
     return Object.values(this.hass.states).filter(
-      (entity) => entity.entity_id.startsWith('media_player.')
+      (entity) =>
+        entity.entity_id.startsWith('media_player.') &&
+        entity.attributes.integration === 'xschedule'
     );
   }
 
