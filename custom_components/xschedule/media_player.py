@@ -178,8 +178,9 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         if "left" in data:
             self._time_remaining = data["left"] / 1000
 
-        # Schedule entity update
-        self.schedule_update_ha_state()
+        # Schedule entity update (only if entity has been added to hass)
+        if self.hass and self.entity_id:
+            self.schedule_update_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity state."""
