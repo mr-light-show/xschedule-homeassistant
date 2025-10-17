@@ -150,9 +150,13 @@ class XScheduleAPIClient:
 
     async def get_playlist_schedules(self, playlist_name: str) -> list[dict[str, Any]]:
         """Get schedule information for a playlist."""
+        _LOGGER.warning("xSchedule API: Getting schedules for playlist: '%s'", playlist_name)
         result = await self.query("GetPlayListSchedules", playlist_name)
+        _LOGGER.warning("xSchedule API: Result for '%s': %s", playlist_name, result)
         if isinstance(result, dict) and "schedules" in result:
+            _LOGGER.warning("xSchedule API: Found %d schedules for '%s'", len(result["schedules"]), playlist_name)
             return result["schedules"]
+        _LOGGER.warning("xSchedule API: No schedules found for '%s'", playlist_name)
         return []
 
     # Playback control commands
