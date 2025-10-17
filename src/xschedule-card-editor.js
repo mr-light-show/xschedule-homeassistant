@@ -210,6 +210,17 @@ class XScheduleCardEditor extends LitElement {
           <label>
             <input
               type="checkbox"
+              .checked=${this.config.showEntityName || false}
+              @change=${(e) => this._checkboxChanged('showEntityName', e)}
+            />
+            Show entity name header
+          </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
               .checked=${this.config.showProgressBar !== false}
               @change=${(e) => this._checkboxChanged('showProgressBar', e)}
             />

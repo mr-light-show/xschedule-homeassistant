@@ -14,14 +14,15 @@ const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,A="$lit$",S=`lit$${Math.random().toFixed(9).slice(2)}$`,C="?"+S,E=`<${C}>`,P=document,T=()=>P.createComment(""),M=t=>null===t||"object"!=typeof t&&"function"!=typeof t,q=Array.isArray,D="[ \t\n\f\r]",U=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,N=/-->/g,O=/>/g,z=RegExp(`>|${D}(?:([^\\s"'>=/]+)(${D}*=${D}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),H=/'/g,j=/"/g,R=/^(?:script|style|textarea|title)$/i,B=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),I=Symbol.for("lit-noChange"),L=Symbol.for("lit-nothing"),V=new WeakMap,Q=P.createTreeWalker(P,129);function W(t,e){if(!q(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const X=(t,e)=>{const i=t.length-1,s=[];let o,n=2===e?"<svg>":3===e?"<math>":"",a=U;for(let e=0;e<i;e++){const i=t[e];let r,l,c=-1,h=0;for(;h<i.length&&(a.lastIndex=h,l=a.exec(i),null!==l);)h=a.lastIndex,a===U?"!--"===l[1]?a=N:void 0!==l[1]?a=O:void 0!==l[2]?(R.test(l[2])&&(o=RegExp("</"+l[2],"g")),a=z):void 0!==l[3]&&(a=z):a===z?">"===l[0]?(a=o??U,c=-1):void 0===l[1]?c=-2:(c=a.lastIndex-l[2].length,r=l[1],a=void 0===l[3]?z:'"'===l[3]?j:H):a===j||a===H?a=z:a===N||a===O?a=U:(a=z,o=void 0);const d=a===z&&t[e+1].startsWith("/>")?" ":"";n+=a===U?i+E:c>=0?(s.push(r),i.slice(0,c)+A+i.slice(c)+S+d):i+S+(-2===c?e:d)}return[W(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class Y{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,n=0;const a=t.length-1,r=this.parts,[l,c]=X(t,e);if(this.el=Y.createElement(l,i),Q.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=Q.nextNode())&&r.length<a;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(A)){const e=c[n++],i=s.getAttribute(t).split(S),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?Z:"?"===a[1]?tt:"@"===a[1]?et:K}),s.removeAttribute(t)}else t.startsWith(S)&&(r.push({type:6,index:o}),s.removeAttribute(t));if(R.test(s.tagName)){const t=s.textContent.split(S),e=t.length-1;if(e>0){s.textContent=w?w.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],T()),Q.nextNode(),r.push({type:2,index:++o});s.append(t[e],T())}}}else if(8===s.nodeType)if(s.data===C)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(S,t+1));)r.push({type:7,index:o}),t+=S.length-1}o++}}static createElement(t,e){const i=P.createElement("template");return i.innerHTML=t,i}}function F(t,e,i=t,s){if(e===I)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const n=M(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=F(t,o._$AS(t,e.values),o,s)),e}class G{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??P).importNode(e,!0);Q.currentNode=s;let o=Q.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new J(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new it(o,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(o=Q.nextNode(),n++)}return Q.currentNode=P,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class J{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=L,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=F(this,t,e),M(t)?t===L||null==t||""===t?(this._$AH!==L&&this._$AR(),this._$AH=L):t!==this._$AH&&t!==I&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>q(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==L&&M(this._$AH)?this._$AA.nextSibling.data=t:this.T(P.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Y.createElement(W(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new G(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=V.get(t.strings);return void 0===e&&V.set(t.strings,e=new Y(t)),e}k(t){q(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new J(this.O(T()),this.O(T()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class K{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=L,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=L}_$AI(t,e=this,i,s){const o=this.strings;let n=!1;if(void 0===o)t=F(this,t,e,0),n=!M(t)||t!==this._$AH&&t!==I,n&&(this._$AH=t);else{const s=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=F(this,s[i+a],e,a),r===I&&(r=this._$AH[a]),n||=!M(r)||r!==this._$AH[a],r===L?t=L:t!==L&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}n&&!s&&this.j(t)}j(t){t===L?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Z extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===L?void 0:t}}class tt extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==L)}}class et extends K{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=F(this,t,e,0)??L)===I)return;const i=this._$AH,s=t===L&&i!==L||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==L&&(i===L||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class it{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){F(this,t)}}const st=x.litHtmlPolyfillSupport;st?.(Y,J),(x.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
+const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,C="?"+A,E=`<${C}>`,P=document,T=()=>P.createComment(""),M=t=>null===t||"object"!=typeof t&&"function"!=typeof t,q=Array.isArray,D="[ \t\n\f\r]",N=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,U=/-->/g,z=/>/g,O=RegExp(`>|${D}(?:([^\\s"'>=/]+)(${D}*=${D}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),H=/'/g,j=/"/g,R=/^(?:script|style|textarea|title)$/i,B=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),I=Symbol.for("lit-noChange"),L=Symbol.for("lit-nothing"),V=new WeakMap,Q=P.createTreeWalker(P,129);function W(t,e){if(!q(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const X=(t,e)=>{const i=t.length-1,s=[];let o,n=2===e?"<svg>":3===e?"<math>":"",a=N;for(let e=0;e<i;e++){const i=t[e];let r,l,c=-1,h=0;for(;h<i.length&&(a.lastIndex=h,l=a.exec(i),null!==l);)h=a.lastIndex,a===N?"!--"===l[1]?a=U:void 0!==l[1]?a=z:void 0!==l[2]?(R.test(l[2])&&(o=RegExp("</"+l[2],"g")),a=O):void 0!==l[3]&&(a=O):a===O?">"===l[0]?(a=o??N,c=-1):void 0===l[1]?c=-2:(c=a.lastIndex-l[2].length,r=l[1],a=void 0===l[3]?O:'"'===l[3]?j:H):a===j||a===H?a=O:a===U||a===z?a=N:(a=O,o=void 0);const d=a===O&&t[e+1].startsWith("/>")?" ":"";n+=a===N?i+E:c>=0?(s.push(r),i.slice(0,c)+S+i.slice(c)+A+d):i+A+(-2===c?e:d)}return[W(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class Y{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,n=0;const a=t.length-1,r=this.parts,[l,c]=X(t,e);if(this.el=Y.createElement(l,i),Q.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=Q.nextNode())&&r.length<a;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=c[n++],i=s.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?Z:"?"===a[1]?tt:"@"===a[1]?et:K}),s.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),s.removeAttribute(t));if(R.test(s.tagName)){const t=s.textContent.split(A),e=t.length-1;if(e>0){s.textContent=w?w.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],T()),Q.nextNode(),r.push({type:2,index:++o});s.append(t[e],T())}}}else if(8===s.nodeType)if(s.data===C)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=P.createElement("template");return i.innerHTML=t,i}}function F(t,e,i=t,s){if(e===I)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const n=M(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=F(t,o._$AS(t,e.values),o,s)),e}class G{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??P).importNode(e,!0);Q.currentNode=s;let o=Q.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new J(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new it(o,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(o=Q.nextNode(),n++)}return Q.currentNode=P,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class J{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=L,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=F(this,t,e),M(t)?t===L||null==t||""===t?(this._$AH!==L&&this._$AR(),this._$AH=L):t!==this._$AH&&t!==I&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>q(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==L&&M(this._$AH)?this._$AA.nextSibling.data=t:this.T(P.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Y.createElement(W(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new G(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=V.get(t.strings);return void 0===e&&V.set(t.strings,e=new Y(t)),e}k(t){q(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new J(this.O(T()),this.O(T()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class K{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=L,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=L}_$AI(t,e=this,i,s){const o=this.strings;let n=!1;if(void 0===o)t=F(this,t,e,0),n=!M(t)||t!==this._$AH&&t!==I,n&&(this._$AH=t);else{const s=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=F(this,s[i+a],e,a),r===I&&(r=this._$AH[a]),n||=!M(r)||r!==this._$AH[a],r===L?t=L:t!==L&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}n&&!s&&this.j(t)}j(t){t===L?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Z extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===L?void 0:t}}class tt extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==L)}}class et extends K{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=F(this,t,e,0)??L)===I)return;const i=this._$AH,s=t===L&&i!==L||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==L&&(i===L||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class it{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){F(this,t)}}const st=x.litHtmlPolyfillSupport;st?.(Y,J),(x.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */class nt extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new J(e.insertBefore(T(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return I}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const rt={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1},custom:{}};class lt extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_entity:{type:Object},_playlists:{type:Array},_songs:{type:Array},_queue:{type:Array},_songsExpanded:{type:Boolean},_queueExpanded:{type:Boolean},_toast:{type:Object},_contextMenu:{type:Object}}}constructor(){super(),this._playlists=[],this._songs=[],this._queue=[],this._songsExpanded=!1,this._queueExpanded=!1,this._toast=null,this._contextMenu=null,this._longPressTimer=null,this._progressInterval=null,this._lastPlaylist=null,this._lastPlaylistSongs=[]}setConfig(t){if(!t.entity)throw new Error("You need to define an entity");const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}connectedCallback(){super.connectedCallback(),this._progressInterval=setInterval(()=>{"playing"===this._entity?.state&&this.requestUpdate()},1e3)}disconnectedCallback(){super.disconnectedCallback(),this._progressInterval&&(clearInterval(this._progressInterval),this._progressInterval=null)}set hass(t){this._hass=t;const e=this.config.entity;if(this._entity=t.states[e],this._entity){this._playlists=this._entity.attributes.source_list||[];const t=this._entity.attributes.playlist,e=this._entity.attributes.playlist_songs||[];t&&"Queue"!==t&&e.length>0&&(this._lastPlaylist=t,this._lastPlaylistSongs=e),this._songs=e.length>0?e:this._lastPlaylistSongs,this._queue=this._entity.attributes.queue||[]}}render(){return this._entity?(this._entity.state,this._entity.state,this._entity.state,B`
+ */class nt extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new J(e.insertBefore(T(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return I}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const rt={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1},custom:{}};class lt extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_entity:{type:Object},_playlists:{type:Array},_songs:{type:Array},_queue:{type:Array},_songsExpanded:{type:Boolean},_queueExpanded:{type:Boolean},_toast:{type:Object},_contextMenu:{type:Object}}}constructor(){super(),this._playlists=[],this._songs=[],this._queue=[],this._songsExpanded=!1,this._queueExpanded=!1,this._toast=null,this._contextMenu=null,this._longPressTimer=null,this._progressInterval=null,this._lastPlaylist=null,this._lastPlaylistSongs=[]}setConfig(t){if(!t.entity)throw new Error("You need to define an entity");const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}connectedCallback(){super.connectedCallback(),this._progressInterval=setInterval(()=>{"playing"===this._entity?.state&&this.requestUpdate()},1e3)}disconnectedCallback(){super.disconnectedCallback(),this._progressInterval&&(clearInterval(this._progressInterval),this._progressInterval=null)}set hass(t){this._hass=t;const e=this.config.entity;if(this._entity=t.states[e],this._entity){this._playlists=this._entity.attributes.source_list||[];const t=this._entity.attributes.playlist,e=this._entity.attributes.playlist_songs||[];t&&"Queue"!==t&&e.length>0&&(this._lastPlaylist=t,this._lastPlaylistSongs=e),this._songs=e.length>0?e:this._lastPlaylistSongs,this._queue=this._entity.attributes.queue||[]}}render(){return this._entity?(this._entity.state,this._entity.state,this._entity.state,B`
       <ha-card>
         <div class="card-content">
+          ${this.config.showEntityName?this._renderEntityName():""}
           ${this._renderNowPlaying()}
           ${this._renderProgressBar()}
           ${this._renderPlaybackControls()}
@@ -40,7 +41,12 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             <p>Entity ${this.config.entity} not found</p>
           </div>
         </ha-card>
-      `}_renderNowPlaying(){const t=this._entity.attributes.playlist||"No playlist",e=this._entity.attributes.song||"No song";return B`
+      `}_renderEntityName(){const t=this._entity.attributes.friendly_name||this._entity.entity_id;return B`
+      <div class="entity-name">
+        <ha-icon icon="mdi:lightbulb-group"></ha-icon>
+        <span>${t}</span>
+      </div>
+    `}_renderNowPlaying(){const t=this._entity.attributes.playlist||"No playlist",e=this._entity.attributes.song||"No song";return B`
       <div class="now-playing">
         <div class="playlist-name">${t}</div>
         <div class="song-name">${e}</div>
@@ -139,18 +145,18 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             `)}
         </div>
       </div>
-    `}_renderQueue(){const t=this.config.queueDisplay;if("auto"===t&&0===this._queue.length)return"";if("hidden"===t)return"";const e="collapsed"===t&&!this._queueExpanded,i=this._queue.length;return B`
+    `}_renderQueue(){const t=this.config.queueDisplay,e=this._queue.length;if(0===e)return"";if("auto"===t&&0===e)return"";if("hidden"===t)return"";const i="collapsed"===t&&!this._queueExpanded;return B`
       <div class="section queue-section">
         <div class="section-header" @click=${this._toggleQueue}>
           <h3>
             <ha-icon icon="mdi:format-list-numbered"></ha-icon>
             Queue
-            ${i>0?B`<span class="badge">${i}</span>`:""}
+            ${e>0?B`<span class="badge">${e}</span>`:""}
           </h3>
           ${"collapsed"===t?B`<ha-icon icon=${this._queueExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
         </div>
 
-        ${!e&&i>0?B`
+        ${i?"":B`
               <div class="queue-list">
                 ${this._queue.map((t,e)=>B`
                     <div class="queue-item">
@@ -166,14 +172,6 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
                 <ha-icon icon="mdi:playlist-remove"></ha-icon>
                 Clear Queue
               </button>
-            `:""}
-
-        ${e||0!==i?"":B`
-              <div class="empty-state">
-                <ha-icon icon="mdi:playlist-plus"></ha-icon>
-                <p>Queue is empty</p>
-                <p class="hint">Tap "Add to Queue" on any song</p>
-              </div>
             `}
       </div>
     `}_renderSongs(){const t=this.config.songsDisplay;if("hidden"===t)return"";const e="collapsed"===t&&!this._songsExpanded,i=this._songs.length,s=this._entity.attributes.song;return B`
@@ -287,8 +285,23 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         color: var(--error-color);
       }
 
+      .entity-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+      }
+
+      .entity-name ha-icon {
+        --mdc-icon-size: 20px;
+        color: var(--primary-color);
+      }
+
       .now-playing {
-        text-align: center;
+        text-align: left;
         margin-bottom: 8px;
       }
 
@@ -341,17 +354,17 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
       }
 
       .playback-controls ha-icon-button {
-        --mdc-icon-button-size: 48px;
-        --mdc-icon-size: 32px;
+        --mdc-icon-button-size: 40px;
+        --mdc-icon-size: 28px;
       }
 
       .playback-controls .play-pause {
-        --mdc-icon-button-size: 64px;
-        --mdc-icon-size: 48px;
+        --mdc-icon-button-size: 56px;
+        --mdc-icon-size: 40px;
       }
 
       .volume-control {
@@ -835,6 +848,17 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
     `}_renderAppearanceTab(){return B`
       <div class="tab-content">
         <h3>Visual Options</h3>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.config.showEntityName||!1}
+              @change=${t=>this._checkboxChanged("showEntityName",t)}
+            />
+            Show entity name header
+          </label>
+        </div>
 
         <div class="form-group checkbox">
           <label>

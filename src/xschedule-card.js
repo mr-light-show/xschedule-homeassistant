@@ -16,6 +16,7 @@ const MODE_PRESETS = {
     showProgressBar: true,
     showPlaybackControls: true,
     enableSeek: false,
+    showEntityName: false,
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -26,6 +27,7 @@ const MODE_PRESETS = {
     showPlaybackControls: true,
     showSongActions: true,
     enableSeek: false,
+    showEntityName: false,
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -36,6 +38,7 @@ const MODE_PRESETS = {
     showPlaybackControls: true,
     showSongActions: true,
     enableSeek: false,
+    showEntityName: false,
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -45,6 +48,7 @@ const MODE_PRESETS = {
     showProgressBar: true,
     showPlaybackControls: true,
     enableSeek: false,
+    showEntityName: false,
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -165,6 +169,7 @@ class XScheduleCard extends LitElement {
     return html`
       <ha-card>
         <div class="card-content">
+          ${this.config.showEntityName ? this._renderEntityName() : ''}
           ${this._renderNowPlaying()}
           ${this._renderProgressBar()}
           ${this._renderPlaybackControls()}
@@ -176,6 +181,17 @@ class XScheduleCard extends LitElement {
         ${this._toast ? this._renderToast() : ''}
         ${this._contextMenu ? this._renderContextMenu() : ''}
       </ha-card>
+    `;
+  }
+
+  _renderEntityName() {
+    const friendlyName = this._entity.attributes.friendly_name || this._entity.entity_id;
+
+    return html`
+      <div class="entity-name">
+        <ha-icon icon="mdi:lightbulb-group"></ha-icon>
+        <span>${friendlyName}</span>
+      </div>
     `;
   }
 
@@ -354,9 +370,15 @@ class XScheduleCard extends LitElement {
 
   _renderQueue() {
     const displayMode = this.config.queueDisplay;
+    const queueCount = this._queue.length;
+
+    // Hide completely if queue is empty
+    if (queueCount === 0) {
+      return '';
+    }
 
     // Auto mode: hidden if empty, expanded if has items
-    if (displayMode === 'auto' && this._queue.length === 0) {
+    if (displayMode === 'auto' && queueCount === 0) {
       return '';
     }
     if (displayMode === 'hidden') {
@@ -364,7 +386,6 @@ class XScheduleCard extends LitElement {
     }
 
     const isCollapsed = displayMode === 'collapsed' && !this._queueExpanded;
-    const queueCount = this._queue.length;
 
     return html`
       <div class="section queue-section">
@@ -379,7 +400,7 @@ class XScheduleCard extends LitElement {
             : ''}
         </div>
 
-        ${!isCollapsed && queueCount > 0
+        ${!isCollapsed
           ? html`
               <div class="queue-list">
                 ${this._queue.map(
@@ -398,16 +419,6 @@ class XScheduleCard extends LitElement {
                 <ha-icon icon="mdi:playlist-remove"></ha-icon>
                 Clear Queue
               </button>
-            `
-          : ''}
-
-        ${!isCollapsed && queueCount === 0
-          ? html`
-              <div class="empty-state">
-                <ha-icon icon="mdi:playlist-plus"></ha-icon>
-                <p>Queue is empty</p>
-                <p class="hint">Tap "Add to Queue" on any song</p>
-              </div>
             `
           : ''}
       </div>
@@ -776,8 +787,23 @@ class XScheduleCard extends LitElement {
         color: var(--error-color);
       }
 
+      .entity-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+      }
+
+      .entity-name ha-icon {
+        --mdc-icon-size: 20px;
+        color: var(--primary-color);
+      }
+
       .now-playing {
-        text-align: center;
+        text-align: left;
         margin-bottom: 8px;
       }
 
@@ -830,17 +856,17 @@ class XScheduleCard extends LitElement {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
       }
 
       .playback-controls ha-icon-button {
-        --mdc-icon-button-size: 48px;
-        --mdc-icon-size: 32px;
+        --mdc-icon-button-size: 40px;
+        --mdc-icon-size: 28px;
       }
 
       .playback-controls .play-pause {
-        --mdc-icon-button-size: 64px;
-        --mdc-icon-size: 48px;
+        --mdc-icon-button-size: 56px;
+        --mdc-icon-size: 40px;
       }
 
       .volume-control {
