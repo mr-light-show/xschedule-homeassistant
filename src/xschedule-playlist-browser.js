@@ -29,6 +29,45 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._initialFetchDone = false; // Track if we've done the initial fetch
     this._expandedPlaylist = null; // Track which playlist is expanded
     this._playlistSongs = {}; // Cache of songs for each playlist
+    this._updateInterval = null; // Timer for periodic updates
+    this._lastFetchTime = null; // Track when we last fetched schedules
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Update every minute to refresh relative time displays
+    this._updateInterval = setInterval(() => {
+      this.requestUpdate();
+
+      // Re-fetch schedules every hour or if day has changed
+      if (this._shouldRefetchSchedules()) {
+        this._fetchScheduleInfo();
+      }
+    }, 60000); // 60 seconds
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._updateInterval) {
+      clearInterval(this._updateInterval);
+      this._updateInterval = null;
+    }
+  }
+
+  _shouldRefetchSchedules() {
+    if (!this._lastFetchTime) return false;
+
+    const now = new Date();
+    const lastFetch = new Date(this._lastFetchTime);
+
+    // Re-fetch if more than 1 hour has passed
+    const hoursPassed = (now - lastFetch) / (1000 * 60 * 60);
+    if (hoursPassed >= 1) return true;
+
+    // Re-fetch if day has changed (crossing midnight)
+    if (now.getDate() !== lastFetch.getDate()) return true;
+
+    return false;
   }
 
   setConfig(config) {
@@ -78,6 +117,7 @@ class XSchedulePlaylistBrowser extends LitElement {
 
   async _fetchScheduleInfo() {
     this._loading = true;
+    this._lastFetchTime = new Date();
     const newSchedules = {};
 
 
@@ -186,7 +226,6 @@ class XSchedulePlaylistBrowser extends LitElement {
             <ha-icon icon="mdi:playlist-music"></ha-icon>
             xSchedule Playlists
           </h1>
-          ${this._renderSortSelector()}
         </div>
 
         <div class="card-content ${this.config.compact_mode ? 'compact' : ''}">
@@ -200,19 +239,6 @@ class XSchedulePlaylistBrowser extends LitElement {
             : this._renderPlaylists()}
         </div>
       </ha-card>
-    `;
-  }
-
-  _renderSortSelector() {
-    return html`
-      <select
-        class="sort-select"
-        .value=${this.config.sort_by}
-        @change=${this._handleSortChange}
-      >
-        <option value="schedule">By Schedule</option>
-        <option value="alphabetical">Alphabetical</option>
-      </select>
     `;
   }
 
@@ -482,14 +508,6 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
   }
 
-  _handleSortChange(e) {
-    this.config = {
-      ...this.config,
-      sort_by: e.target.value,
-    };
-    this.requestUpdate();
-  }
-
   getCardSize() {
     return this.config.compact_mode ? 4 : 6;
   }
@@ -519,16 +537,6 @@ class XSchedulePlaylistBrowser extends LitElement {
         margin: 0;
         font-size: 1.2em;
         font-weight: 600;
-      }
-
-      .sort-select {
-        padding: 8px 12px;
-        font-size: 0.9em;
-        border: 1px solid var(--divider-color);
-        border-radius: 6px;
-        background: var(--card-background-color);
-        color: var(--primary-text-color);
-        cursor: pointer;
       }
 
       .card-content {
@@ -716,10 +724,6 @@ class XSchedulePlaylistBrowser extends LitElement {
           flex-direction: column;
           align-items: stretch;
           gap: 12px;
-        }
-
-        .sort-select {
-          width: 100%;
         }
 
         .schedule-info {
