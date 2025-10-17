@@ -15,6 +15,7 @@ const MODE_PRESETS = {
     showVolumeControl: false,
     showProgressBar: true,
     showPlaybackControls: true,
+    enableSeek: false,
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -24,6 +25,7 @@ const MODE_PRESETS = {
     showProgressBar: true,
     showPlaybackControls: true,
     showSongActions: true,
+    enableSeek: false,
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -33,6 +35,7 @@ const MODE_PRESETS = {
     showProgressBar: true,
     showPlaybackControls: true,
     showSongActions: true,
+    enableSeek: false,
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -41,6 +44,7 @@ const MODE_PRESETS = {
     showVolumeControl: false,
     showProgressBar: true,
     showPlaybackControls: true,
+    enableSeek: false,
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -219,7 +223,10 @@ class XScheduleCard extends LitElement {
 
     return html`
       <div class="progress-container">
-        <div class="progress-bar">
+        <div
+          class="progress-bar ${this.config.enableSeek ? 'seekable' : ''}"
+          @click=${this.config.enableSeek ? this._handleSeek : null}
+        >
           <div class="progress-fill" style="width: ${progress}%"></div>
         </div>
         <div class="time-display">
@@ -553,6 +560,16 @@ class XScheduleCard extends LitElement {
     this._callService('media_previous_track');
   }
 
+  _handleSeek(e) {
+    const progressBar = e.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const duration = this._entity.attributes.media_duration || 0;
+    const position = duration * percent;
+
+    this._callService('media_seek', { seek_position: position });
+  }
+
   _handleVolumeChange(e) {
     const volume = parseInt(e.target.value) / 100;
     this._callService('volume_set', { volume_level: volume });
@@ -789,6 +806,10 @@ class XScheduleCard extends LitElement {
         border-radius: 3px;
         position: relative;
         overflow: hidden;
+      }
+
+      .progress-bar.seekable {
+        cursor: pointer;
       }
 
       .progress-fill {

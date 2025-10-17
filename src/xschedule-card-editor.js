@@ -284,11 +284,12 @@ class XScheduleCardEditor extends LitElement {
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showSeekBar !== false}
-              @change=${(e) => this._checkboxChanged('showSeekBar', e)}
+              .checked=${this.config.enableSeek || false}
+              @change=${(e) => this._checkboxChanged('enableSeek', e)}
             />
-            Show seek bar
+            Enable seek on progress bar
           </label>
+          <div class="hint">Allow clicking progress bar to seek to position</div>
         </div>
       </div>
     `;
