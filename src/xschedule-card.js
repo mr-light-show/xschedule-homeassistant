@@ -144,8 +144,8 @@ class XScheduleCard extends LitElement {
     this._entity = hass.states[entityId];
 
     if (this._entity) {
-      // Extract playlists from source_list
-      this._playlists = this._entity.attributes.source_list || [];
+      // Extract playlists from source_list and sort alphabetically
+      this._playlists = (this._entity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
 
       const currentPlaylist = this._entity.attributes.playlist;
       const playlistSongs = this._entity.attributes.playlist_songs || [];
@@ -210,6 +210,11 @@ class XScheduleCard extends LitElement {
   }
 
   _renderNowPlaying() {
+    // Don't show now playing if both queue and songs are empty
+    if (this._queue.length === 0 && this._songs.length === 0) {
+      return '';
+    }
+
     const playlist = this._entity.attributes.playlist || 'No playlist';
     const song = this._entity.attributes.song || 'No song';
 
@@ -223,6 +228,11 @@ class XScheduleCard extends LitElement {
 
   _renderProgressBar() {
     if (!this.config.showProgressBar) return '';
+
+    // Don't show progress bar if both queue and songs are empty
+    if (this._queue.length === 0 && this._songs.length === 0) {
+      return '';
+    }
 
     const duration = this._entity.attributes.media_duration;
     const basePosition = this._entity.attributes.media_position;
@@ -1255,7 +1265,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.1-pre  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.1-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
