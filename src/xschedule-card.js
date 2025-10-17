@@ -172,7 +172,7 @@ class XScheduleCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="card-content">
+        <div class="card-content ${this.config.compactMode ? 'compact' : ''}">
           ${this.config.showEntityName ? this._renderEntityName() : ''}
           ${this._renderNowPlaying()}
           ${this._renderProgressBar()}
@@ -466,7 +466,7 @@ class XScheduleCard extends LitElement {
                     >
                       ${song.name === currentSong ? html`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
                       <span class="song-name">${song.name}</span>
-                      ${song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
+                      ${this.config.showDuration !== false && song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
                       ${this.config.showSongActions !== false
                         ? html`
                             <div class="song-actions">
@@ -614,8 +614,8 @@ class XScheduleCard extends LitElement {
       return;
     }
 
-    // Confirm if something is playing
-    if (this._entity.state === 'playing') {
+    // Confirm if something is playing and confirmDisruptive is enabled
+    if (this.config.confirmDisruptive !== false && this._entity.state === 'playing') {
       if (!confirm('Replace current song?')) {
         return;
       }
@@ -781,6 +781,14 @@ class XScheduleCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 16px;
+      }
+
+      .card-content.compact {
+        gap: 12px;
+      }
+
+      .card-content.compact ha-card {
+        padding: 12px;
       }
 
       .error {
