@@ -18,6 +18,9 @@ const MODE_PRESETS = {
     enableSeek: false,
     showEntityName: false,
     showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -30,6 +33,8 @@ const MODE_PRESETS = {
     enableSeek: false,
     showEntityName: false,
     showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -42,6 +47,8 @@ const MODE_PRESETS = {
     enableSeek: false,
     showEntityName: false,
     showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -53,6 +60,9 @@ const MODE_PRESETS = {
     enableSeek: false,
     showEntityName: false,
     showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -467,23 +477,31 @@ class XScheduleCard extends LitElement {
                       ${song.name === currentSong ? html`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
                       <span class="song-name">${song.name}</span>
                       ${this.config.showDuration !== false && song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
-                      ${this.config.showSongActions !== false
+                      ${(this.config.showSongActions !== false || this.config.showPlayButton !== false || this.config.showAddToQueueButton !== false)
                         ? html`
                             <div class="song-actions">
-                              <button
-                                @click=${() => this._playSong(song.name)}
-                                class="action-btn-compact"
-                                title="Play Now"
-                              >
-                                <ha-icon icon="mdi:play"></ha-icon>
-                              </button>
-                              <button
-                                @click=${() => this._addToQueue(song.name)}
-                                class="action-btn-compact"
-                                title="Add to Queue"
-                              >
-                                <ha-icon icon="mdi:playlist-plus"></ha-icon>
-                              </button>
+                              ${this.config.showPlayButton !== false
+                                ? html`
+                                    <button
+                                      @click=${() => this._playSong(song.name)}
+                                      class="action-btn-compact"
+                                      title="Play Now"
+                                    >
+                                      <ha-icon icon="mdi:play"></ha-icon>
+                                    </button>
+                                  `
+                                : ''}
+                              ${this.config.showAddToQueueButton !== false
+                                ? html`
+                                    <button
+                                      @click=${() => this._addToQueue(song.name)}
+                                      class="action-btn-compact"
+                                      title="Add to Queue"
+                                    >
+                                      <ha-icon icon="mdi:playlist-plus"></ha-icon>
+                                    </button>
+                                  `
+                                : ''}
                             </div>
                           `
                         : ''}

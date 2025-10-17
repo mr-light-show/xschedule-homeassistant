@@ -246,7 +246,29 @@ class XScheduleCardEditor extends LitElement {
               .checked=${this.config.showSongActions !== false}
               @change=${(e) => this._checkboxChanged('showSongActions', e)}
             />
-            Show song actions (Play Now, Add to Queue buttons)
+            Show song actions (enable both buttons below)
+          </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label style="padding-left: 20px;">
+            <input
+              type="checkbox"
+              .checked=${this.config.showPlayButton !== false}
+              @change=${(e) => this._checkboxChanged('showPlayButton', e)}
+            />
+            Show "Play Now" button
+          </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label style="padding-left: 20px;">
+            <input
+              type="checkbox"
+              .checked=${this.config.showAddToQueueButton !== false}
+              @change=${(e) => this._checkboxChanged('showAddToQueueButton', e)}
+            />
+            Show "Add to Queue" button
           </label>
         </div>
 
