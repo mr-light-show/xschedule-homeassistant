@@ -73,6 +73,7 @@ class XScheduleCard extends LitElement {
     this._toast = null;
     this._contextMenu = null;
     this._longPressTimer = null;
+    this._progressInterval = null;
   }
 
   setConfig(config) {
@@ -90,6 +91,25 @@ class XScheduleCard extends LitElement {
       ...modePreset,
       ...config, // User config overrides preset
     };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Start progress bar update interval (every second)
+    this._progressInterval = setInterval(() => {
+      if (this._entity?.state === 'playing') {
+        this.requestUpdate();
+      }
+    }, 1000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up interval
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+      this._progressInterval = null;
+    }
   }
 
   set hass(hass) {
@@ -844,7 +864,7 @@ class XScheduleCard extends LitElement {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px;
+        padding: 8px 12px;
         border-radius: 8px;
         background: var(--primary-background-color);
         cursor: pointer;
@@ -974,22 +994,25 @@ class XScheduleCard extends LitElement {
 
       .empty-state {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         gap: 8px;
-        padding: 24px;
+        padding: 8px 12px;
         color: var(--secondary-text-color);
-        text-align: center;
       }
 
       .empty-state ha-icon {
-        --mdc-icon-size: 48px;
+        --mdc-icon-size: 20px;
         opacity: 0.5;
       }
 
+      .empty-state p {
+        margin: 0;
+        font-size: 0.9em;
+      }
+
       .empty-state .hint {
-        font-size: 0.85em;
-        opacity: 0.7;
+        display: none;
       }
 
       .toast {
