@@ -49,17 +49,25 @@ class XSchedulePlaylistBrowser extends LitElement {
     const entityId = this.config.entity;
     this._entity = hass.states[entityId];
 
+    console.log('xSchedule Playlist Browser: hass setter called, entity:', this._entity);
+
     if (this._entity) {
       // Extract playlists from source_list
       const newSourceList = this._entity.attributes.source_list || [];
 
+      console.log('xSchedule Playlist Browser: newSourceList:', newSourceList);
+      console.log('xSchedule Playlist Browser: _lastSourceList:', this._lastSourceList);
+
       // Only fetch schedule info if source_list has changed
       const sourceListChanged = JSON.stringify(this._lastSourceList) !== JSON.stringify(newSourceList);
+
+      console.log('xSchedule Playlist Browser: sourceListChanged:', sourceListChanged);
 
       if (sourceListChanged) {
         this._playlists = newSourceList;
         this._lastSourceList = [...newSourceList]; // Store copy for comparison
 
+        console.log('xSchedule Playlist Browser: Calling _fetchScheduleInfo()');
         // Fetch schedule information for each playlist
         this._fetchScheduleInfo();
       }
