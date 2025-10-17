@@ -193,8 +193,19 @@ class XScheduleCard extends LitElement {
     const duration = this._entity.attributes.media_duration;
     const basePosition = this._entity.attributes.media_position;
 
+    // Debug logging
+    console.log('xSchedule Card - Progress Bar Debug:', {
+      duration,
+      basePosition,
+      state: this._entity.state,
+      allAttributes: Object.keys(this._entity.attributes)
+    });
+
     // Don't show progress bar if we don't have valid duration data
-    if (!duration || duration <= 0) return '';
+    if (!duration || duration <= 0) {
+      console.log('xSchedule Card - No valid duration, hiding progress bar');
+      return '';
+    }
 
     // Calculate current position based on media_position and when it was last updated
     let position = basePosition || 0;
