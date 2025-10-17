@@ -102,7 +102,42 @@ class XSchedulePlaylistBrowser extends LitElement {
         console.log(`xSchedule Playlist Browser: Response for "${playlist}":`, response);
 
         if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
-          const schedule = response.response.schedules[0]; // Use first schedule
+          const schedules = response.response.schedules;
+          console.log(`xSchedule Playlist Browser: Found ${schedules.length} schedules for "${playlist}"`);
+
+          // Find the best schedule to display:
+          // 1. Currently active schedule (active: "TRUE" or nextactive: "NOW!")
+          // 2. Soonest upcoming schedule (earliest valid date)
+          let schedule = null;
+
+          // First, look for active schedule
+          const activeSchedule = schedules.find(s => s.active === "TRUE" || s.nextactive === "NOW!");
+          if (activeSchedule) {
+            schedule = activeSchedule;
+            console.log(`xSchedule Playlist Browser: Using active schedule for "${playlist}":`, schedule.name);
+          } else {
+            // Find soonest upcoming schedule (skip "A long time from now" and invalid dates)
+            const upcomingSchedules = schedules
+              .filter(s => {
+                const na = s.nextactive;
+                return na && na !== "A long time from now" && na !== "N/A" && na.match(/\d{4}-\d{2}-\d{2}/);
+              })
+              .sort((a, b) => {
+                // Sort by nextactive date (earliest first)
+                return new Date(a.nextactive) - new Date(b.nextactive);
+              });
+
+            schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
+            if (schedule) {
+              console.log(`xSchedule Playlist Browser: Using soonest schedule for "${playlist}":`, schedule.name, schedule.nextactive);
+            }
+          }
+
+          if (!schedule) {
+            console.log(`xSchedule Playlist Browser: No valid schedule found for "${playlist}"`);
+            continue; // Skip this playlist
+          }
+
           console.log(`xSchedule Playlist Browser: Schedule object for "${playlist}":`, schedule);
           console.log(`xSchedule Playlist Browser: Schedule keys:`, Object.keys(schedule));
 
