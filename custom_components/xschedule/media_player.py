@@ -168,15 +168,25 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         # Update position and duration
         if "position" in data:
-            # Convert milliseconds to seconds
-            self._attr_media_position = data["position"] / 1000
+            # Convert milliseconds to seconds (handle both int and string)
+            try:
+                self._attr_media_position = int(data["position"]) / 1000
+            except (ValueError, TypeError):
+                self._attr_media_position = 0
 
         if "length" in data:
-            # Convert milliseconds to seconds
-            self._attr_media_duration = data["length"] / 1000
+            # Convert milliseconds to seconds (handle both int and string)
+            try:
+                self._attr_media_duration = int(data["length"]) / 1000
+            except (ValueError, TypeError):
+                self._attr_media_duration = 0
 
         if "left" in data:
-            self._time_remaining = data["left"] / 1000
+            # Convert milliseconds to seconds (handle both int and string)
+            try:
+                self._time_remaining = int(data["left"]) / 1000
+            except (ValueError, TypeError):
+                self._time_remaining = 0
 
         # Schedule entity update (only if entity has been added to hass)
         if self.hass and self.entity_id:

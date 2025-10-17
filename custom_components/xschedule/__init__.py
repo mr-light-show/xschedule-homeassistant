@@ -220,8 +220,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Copy cards to www and get timestamps for cache busting
     timestamps = await _copy_cards_to_www(hass)
 
-    # Register frontend resources with cache-busting timestamps
-    await _register_frontend_resources(hass, timestamps)
+    # Delay resource registration until Home Assistant is fully started
+    # This ensures Lovelace resources are loaded before we try to register
+    async def register_resources_when_ready(event):
+        """Register resources after Home Assistant has started."""
+        _LOGGER.warning("xSchedule: Home Assistant started, now registering frontend resources")
+        await _register_frontend_resources(hass, timestamps)
+
+    hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
