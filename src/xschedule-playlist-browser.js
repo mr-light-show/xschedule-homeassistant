@@ -303,18 +303,41 @@ class XSchedulePlaylistBrowser extends LitElement {
     const currentPlaylist = this._entity.attributes.playlist;
 
     if (this.config.sort_by === 'schedule') {
-      // Sort by schedule: playing first, then by next active time, then alphabetically
+      // Sort by schedule:
+      // 1. Currently playing playlist (from media player state)
+      // 2. Active schedules (nextActiveTime === "NOW!")
+      // 3. Upcoming schedules (by time)
+      // 4. No schedules (alphabetically)
       return playlists.sort((a, b) => {
         // Currently playing always first
         if (a === currentPlaylist) return -1;
         if (b === currentPlaylist) return 1;
 
-        // Then by schedule time
         const scheduleA = this._playlistSchedules[a];
         const scheduleB = this._playlistSchedules[b];
 
+        const isActiveA = scheduleA?.nextActiveTime === "NOW!";
+        const isActiveB = scheduleB?.nextActiveTime === "NOW!";
+
+        // Active schedules (NOW!) come next
+        if (isActiveA && !isActiveB) return -1;
+        if (!isActiveA && isActiveB) return 1;
+
+        // Both active or both not active - sort by schedule time
         if (scheduleA?.nextActiveTime && scheduleB?.nextActiveTime) {
-          return new Date(scheduleA.nextActiveTime) - new Date(scheduleB.nextActiveTime);
+          // Skip unparseable values
+          const parseableA = scheduleA.nextActiveTime !== "A long time from now" &&
+                            scheduleA.nextActiveTime !== "N/A" &&
+                            scheduleA.nextActiveTime !== "NOW!";
+          const parseableB = scheduleB.nextActiveTime !== "A long time from now" &&
+                            scheduleB.nextActiveTime !== "N/A" &&
+                            scheduleB.nextActiveTime !== "NOW!";
+
+          if (parseableA && parseableB) {
+            return new Date(scheduleA.nextActiveTime) - new Date(scheduleB.nextActiveTime);
+          }
+          if (parseableA) return -1;
+          if (parseableB) return 1;
         }
         if (scheduleA?.nextActiveTime) return -1;
         if (scheduleB?.nextActiveTime) return 1;
