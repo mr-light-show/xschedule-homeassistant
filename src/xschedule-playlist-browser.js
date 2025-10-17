@@ -15,6 +15,8 @@ class XSchedulePlaylistBrowser extends LitElement {
       _playlists: { type: Array },
       _playlistSchedules: { type: Object },
       _loading: { type: Boolean },
+      _expandedPlaylist: { type: String },
+      _playlistSongs: { type: Object },
     };
   }
 
@@ -25,6 +27,8 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._loading = true;
     this._lastSourceList = null; // Track last source_list to detect changes
     this._initialFetchDone = false; // Track if we've done the initial fetch
+    this._expandedPlaylist = null; // Track which playlist is expanded
+    this._playlistSongs = {}; // Cache of songs for each playlist
   }
 
   setConfig(config) {
@@ -237,18 +241,24 @@ class XSchedulePlaylistBrowser extends LitElement {
   _renderPlaylistItem(playlistName, isPlaying) {
     const scheduleInfo = this._playlistSchedules[playlistName];
     const hasSchedule = scheduleInfo && scheduleInfo.nextActiveTime;
+    const isExpanded = this._expandedPlaylist === playlistName;
 
     return html`
-      <div class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''}">
-        <div class="playlist-header">
+      <div class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''} ${isExpanded ? 'expanded' : ''}">
+        <div class="playlist-header" @click=${() => this._togglePlaylist(playlistName)}>
           <ha-icon
             icon=${isPlaying ? 'mdi:play-circle' : hasSchedule ? 'mdi:clock-outline' : 'mdi:playlist-music'}
             class="playlist-icon"
           ></ha-icon>
           <div class="playlist-name">${playlistName}</div>
+          <ha-icon
+            icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+            class="expand-icon"
+          ></ha-icon>
         </div>
 
         ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
+        ${isExpanded ? this._renderSongList(playlistName) : ''}
       </div>
     `;
   }
@@ -387,6 +397,95 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
 
+  async _togglePlaylist(playlistName) {
+    if (this._expandedPlaylist === playlistName) {
+      // Collapse if already expanded
+      this._expandedPlaylist = null;
+    } else {
+      // Expand and fetch songs if not cached
+      this._expandedPlaylist = playlistName;
+
+      if (!this._playlistSongs[playlistName]) {
+        await this._fetchPlaylistSongs(playlistName);
+      }
+    }
+    this.requestUpdate();
+  }
+
+  async _fetchPlaylistSongs(playlistName) {
+    try {
+      const response = await this._hass.callWS({
+        type: 'call_service',
+        domain: 'xschedule',
+        service: 'get_playlist_steps',
+        service_data: {
+          entity_id: this.config.entity,
+          playlist: playlistName,
+        },
+        return_response: true,
+      });
+
+      if (response && response.response && response.response.steps) {
+        this._playlistSongs[playlistName] = response.response.steps;
+        this.requestUpdate();
+      }
+    } catch (err) {
+      console.error(`Failed to fetch songs for ${playlistName}:`, err);
+      this._playlistSongs[playlistName] = [];
+    }
+  }
+
+  _renderSongList(playlistName) {
+    const songs = this._playlistSongs[playlistName];
+
+    if (!songs) {
+      return html`
+        <div class="song-list loading">
+          <ha-circular-progress active size="small"></ha-circular-progress>
+        </div>
+      `;
+    }
+
+    if (songs.length === 0) {
+      return html`
+        <div class="song-list empty">
+          <p>No songs in this playlist</p>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="song-list">
+        ${songs.map((song) => html`
+          <div class="song-item-compact">
+            <span class="song-name-compact">${song.name}</span>
+            <button
+              class="add-queue-btn-compact"
+              @click=${(e) => this._addSongToQueue(e, playlistName, song.name)}
+              title="Add to queue"
+            >
+              <ha-icon icon="mdi:playlist-plus"></ha-icon>
+            </button>
+          </div>
+        `)}
+      </div>
+    `;
+  }
+
+  async _addSongToQueue(e, playlistName, songName) {
+    e.stopPropagation(); // Prevent playlist toggle
+
+    try {
+      await this._hass.callService('xschedule', 'add_to_queue', {
+        entity_id: this.config.entity,
+        playlist: playlistName,
+        song: songName,
+      });
+    } catch (err) {
+      console.error('Failed to add to queue:', err);
+    }
+  }
+
   _handleSortChange(e) {
     this.config = {
       ...this.config,
@@ -493,6 +592,7 @@ class XSchedulePlaylistBrowser extends LitElement {
         display: flex;
         align-items: center;
         gap: 12px;
+        cursor: pointer;
       }
 
       .playlist-icon {
@@ -507,6 +607,13 @@ class XSchedulePlaylistBrowser extends LitElement {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .expand-icon {
+        --mdc-icon-size: 20px;
+        flex-shrink: 0;
+        opacity: 0.7;
+        transition: transform 0.2s;
       }
 
       .playlist-info-line {
@@ -531,6 +638,82 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       .playlist-item.playing .playlist-info-line.schedule-time {
         color: rgba(255, 255, 255, 0.8);
+      }
+
+      .song-list {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--divider-color);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .song-list.loading,
+      .song-list.empty {
+        padding: 12px;
+        text-align: center;
+        color: var(--secondary-text-color);
+      }
+
+      .song-item-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        background: var(--card-background-color);
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .song-item-compact:hover {
+        background: var(--secondary-background-color);
+      }
+
+      .song-name-compact {
+        flex: 1;
+        font-size: 0.9em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .add-queue-btn-compact {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+
+      .add-queue-btn-compact:hover {
+        background: var(--dark-primary-color);
+      }
+
+      .add-queue-btn-compact ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .playlist-item.playing .song-list {
+        border-top-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .playlist-item.playing .song-item-compact {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playlist-item.playing .song-item-compact:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .playlist-item.playing .song-name-compact {
+        color: white;
       }
 
       @media (max-width: 768px) {
