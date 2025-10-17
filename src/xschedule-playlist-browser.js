@@ -251,13 +251,13 @@ class XSchedulePlaylistBrowser extends LitElement {
             class="playlist-icon"
           ></ha-icon>
           <div class="playlist-name">${playlistName}</div>
+          ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
           <ha-icon
             icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
             class="expand-icon"
           ></ha-icon>
         </div>
 
-        ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
         ${isExpanded ? this._renderSongList(playlistName) : ''}
       </div>
     `;
@@ -268,9 +268,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     // Check both isPlaying (current playlist) AND nextActiveTime === "NOW!" (schedule is active)
     if (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!")) {
       return html`
-        <div class="playlist-info-line playing-status">
-          [Playing]
-        </div>
+        <span class="schedule-info playing-status">[Playing]</span>
       `;
     }
 
@@ -282,9 +280,7 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
       return html`
-        <div class="playlist-info-line schedule-time">
-          [${timeStr}]
-        </div>
+        <span class="schedule-info schedule-time">[${timeStr}]</span>
       `;
     }
 
@@ -616,27 +612,26 @@ class XSchedulePlaylistBrowser extends LitElement {
         transition: transform 0.2s;
       }
 
-      .playlist-info-line {
-        font-size: 0.9em;
-        margin-top: 4px;
-        margin-left: 36px;
-        text-align: right;
+      .schedule-info {
+        font-size: 0.85em;
+        margin-left: 8px;
+        white-space: nowrap;
       }
 
-      .playlist-info-line.playing-status {
+      .schedule-info.playing-status {
         color: var(--accent-color);
         font-weight: 600;
       }
 
-      .playlist-item.playing .playlist-info-line.playing-status {
+      .playlist-item.playing .schedule-info.playing-status {
         color: white;
       }
 
-      .playlist-info-line.schedule-time {
+      .schedule-info.schedule-time {
         color: var(--secondary-text-color);
       }
 
-      .playlist-item.playing .playlist-info-line.schedule-time {
+      .playlist-item.playing .schedule-info.schedule-time {
         color: rgba(255, 255, 255, 0.8);
       }
 
@@ -727,8 +722,12 @@ class XSchedulePlaylistBrowser extends LitElement {
           width: 100%;
         }
 
-        .playlist-info-line {
-          font-size: 0.85em;
+        .schedule-info {
+          font-size: 0.75em;
+        }
+
+        .playlist-name {
+          font-size: 0.95em;
         }
       }
     `;

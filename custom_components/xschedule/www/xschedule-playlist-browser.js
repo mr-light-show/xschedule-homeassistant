@@ -71,23 +71,19 @@ const A=globalThis,x=A.trustedTypes,S=x?x.createPolicy("lit-html",{createHTML:t=
             class="playlist-icon"
           ></ha-icon>
           <div class="playlist-name">${t}</div>
+          ${this._renderScheduleInfo(e,i)}
           <ha-icon
             icon=${o?"mdi:chevron-up":"mdi:chevron-down"}
             class="expand-icon"
           ></ha-icon>
         </div>
 
-        ${this._renderScheduleInfo(e,i)}
         ${o?this._renderSongList(t):""}
       </div>
     `}_renderScheduleInfo(t,e){if(t||e&&"NOW!"===e.nextActiveTime)return B`
-        <div class="playlist-info-line playing-status">
-          [Playing]
-        </div>
+        <span class="schedule-info playing-status">[Playing]</span>
       `;if(e&&e.nextActiveTime){if("A long time from now"===e.nextActiveTime||"N/A"===e.nextActiveTime)return"";const t=this._formatScheduleTime(e.nextActiveTime);return B`
-        <div class="playlist-info-line schedule-time">
-          [${t}]
-        </div>
+        <span class="schedule-info schedule-time">[${t}]</span>
       `}return""}_getSortedPlaylists(){const t=[...this._playlists],e=this._entity.attributes.playlist;return"schedule"===this.config.sort_by?t.sort((t,i)=>{if(t===e)return-1;if(i===e)return 1;const s=this._playlistSchedules[t],o=this._playlistSchedules[i],n="NOW!"===s?.nextActiveTime,r="NOW!"===o?.nextActiveTime;if(n&&!r)return-1;if(!n&&r)return 1;if(s?.nextActiveTime&&o?.nextActiveTime){const t="A long time from now"!==s.nextActiveTime&&"N/A"!==s.nextActiveTime&&"NOW!"!==s.nextActiveTime,e="A long time from now"!==o.nextActiveTime&&"N/A"!==o.nextActiveTime&&"NOW!"!==o.nextActiveTime;if(t&&e)return new Date(s.nextActiveTime)-new Date(o.nextActiveTime);if(t)return-1;if(e)return 1}return s?.nextActiveTime?-1:o?.nextActiveTime?1:t.localeCompare(i)}):t.sort((t,i)=>t===e?-1:i===e?1:t.localeCompare(i))}_formatScheduleTime(t){const e=new Date(t),i=e-new Date,s=Math.ceil(i/864e5),o=e.getHours(),n=o>=12?"PM":"AM",r=`${o%12||12}:${e.getMinutes().toString().padStart(2,"0")} ${n}`;if(0===s)return`Today ${r}`;if(1===s)return`Tomorrow ${r}`;if(s<=7){return`${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][e.getDay()]} ${r}`}return`${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][e.getMonth()]} ${e.getDate()} ${r}`}_formatDuration(t){if(!t)return"0:00";const e=Math.floor(t/3600),i=Math.floor(t%3600/60),s=Math.floor(t%60);return e>0?`${e}:${i.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`:`${i}:${s.toString().padStart(2,"0")}`}async _togglePlaylist(t){this._expandedPlaylist===t?this._expandedPlaylist=null:(this._expandedPlaylist=t,this._playlistSongs[t]||await this._fetchPlaylistSongs(t)),this.requestUpdate()}async _fetchPlaylistSongs(t){try{const e=await this._hass.callWS({type:"call_service",domain:"xschedule",service:"get_playlist_steps",service_data:{entity_id:this.config.entity,playlist:t},return_response:!0});e&&e.response&&e.response.steps&&(this._playlistSongs[t]=e.response.steps,this.requestUpdate())}catch(e){console.error(`Failed to fetch songs for ${t}:`,e),this._playlistSongs[t]=[]}}_renderSongList(t){const e=this._playlistSongs[t];return e?0===e.length?B`
         <div class="song-list empty">
           <p>No songs in this playlist</p>
@@ -228,27 +224,26 @@ const A=globalThis,x=A.trustedTypes,S=x?x.createPolicy("lit-html",{createHTML:t=
         transition: transform 0.2s;
       }
 
-      .playlist-info-line {
-        font-size: 0.9em;
-        margin-top: 4px;
-        margin-left: 36px;
-        text-align: right;
+      .schedule-info {
+        font-size: 0.85em;
+        margin-left: 8px;
+        white-space: nowrap;
       }
 
-      .playlist-info-line.playing-status {
+      .schedule-info.playing-status {
         color: var(--accent-color);
         font-weight: 600;
       }
 
-      .playlist-item.playing .playlist-info-line.playing-status {
+      .playlist-item.playing .schedule-info.playing-status {
         color: white;
       }
 
-      .playlist-info-line.schedule-time {
+      .schedule-info.schedule-time {
         color: var(--secondary-text-color);
       }
 
-      .playlist-item.playing .playlist-info-line.schedule-time {
+      .playlist-item.playing .schedule-info.schedule-time {
         color: rgba(255, 255, 255, 0.8);
       }
 
@@ -339,8 +334,12 @@ const A=globalThis,x=A.trustedTypes,S=x?x.createPolicy("lit-html",{createHTML:t=
           width: 100%;
         }
 
-        .playlist-info-line {
-          font-size: 0.85em;
+        .schedule-info {
+          font-size: 0.75em;
+        }
+
+        .playlist-name {
+          font-size: 0.95em;
         }
       }
     `}}customElements.define("xschedule-playlist-browser-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object}}}setConfig(t){this.config=t}_valueChanged(t){if(!this.config||!this.hass)return;const e=t.target,i="checkbox"===e.type?e.checked:e.value;if(this.config[e.configValue]===i)return;const s={...this.config,[e.configValue]:i},o=new CustomEvent("config-changed",{detail:{config:s},bubbles:!0,composed:!0});this.dispatchEvent(o)}render(){if(!this.hass||!this.config)return B``;const t=Object.keys(this.hass.states).filter(t=>t.startsWith("media_player.")&&(void 0!==this.hass.states[t].attributes.playlist_songs||t.includes("xschedule"))).sort();return B`
