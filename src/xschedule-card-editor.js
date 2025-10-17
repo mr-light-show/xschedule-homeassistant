@@ -243,8 +243,10 @@ class XScheduleCardEditor extends LitElement {
           <label>
             <input
               type="checkbox"
+              id="songActionsParent"
               .checked=${this.config.showSongActions !== false}
-              @change=${(e) => this._checkboxChanged('showSongActions', e)}
+              .indeterminate=${this._getSongActionsIndeterminate()}
+              @change=${(e) => this._songActionsParentChanged(e)}
             />
             Show song actions (enable both buttons below)
           </label>
@@ -255,7 +257,7 @@ class XScheduleCardEditor extends LitElement {
             <input
               type="checkbox"
               .checked=${this.config.showPlayButton !== false}
-              @change=${(e) => this._checkboxChanged('showPlayButton', e)}
+              @change=${(e) => this._songActionsChildChanged('showPlayButton', e)}
             />
             Show "Play Now" button
           </label>
@@ -266,7 +268,7 @@ class XScheduleCardEditor extends LitElement {
             <input
               type="checkbox"
               .checked=${this.config.showAddToQueueButton !== false}
-              @change=${(e) => this._checkboxChanged('showAddToQueueButton', e)}
+              @change=${(e) => this._songActionsChildChanged('showAddToQueueButton', e)}
             />
             Show "Add to Queue" button
           </label>
@@ -437,6 +439,44 @@ class XScheduleCardEditor extends LitElement {
 
   _checkboxChanged(key, e) {
     this._updateConfig({ [key]: e.target.checked });
+  }
+
+  _songActionsParentChanged(e) {
+    // When parent checkbox changes, update both children
+    const checked = e.target.checked;
+    this._updateConfig({
+      showSongActions: checked,
+      showPlayButton: checked,
+      showAddToQueueButton: checked
+    });
+  }
+
+  _songActionsChildChanged(key, e) {
+    // Update the child checkbox
+    const updates = { [key]: e.target.checked };
+
+    // Update parent based on children states
+    const showPlayButton = key === 'showPlayButton' ? e.target.checked : (this.config.showPlayButton !== false);
+    const showAddToQueueButton = key === 'showAddToQueueButton' ? e.target.checked : (this.config.showAddToQueueButton !== false);
+
+    if (showPlayButton && showAddToQueueButton) {
+      // Both checked - parent should be checked
+      updates.showSongActions = true;
+    } else if (!showPlayButton && !showAddToQueueButton) {
+      // Both unchecked - parent should be unchecked
+      updates.showSongActions = false;
+    } else {
+      // Mixed state - keep parent checked but we'll show indeterminate
+      updates.showSongActions = true;
+    }
+
+    this._updateConfig(updates);
+  }
+
+  _getSongActionsIndeterminate() {
+    const showPlayButton = this.config.showPlayButton !== false;
+    const showAddToQueueButton = this.config.showAddToQueueButton !== false;
+    return showPlayButton !== showAddToQueueButton;
   }
 
   _resetToDefaults() {
