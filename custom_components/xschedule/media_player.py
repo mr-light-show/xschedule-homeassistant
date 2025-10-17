@@ -169,11 +169,15 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._attr_media_title = data["step"]
 
         # Update position and duration
+        _LOGGER.info("WebSocket data keys: %s", list(data.keys()))
+        _LOGGER.info("WebSocket data position: %s, length: %s", data.get("position"), data.get("length"))
+
         if "position" in data:
             # Convert milliseconds to seconds (handle both int and string)
             try:
                 self._attr_media_position = int(data["position"]) / 1000
                 self._attr_media_position_updated_at = dt_util.utcnow()
+                _LOGGER.info("Set media_position to %s seconds", self._attr_media_position)
             except (ValueError, TypeError):
                 self._attr_media_position = 0
                 self._attr_media_position_updated_at = dt_util.utcnow()
@@ -182,6 +186,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # Convert milliseconds to seconds (handle both int and string)
             try:
                 self._attr_media_duration = int(data["length"]) / 1000
+                _LOGGER.info("Set media_duration to %s seconds", self._attr_media_duration)
             except (ValueError, TypeError):
                 self._attr_media_duration = 0
 
