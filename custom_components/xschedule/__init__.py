@@ -229,14 +229,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         song = call.data["song"]
 
         for entity_id in entity_ids:
-            entity = hass.states.get(entity_id)
-            if entity and entity.platform == DOMAIN:
-                # Get the media player entity
-                component = hass.data.get("media_player")
-                if component:
-                    entity_obj = component.get_entity(entity_id)
-                    if entity_obj and hasattr(entity_obj, "async_play_song"):
-                        await entity_obj.async_play_song(playlist, song)
+            # Get the media player entity directly from the component
+            component = hass.data.get("media_player")
+            if component:
+                entity_obj = component.get_entity(entity_id)
+                if entity_obj and hasattr(entity_obj, "async_play_song"):
+                    await entity_obj.async_play_song(playlist, song)
 
     async def async_add_to_queue(call: ServiceCall) -> None:
         """Handle add_to_queue service call."""
@@ -257,14 +255,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_ids = call.data["entity_id"]
 
         for entity_id in entity_ids:
-            entity = hass.states.get(entity_id)
-            if entity and entity.platform == DOMAIN:
-                # Get the media player entity
-                component = hass.data.get("media_player")
-                if component:
-                    entity_obj = component.get_entity(entity_id)
-                    if entity_obj and hasattr(entity_obj, "async_clear_queue"):
-                        await entity_obj.async_clear_queue()
+            # Get the media player entity directly from the component
+            component = hass.data.get("media_player")
+            if component:
+                entity_obj = component.get_entity(entity_id)
+                if entity_obj and hasattr(entity_obj, "async_clear_queue"):
+                    await entity_obj.async_clear_queue()
 
     async def async_get_playlist_schedules(call: ServiceCall) -> dict[str, Any]:
         """Handle get_playlist_schedules service call."""
