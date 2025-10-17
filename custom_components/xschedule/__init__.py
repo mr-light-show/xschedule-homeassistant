@@ -145,41 +145,53 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
             _LOGGER.warning("Resources does not have async_create_item method")
             return
 
+        # Get existing resources once (async_items() is not actually async, it returns a list)
+        if callable(resources.async_items):
+            existing = resources.async_items()
+        else:
+            existing = []
+
+        _LOGGER.debug("Found %d existing resources", len(existing))
+
         for card in cards:
             # Check if already registered (check base URL without timestamp)
             base_url = card["url"].split("?")[0]
             already_registered = False
+            resources_to_delete = []
 
-            # Get existing resources (async_items() is not actually async, it returns a list)
-            if callable(resources.async_items):
-                existing = resources.async_items()
-            else:
-                existing = []
-
-            _LOGGER.debug("Found %d existing resources", len(existing))
-
-            # Find and update/remove old entries with different timestamps
+            # Find matching resources (our cards only)
             for existing_resource in existing:
                 existing_url = existing_resource.get("url", "")
                 existing_base = existing_url.split("?")[0]
 
                 if existing_base == base_url:
-                    # Remove old entry if timestamp changed
-                    if existing_url != card["url"]:
-                        if hasattr(resources, "async_delete_item"):
-                            resource_id = existing_resource.get("id")
-                            await resources.async_delete_item(resource_id)
-                            _LOGGER.info("Removed old resource: %s (id: %s)", existing_url, resource_id)
-                    else:
+                    # Check if this is exactly the same URL (including timestamp)
+                    if existing_url == card["url"]:
                         # Already registered with correct timestamp
                         _LOGGER.info("Resource already registered with correct timestamp: %s", card["url"])
                         already_registered = True
-                        break
+                    else:
+                        # Old entry with different timestamp - mark for deletion
+                        resources_to_delete.append(existing_resource)
+
+            # Delete old entries BEFORE adding new one
+            if resources_to_delete and hasattr(resources, "async_delete_item"):
+                for old_resource in resources_to_delete:
+                    resource_id = old_resource.get("id")
+                    old_url = old_resource.get("url", "")
+                    try:
+                        await resources.async_delete_item(resource_id)
+                        _LOGGER.info("Removed old resource: %s (id: %s)", old_url, resource_id)
+                    except Exception as del_err:
+                        _LOGGER.warning("Failed to delete old resource %s: %s", old_url, del_err)
 
             # Add the resource if not already registered
             if not already_registered:
-                await resources.async_create_item(card)
-                _LOGGER.info("Successfully registered lovelace resource: %s", card["url"])
+                try:
+                    await resources.async_create_item(card)
+                    _LOGGER.info("Successfully registered lovelace resource: %s", card["url"])
+                except Exception as add_err:
+                    _LOGGER.error("Failed to register resource %s: %s", card["url"], add_err)
 
         _LOGGER.info("Frontend resource registration completed")
 
