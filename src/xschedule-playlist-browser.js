@@ -103,6 +103,8 @@ class XSchedulePlaylistBrowser extends LitElement {
 
         if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
           const schedule = response.response.schedules[0]; // Use first schedule
+          console.log(`xSchedule Playlist Browser: Schedule object for "${playlist}":`, schedule);
+          console.log(`xSchedule Playlist Browser: Schedule keys:`, Object.keys(schedule));
 
           // Calculate total duration from playlist steps
           const stepsResponse = await this._hass.callWS({
