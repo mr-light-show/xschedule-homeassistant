@@ -17,6 +17,7 @@ const MODE_PRESETS = {
     showPlaybackControls: true,
     enableSeek: false,
     showEntityName: false,
+    showPlaylistName: false,
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -28,6 +29,7 @@ const MODE_PRESETS = {
     showSongActions: true,
     enableSeek: false,
     showEntityName: false,
+    showPlaylistName: false,
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -39,6 +41,7 @@ const MODE_PRESETS = {
     showSongActions: true,
     enableSeek: false,
     showEntityName: false,
+    showPlaylistName: false,
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -49,6 +52,7 @@ const MODE_PRESETS = {
     showPlaybackControls: true,
     enableSeek: false,
     showEntityName: false,
+    showPlaylistName: false,
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -201,7 +205,7 @@ class XScheduleCard extends LitElement {
 
     return html`
       <div class="now-playing">
-        <div class="playlist-name">${playlist}</div>
+        ${this.config.showPlaylistName ? html`<div class="playlist-name">${playlist}</div>` : ''}
         <div class="song-name">${song}</div>
       </div>
     `;

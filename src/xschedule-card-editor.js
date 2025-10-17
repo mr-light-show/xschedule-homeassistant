@@ -221,6 +221,17 @@ class XScheduleCardEditor extends LitElement {
           <label>
             <input
               type="checkbox"
+              .checked=${this.config.showPlaylistName || false}
+              @change=${(e) => this._checkboxChanged('showPlaylistName', e)}
+            />
+            Show playlist name
+          </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
               .checked=${this.config.showProgressBar !== false}
               @change=${(e) => this._checkboxChanged('showProgressBar', e)}
             />
