@@ -168,32 +168,27 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         if "step" in data:
             self._attr_media_title = data["step"]
 
-        # Update position and duration
-        _LOGGER.info("WebSocket data keys: %s", list(data.keys()))
-        _LOGGER.info("WebSocket data position: %s, length: %s", data.get("position"), data.get("length"))
-
-        if "position" in data:
+        # Update position and duration (use millisecond fields)
+        if "positionms" in data:
             # Convert milliseconds to seconds (handle both int and string)
             try:
-                self._attr_media_position = int(data["position"]) / 1000
+                self._attr_media_position = int(data["positionms"]) / 1000
                 self._attr_media_position_updated_at = dt_util.utcnow()
-                _LOGGER.info("Set media_position to %s seconds", self._attr_media_position)
             except (ValueError, TypeError):
                 self._attr_media_position = 0
                 self._attr_media_position_updated_at = dt_util.utcnow()
 
-        if "length" in data:
+        if "lengthms" in data:
             # Convert milliseconds to seconds (handle both int and string)
             try:
-                self._attr_media_duration = int(data["length"]) / 1000
-                _LOGGER.info("Set media_duration to %s seconds", self._attr_media_duration)
+                self._attr_media_duration = int(data["lengthms"]) / 1000
             except (ValueError, TypeError):
                 self._attr_media_duration = 0
 
-        if "left" in data:
+        if "leftms" in data:
             # Convert milliseconds to seconds (handle both int and string)
             try:
-                self._time_remaining = int(data["left"]) / 1000
+                self._time_remaining = int(data["leftms"]) / 1000
             except (ValueError, TypeError):
                 self._time_remaining = 0
 
