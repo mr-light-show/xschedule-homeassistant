@@ -190,10 +190,14 @@ class XScheduleCard extends LitElement {
   _renderProgressBar() {
     if (!this.config.showProgressBar) return '';
 
-    const duration = this._entity.attributes.media_duration || 0;
+    const duration = this._entity.attributes.media_duration;
+    const basePosition = this._entity.attributes.media_position;
+
+    // Don't show progress bar if we don't have valid duration data
+    if (!duration || duration <= 0) return '';
 
     // Calculate current position based on media_position and when it was last updated
-    let position = this._entity.attributes.media_position || 0;
+    let position = basePosition || 0;
 
     // If playing, calculate current position based on elapsed time since last update
     if (this._entity.state === 'playing') {
@@ -211,7 +215,7 @@ class XScheduleCard extends LitElement {
       }
     }
 
-    const progress = duration > 0 ? (position / duration) * 100 : 0;
+    const progress = (position / duration) * 100;
 
     return html`
       <div class="progress-container">
@@ -780,17 +784,17 @@ class XScheduleCard extends LitElement {
       }
 
       .progress-bar {
-        height: 8px;
-        background: rgba(128, 128, 128, 0.3);
-        border-radius: 4px;
+        height: 6px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.2));
+        border-radius: 3px;
         position: relative;
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        background: var(--primary-color, #03a9f4);
-        border-radius: 4px;
+        background: var(--accent-color, var(--primary-color, #03a9f4));
+        border-radius: 3px;
         transition: width 0.1s linear;
       }
 

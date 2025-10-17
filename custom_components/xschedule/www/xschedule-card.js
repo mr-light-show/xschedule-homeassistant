@@ -45,13 +45,13 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         <div class="playlist-name">${t}</div>
         <div class="song-name">${e}</div>
       </div>
-    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";const t=this._entity.attributes.media_duration||0;let e=this._entity.attributes.media_position||0;if("playing"===this._entity.state){const i=this._entity.attributes.media_position_updated_at;if(i){const s=new Date(i);e+=(new Date-s)/1e3,e>t&&(e=t)}}return B`
+    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position;if(!t||t<=0)return"";let i=e||0;if("playing"===this._entity.state){const e=this._entity.attributes.media_position_updated_at;if(e){const s=new Date(e);i+=(new Date-s)/1e3,i>t&&(i=t)}}return B`
       <div class="progress-container">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: ${t>0?e/t*100:0}%"></div>
+          <div class="progress-fill" style="width: ${i/t*100}%"></div>
         </div>
         <div class="time-display">
-          <span>${this._formatTime(e)}</span>
+          <span>${this._formatTime(i)}</span>
           <span>${this._formatTime(t)}</span>
         </div>
       </div>
@@ -309,17 +309,17 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
       }
 
       .progress-bar {
-        height: 8px;
-        background: rgba(128, 128, 128, 0.3);
-        border-radius: 4px;
+        height: 6px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.2));
+        border-radius: 3px;
         position: relative;
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        background: var(--primary-color, #03a9f4);
-        border-radius: 4px;
+        background: var(--accent-color, var(--primary-color, #03a9f4));
+        border-radius: 3px;
         transition: width 0.1s linear;
       }
 
