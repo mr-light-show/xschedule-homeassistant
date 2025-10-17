@@ -24,6 +24,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlistSchedules = {};
     this._loading = true;
     this._lastSourceList = null; // Track last source_list to detect changes
+    this._initialFetchDone = false; // Track if we've done the initial fetch
   }
 
   setConfig(config) {
@@ -57,15 +58,19 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       console.log('xSchedule Playlist Browser: newSourceList:', newSourceList);
       console.log('xSchedule Playlist Browser: _lastSourceList:', this._lastSourceList);
+      console.log('xSchedule Playlist Browser: _initialFetchDone:', this._initialFetchDone);
 
-      // Only fetch schedule info if source_list has changed
+      // Fetch on initial load OR when source_list has changed
       const sourceListChanged = JSON.stringify(this._lastSourceList) !== JSON.stringify(newSourceList);
+      const shouldFetch = !this._initialFetchDone || sourceListChanged;
 
       console.log('xSchedule Playlist Browser: sourceListChanged:', sourceListChanged);
+      console.log('xSchedule Playlist Browser: shouldFetch:', shouldFetch);
 
-      if (sourceListChanged) {
+      if (shouldFetch && newSourceList.length > 0) {
         this._playlists = newSourceList;
         this._lastSourceList = [...newSourceList]; // Store copy for comparison
+        this._initialFetchDone = true;
 
         console.log('xSchedule Playlist Browser: Calling _fetchScheduleInfo()');
         // Fetch schedule information for each playlist
