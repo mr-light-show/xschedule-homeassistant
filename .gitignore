@@ -149,3 +149,8 @@ yarn.lock
 release/
 *.zip
 *.tar.gz
+
+# Development documentation
+DEVELOPMENT_PROMPT.md
+ENHANCEMENTS_SUMMARY.md
+IMPLEMENTATION_SUMMARY.md
