@@ -210,13 +210,21 @@ class XScheduleCard extends LitElement {
   }
 
   _renderNowPlaying() {
-    // Don't show now playing if both queue and songs are empty
-    if (this._queue.length === 0 && this._songs.length === 0) {
+    // Don't show now playing if player is idle or no content available
+    const isIdle = this._entity.state === 'idle' ||
+                   this._entity.state === 'off' ||
+                   this._entity.state === 'unavailable' ||
+                   this._entity.state === 'unknown';
+
+    const song = this._entity.attributes.song;
+    const hasNoSong = !song || song === '' || song === 'No song';
+
+    // Hide if idle, no song, or both queue and songs are empty
+    if (isIdle || hasNoSong || (this._queue.length === 0 && this._songs.length === 0)) {
       return '';
     }
 
     const playlist = this._entity.attributes.playlist || 'No playlist';
-    const song = this._entity.attributes.song || 'No song';
 
     return html`
       <div class="now-playing">
@@ -229,8 +237,14 @@ class XScheduleCard extends LitElement {
   _renderProgressBar() {
     if (!this.config.showProgressBar) return '';
 
-    // Don't show progress bar if both queue and songs are empty
-    if (this._queue.length === 0 && this._songs.length === 0) {
+    // Don't show progress bar if player is idle or no content available
+    const isIdle = this._entity.state === 'idle' ||
+                   this._entity.state === 'off' ||
+                   this._entity.state === 'unavailable' ||
+                   this._entity.state === 'unknown';
+
+    // Hide if idle or both queue and songs are empty
+    if (isIdle || (this._queue.length === 0 && this._songs.length === 0)) {
       return '';
     }
 
@@ -1265,7 +1279,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.1-pre2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.1-pre3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
