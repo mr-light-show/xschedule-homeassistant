@@ -210,26 +210,31 @@ class XScheduleCard extends LitElement {
   }
 
   _renderNowPlaying() {
-    // Don't show now playing if player is idle or no content available
+    // Get attributes without fallback text
+    const playlist = this._entity.attributes.playlist;
+    const song = this._entity.attributes.song;
+
+    // Check validity - hide "No playlist" and "No song" placeholders
+    const hasValidPlaylist = playlist && playlist !== '' && playlist !== 'No playlist';
+    const hasValidSong = song && song !== '' && song !== 'No song';
+
+    // Check if player is idle
     const isIdle = this._entity.state === 'idle' ||
                    this._entity.state === 'off' ||
                    this._entity.state === 'unavailable' ||
                    this._entity.state === 'unknown';
 
-    const song = this._entity.attributes.song;
-    const hasNoSong = !song || song === '' || song === 'No song';
-
-    // Hide if idle, no song, or both queue and songs are empty
-    if (isIdle || hasNoSong || (this._queue.length === 0 && this._songs.length === 0)) {
+    // Hide entire section if idle OR (no valid content AND queue/songs are empty)
+    if (isIdle || (!hasValidPlaylist && !hasValidSong) ||
+        (this._queue.length === 0 && this._songs.length === 0)) {
       return '';
     }
 
-    const playlist = this._entity.attributes.playlist || 'No playlist';
-
     return html`
       <div class="now-playing">
-        ${this.config.showPlaylistName ? html`<div class="playlist-name">${playlist}</div>` : ''}
-        <div class="song-name">${song}</div>
+        ${this.config.showPlaylistName && hasValidPlaylist ?
+          html`<div class="playlist-name">${playlist}</div>` : ''}
+        ${hasValidSong ? html`<div class="song-name">${song}</div>` : ''}
       </div>
     `;
   }
@@ -1279,7 +1284,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.1  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.0.2-pre  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
