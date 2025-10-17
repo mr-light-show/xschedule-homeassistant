@@ -151,11 +151,17 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         else:
             existing = []
 
-        _LOGGER.debug("Found %d existing resources", len(existing))
+        _LOGGER.warning("xSchedule: Found %d existing resources total", len(existing))
+
+        # Log all existing resources for debugging
+        for idx, res in enumerate(existing):
+            _LOGGER.warning("xSchedule: Existing resource #%d: %s (id: %s)", idx, res.get("url", ""), res.get("id", ""))
 
         for card in cards:
             # Check if already registered (check base URL without timestamp)
             base_url = card["url"].split("?")[0]
+            _LOGGER.warning("xSchedule: Processing card: %s (base: %s)", card["url"], base_url)
+
             already_registered = False
             resources_to_delete = []
 
@@ -164,14 +170,19 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 existing_url = existing_resource.get("url", "")
                 existing_base = existing_url.split("?")[0]
 
+                _LOGGER.warning("xSchedule: Comparing existing '%s' (base: '%s') with card base '%s'",
+                              existing_url, existing_base, base_url)
+
                 if existing_base == base_url:
+                    _LOGGER.warning("xSchedule: MATCH FOUND! existing_base == base_url")
                     # Check if this is exactly the same URL (including timestamp)
                     if existing_url == card["url"]:
                         # Already registered with correct timestamp
-                        _LOGGER.info("Resource already registered with correct timestamp: %s", card["url"])
+                        _LOGGER.warning("xSchedule: Resource already registered with correct timestamp: %s", card["url"])
                         already_registered = True
                     else:
                         # Old entry with different timestamp - mark for deletion
+                        _LOGGER.warning("xSchedule: Marking for deletion (timestamp mismatch): %s", existing_url)
                         resources_to_delete.append(existing_resource)
 
             # Delete old entries BEFORE adding new one
@@ -181,17 +192,17 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                     old_url = old_resource.get("url", "")
                     try:
                         await resources.async_delete_item(resource_id)
-                        _LOGGER.info("Removed old resource: %s (id: %s)", old_url, resource_id)
+                        _LOGGER.warning("xSchedule: DELETED resource: %s (id: %s)", old_url, resource_id)
                     except Exception as del_err:
-                        _LOGGER.warning("Failed to delete old resource %s: %s", old_url, del_err)
+                        _LOGGER.warning("xSchedule: Failed to delete old resource %s: %s", old_url, del_err)
 
             # Add the resource if not already registered
             if not already_registered:
                 try:
                     await resources.async_create_item(card)
-                    _LOGGER.info("Successfully registered lovelace resource: %s", card["url"])
+                    _LOGGER.warning("xSchedule: ADDED new resource: %s", card["url"])
                 except Exception as add_err:
-                    _LOGGER.error("Failed to register resource %s: %s", card["url"], add_err)
+                    _LOGGER.error("xSchedule: Failed to register resource %s: %s", card["url"], add_err)
 
         _LOGGER.info("Frontend resource registration completed")
 
