@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from datetime import datetime
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -15,6 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .api_client import XScheduleAPIClient, XScheduleAPIError
 from .const import (
@@ -171,8 +173,10 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # Convert milliseconds to seconds (handle both int and string)
             try:
                 self._attr_media_position = int(data["position"]) / 1000
+                self._attr_media_position_updated_at = dt_util.utcnow()
             except (ValueError, TypeError):
                 self._attr_media_position = 0
+                self._attr_media_position_updated_at = dt_util.utcnow()
 
         if "length" in data:
             # Convert milliseconds to seconds (handle both int and string)

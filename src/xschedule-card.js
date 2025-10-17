@@ -74,6 +74,8 @@ class XScheduleCard extends LitElement {
     this._contextMenu = null;
     this._longPressTimer = null;
     this._progressInterval = null;
+    this._lastPlaylist = null;
+    this._lastPlaylistSongs = [];
   }
 
   setConfig(config) {
@@ -123,8 +125,17 @@ class XScheduleCard extends LitElement {
       // Extract playlists from source_list
       this._playlists = this._entity.attributes.source_list || [];
 
-      // Extract songs from current playlist
-      this._songs = this._entity.attributes.playlist_songs || [];
+      const currentPlaylist = this._entity.attributes.playlist;
+      const playlistSongs = this._entity.attributes.playlist_songs || [];
+
+      // Remember the last playlist and its songs when not playing from queue
+      if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
+        this._lastPlaylist = currentPlaylist;
+        this._lastPlaylistSongs = playlistSongs;
+      }
+
+      // Extract songs - use current playlist songs if available, otherwise use last known playlist songs
+      this._songs = playlistSongs.length > 0 ? playlistSongs : this._lastPlaylistSongs;
 
       // Extract queue
       this._queue = this._entity.attributes.queue || [];
@@ -179,8 +190,27 @@ class XScheduleCard extends LitElement {
   _renderProgressBar() {
     if (!this.config.showProgressBar) return '';
 
-    const position = this._entity.attributes.media_position || 0;
     const duration = this._entity.attributes.media_duration || 0;
+
+    // Calculate current position based on media_position and when it was last updated
+    let position = this._entity.attributes.media_position || 0;
+
+    // If playing, calculate current position based on elapsed time since last update
+    if (this._entity.state === 'playing') {
+      const updatedAt = this._entity.attributes.media_position_updated_at;
+      if (updatedAt) {
+        const lastUpdate = new Date(updatedAt);
+        const now = new Date();
+        const elapsed = (now - lastUpdate) / 1000; // Convert to seconds
+        position = position + elapsed;
+
+        // Don't exceed duration
+        if (position > duration) {
+          position = duration;
+        }
+      }
+    }
+
     const progress = duration > 0 ? (position / duration) * 100 : 0;
 
     return html`
