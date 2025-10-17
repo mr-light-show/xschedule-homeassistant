@@ -70,7 +70,6 @@ class XScheduleAPIClient:
     ) -> Any:
         """Make HTTP request to xSchedule API."""
         session = await self._get_session()
-        url = f"{self._base_url}/{endpoint}"
 
         # Add password if configured
         if params is None:
@@ -78,9 +77,23 @@ class XScheduleAPIClient:
         if self.password:
             params["Pass"] = self._get_password_hash()
 
+        # Build URL manually with pre-encoded parameters
+        # We do this because xSchedule requires %20 for spaces, not +
+        # Parameters dict already has pre-encoded values from query()/command()
+        url = f"{self._base_url}/{endpoint}"
+        if params:
+            # Build query string manually to preserve our encoding
+            query_parts = []
+            for key, value in params.items():
+                # Value is already encoded if it came from query()/command()
+                # Don't encode again
+                query_parts.append(f"{key}={value}")
+            url = f"{url}?{'&'.join(query_parts)}"
+
         try:
             async with asyncio.timeout(timeout):
-                async with session.get(url, params=params) as response:
+                # Don't pass params - URL already has query string
+                async with session.get(url) as response:
                     response.raise_for_status()
                     data = await response.json()
 
