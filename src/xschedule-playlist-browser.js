@@ -55,6 +55,11 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
   _shouldRefetchSchedules() {
+    // If we have playlists but no schedule data, retry (likely HA startup issue)
+    if (this._playlists.length > 0 && Object.keys(this._playlistSchedules).length === 0) {
+      return true;
+    }
+
     if (!this._lastFetchTime) return false;
 
     const now = new Date();
@@ -116,8 +121,10 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
   async _fetchScheduleInfo() {
+    // Don't fetch if already in progress
+    if (this._loading) return;
+
     this._loading = true;
-    this._lastFetchTime = new Date();
     const newSchedules = {};
 
 
@@ -203,6 +210,13 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     this._playlistSchedules = newSchedules;
+
+    // Only set last fetch time if we got at least some schedule data
+    // This allows retries if all fetches failed (e.g., during HA startup)
+    if (Object.keys(newSchedules).length > 0) {
+      this._lastFetchTime = new Date();
+    }
+
     this._loading = false;
     this.requestUpdate();
   }
@@ -374,16 +388,17 @@ class XSchedulePlaylistBrowser extends LitElement {
     const date = new Date(timeStr);
     const now = new Date();
 
-    // Calculate days difference
-    const diffTime = date - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     // Format time in 12-hour format
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const hours12 = hours % 12 || 12;
     const timeFormatted = `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+
+    // Normalize dates to midnight for accurate day comparison
+    const dateDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((dateDate - nowDate) / (1000 * 60 * 60 * 24));
 
     // Same day
     if (diffDays === 0) {
@@ -395,8 +410,13 @@ class XSchedulePlaylistBrowser extends LitElement {
       return `Tomorrow ${timeFormatted}`;
     }
 
+    // Yesterday (in case of past schedules)
+    if (diffDays === -1) {
+      return `Yesterday ${timeFormatted}`;
+    }
+
     // Within a week (show day name)
-    if (diffDays <= 7) {
+    if (diffDays > 0 && diffDays <= 7) {
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       return `${dayNames[date.getDay()]} ${timeFormatted}`;
     }
