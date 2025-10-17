@@ -24,7 +24,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     super();
     this._playlists = [];
     this._playlistSchedules = {};
-    this._loading = true;
+    this._loading = false;
     this._lastSourceList = null; // Track last source_list to detect changes
     this._initialFetchDone = false; // Track if we've done the initial fetch
     this._expandedPlaylist = null; // Track which playlist is expanded
@@ -940,7 +940,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 0.0.45  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 0.0.47  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

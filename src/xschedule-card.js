@@ -1255,7 +1255,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 0.0.45  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 0.0.47  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
