@@ -112,10 +112,16 @@ class XSchedulePlaylistBrowser extends LitElement {
       if (shouldFetch && newSourceList.length > 0) {
         this._playlists = newSourceList;
         this._lastSourceList = [...newSourceList]; // Store copy for comparison
-        this._initialFetchDone = true;
 
-        // Fetch schedule information for each playlist
-        this._fetchScheduleInfo();
+        // On first fetch, add a delay to wait for HA services to be ready
+        if (!this._initialFetchDone) {
+          this._initialFetchDone = true;
+          // Wait 5 seconds for Home Assistant to fully start up before fetching schedules
+          setTimeout(() => this._fetchScheduleInfo(), 5000);
+        } else {
+          // Source list changed after initial load, fetch immediately
+          this._fetchScheduleInfo();
+        }
       }
     }
   }
@@ -125,63 +131,17 @@ class XSchedulePlaylistBrowser extends LitElement {
     if (this._loading) return;
 
     this._loading = true;
-    const newSchedules = {};
 
+    try {
+      const newSchedules = {};
 
-    // Fetch schedule info for each playlist
-    for (const playlist of this._playlists) {
-      try {
-        const response = await this._hass.callWS({
-          type: 'call_service',
-          domain: 'xschedule',
-          service: 'get_playlist_schedules',
-          service_data: {
-            entity_id: this.config.entity,
-            playlist: playlist,
-          },
-          return_response: true,
-        });
-
-
-        if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
-          const schedules = response.response.schedules;
-
-          // Find the best schedule to display:
-          // 1. Currently active schedule (active: "TRUE" or nextactive: "NOW!")
-          // 2. Soonest upcoming schedule (earliest valid date)
-          let schedule = null;
-
-          // First, look for active schedule
-          const activeSchedule = schedules.find(s => s.active === "TRUE" || s.nextactive === "NOW!");
-          if (activeSchedule) {
-            schedule = activeSchedule;
-          } else {
-            // Find soonest upcoming schedule (skip "A long time from now" and invalid dates)
-            const upcomingSchedules = schedules
-              .filter(s => {
-                const na = s.nextactive;
-                return na && na !== "A long time from now" && na !== "N/A" && na.match(/\d{4}-\d{2}-\d{2}/);
-              })
-              .sort((a, b) => {
-                // Sort by nextactive date (earliest first)
-                return new Date(a.nextactive) - new Date(b.nextactive);
-              });
-
-            schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
-            if (schedule) {
-            }
-          }
-
-          if (!schedule) {
-            continue; // Skip this playlist
-          }
-
-
-          // Calculate total duration from playlist steps
-          const stepsResponse = await this._hass.callWS({
+      // Fetch schedule info for each playlist
+      for (const playlist of this._playlists) {
+        try {
+          const response = await this._hass.callWS({
             type: 'call_service',
             domain: 'xschedule',
-            service: 'get_playlist_steps',
+            service: 'get_playlist_schedules',
             service_data: {
               entity_id: this.config.entity,
               playlist: playlist,
@@ -189,36 +149,85 @@ class XSchedulePlaylistBrowser extends LitElement {
             return_response: true,
           });
 
-          let totalDuration = 0;
-          if (stepsResponse && stepsResponse.response && stepsResponse.response.steps) {
-            totalDuration = stepsResponse.response.steps.reduce(
-              (sum, step) => sum + (step.duration || 0),
-              0
-            );
+
+          if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
+            const schedules = response.response.schedules;
+
+            // Find the best schedule to display:
+            // 1. Currently active schedule (active: "TRUE" or nextactive: "NOW!")
+            // 2. Soonest upcoming schedule (earliest valid date)
+            let schedule = null;
+
+            // First, look for active schedule
+            const activeSchedule = schedules.find(s => s.active === "TRUE" || s.nextactive === "NOW!");
+            if (activeSchedule) {
+              schedule = activeSchedule;
+            } else {
+              // Find soonest upcoming schedule (skip "A long time from now" and invalid dates)
+              const upcomingSchedules = schedules
+                .filter(s => {
+                  const na = s.nextactive;
+                  return na && na !== "A long time from now" && na !== "N/A" && na.match(/\d{4}-\d{2}-\d{2}/);
+                })
+                .sort((a, b) => {
+                  // Sort by nextactive date (earliest first)
+                  return new Date(a.nextactive) - new Date(b.nextactive);
+                });
+
+              schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
+              if (schedule) {
+              }
+            }
+
+            if (!schedule) {
+              continue; // Skip this playlist
+            }
+
+
+            // Calculate total duration from playlist steps
+            const stepsResponse = await this._hass.callWS({
+              type: 'call_service',
+              domain: 'xschedule',
+              service: 'get_playlist_steps',
+              service_data: {
+                entity_id: this.config.entity,
+                playlist: playlist,
+              },
+              return_response: true,
+            });
+
+            let totalDuration = 0;
+            if (stepsResponse && stepsResponse.response && stepsResponse.response.steps) {
+              totalDuration = stepsResponse.response.steps.reduce(
+                (sum, step) => sum + (step.duration || 0),
+                0
+              );
+            }
+
+            newSchedules[playlist] = {
+              nextActiveTime: schedule.nextactive,  // Fixed: field is "nextactive" not "nextactivetime"
+              enabled: schedule.enabled,
+              active: schedule.active,
+              duration: totalDuration,
+            };
           }
-
-          newSchedules[playlist] = {
-            nextActiveTime: schedule.nextactive,  // Fixed: field is "nextactive" not "nextactivetime"
-            enabled: schedule.enabled,
-            active: schedule.active,
-            duration: totalDuration,
-          };
+        } catch (err) {
+          console.error(`Failed to fetch schedule for ${playlist}:`, err);
         }
-      } catch (err) {
-        console.error(`Failed to fetch schedule for ${playlist}:`, err);
       }
+
+      this._playlistSchedules = newSchedules;
+
+      // Only set last fetch time if we got at least some schedule data
+      // This allows retries if all fetches failed (e.g., during HA startup)
+      if (Object.keys(newSchedules).length > 0) {
+        this._lastFetchTime = new Date();
+      }
+    } finally {
+      // Always reset loading state, even if there's an unexpected error
+      this._loading = false;
+      this.requestUpdate();
     }
-
-    this._playlistSchedules = newSchedules;
-
-    // Only set last fetch time if we got at least some schedule data
-    // This allows retries if all fetches failed (e.g., during HA startup)
-    if (Object.keys(newSchedules).length > 0) {
-      this._lastFetchTime = new Date();
-    }
-
-    this._loading = false;
-    this.requestUpdate();
   }
 
   render() {
