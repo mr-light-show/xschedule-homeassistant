@@ -215,7 +215,7 @@ class XScheduleCard extends LitElement {
 
     return html`
       <div class="progress-container">
-        <div class="progress-bar" @click=${this._handleSeek}>
+        <div class="progress-bar">
           <div class="progress-fill" style="width: ${progress}%"></div>
         </div>
         <div class="time-display">
@@ -549,16 +549,6 @@ class XScheduleCard extends LitElement {
     this._callService('media_previous_track');
   }
 
-  _handleSeek(e) {
-    const progressBar = e.currentTarget;
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const duration = this._entity.attributes.media_duration || 0;
-    const position = duration * percent;
-
-    this._callService('media_seek', { seek_position: position });
-  }
-
   _handleVolumeChange(e) {
     const volume = parseInt(e.target.value) / 100;
     this._callService('volume_set', { volume_level: volume });
@@ -790,18 +780,18 @@ class XScheduleCard extends LitElement {
       }
 
       .progress-bar {
-        height: 6px;
-        background: var(--disabled-text-color);
-        border-radius: 3px;
-        cursor: pointer;
+        height: 8px;
+        background: rgba(128, 128, 128, 0.3);
+        border-radius: 4px;
         position: relative;
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        background: var(--accent-color);
-        transition: width 0.3s ease;
+        background: var(--primary-color, #03a9f4);
+        border-radius: 4px;
+        transition: width 0.1s linear;
       }
 
       .time-display {

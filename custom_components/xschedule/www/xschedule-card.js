@@ -45,10 +45,10 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         <div class="playlist-name">${t}</div>
         <div class="song-name">${e}</div>
       </div>
-    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";const t=this._entity.attributes.media_duration||0;let e=this._entity.attributes.media_position||0;if("playing"===this._entity.state){const i=this._entity.attributes.media_position_updated_at;if(i){const s=new Date(i);e+=(new Date-s)/1e3,e>t&&(e=t)}}const i=t>0?e/t*100:0;return B`
+    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";const t=this._entity.attributes.media_duration||0;let e=this._entity.attributes.media_position||0;if("playing"===this._entity.state){const i=this._entity.attributes.media_position_updated_at;if(i){const s=new Date(i);e+=(new Date-s)/1e3,e>t&&(e=t)}}return B`
       <div class="progress-container">
-        <div class="progress-bar" @click=${this._handleSeek}>
-          <div class="progress-fill" style="width: ${i}%"></div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${t>0?e/t*100:0}%"></div>
         </div>
         <div class="time-display">
           <span>${this._formatTime(e)}</span>
@@ -261,7 +261,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </button>
         </div>
       </div>
-    `}_handlePlay(){this._callService("media_play")}_handlePause(){this._callService("media_pause")}_handleStop(){this._callService("media_stop")}_handleNext(){this._callService("media_next_track")}_handlePrevious(){this._callService("media_previous_track")}_handleSeek(t){const e=t.currentTarget.getBoundingClientRect(),i=(t.clientX-e.left)/e.width,s=(this._entity.attributes.media_duration||0)*i;this._callService("media_seek",{seek_position:s})}_handleVolumeChange(t){const e=parseInt(t.target.value)/100;this._callService("volume_set",{volume_level:e})}_handleMuteToggle(){const t=this._entity.attributes.is_volume_muted||!1;this._callService("volume_mute",{is_volume_muted:!t})}_handlePlaylistChange(t){const e=t.target.value;e&&this._selectPlaylist(e)}_selectPlaylist(t){this._callService("select_source",{source:t}),this._showToast("success","mdi:check-circle",`Playing: ${t}`)}async _playSong(t){const e=this._entity.attributes.playlist;if(e){if("playing"!==this._entity.state||confirm("Replace current song?"))try{await this._hass.callService("xschedule","play_song",{entity_id:this.config.entity,playlist:e,song:t}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song")}}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _addToQueue(t){const e=this._entity.attributes.playlist;if(e)if(this._queue.some(e=>e.name===t))this._showToast("info","mdi:information","Already in queue");else try{await this._hass.callService("xschedule","add_to_queue",{entity_id:this.config.entity,playlist:e,song:t}),this._showToast("success","mdi:check-circle","Added to queue")}catch(t){this._showToast("error","mdi:alert-circle","Failed to add to queue")}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _handleClearQueue(){if(confirm("Clear entire queue?"))try{await this._hass.callService("xschedule","clear_queue",{entity_id:this.config.entity}),this._showToast("success","mdi:check-circle","Queue cleared")}catch(t){this._showToast("error","mdi:alert-circle","Failed to clear queue")}}_toggleSongs(){"collapsed"===this.config.songsDisplay&&(this._songsExpanded=!this._songsExpanded,this.requestUpdate())}_toggleQueue(){"collapsed"===this.config.queueDisplay&&(this._queueExpanded=!this._queueExpanded,this.requestUpdate())}_handleLongPressStart(t,e){this._longPressTimer&&clearTimeout(this._longPressTimer),this._longPressTimer=setTimeout(()=>{t.preventDefault();const i=t.touches?t.touches[0].clientX:t.clientX,s=t.touches?t.touches[0].clientY:t.clientY;this._contextMenu={songName:e,x:Math.min(i,window.innerWidth-220),y:Math.min(s,window.innerHeight-200)},this.requestUpdate(),navigator.vibrate&&navigator.vibrate(50)},500)}_handleLongPressEnd(){this._longPressTimer&&(clearTimeout(this._longPressTimer),this._longPressTimer=null)}_closeContextMenu(){this._contextMenu=null,this.requestUpdate()}_showSongInfo(t){const e=this._songs.find(e=>e.name===t);if(e){const i=e.duration?this._formatTime(e.duration/1e3):"Unknown";this._showToast("info","mdi:information",`${t} - Duration: ${i}`)}}_callService(t,e={}){this._hass.callService("media_player",t,{entity_id:this.config.entity,...e})}_formatTime(t){if(!t||t<0)return"0:00";return`${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2,"0")}`}_showToast(t,e,i){this._toast={type:t,icon:e,message:i},this.requestUpdate(),setTimeout(()=>{this._toast=null,this.requestUpdate()},2e3)}getCardSize(){return 3}static get styles(){return n`
+    `}_handlePlay(){this._callService("media_play")}_handlePause(){this._callService("media_pause")}_handleStop(){this._callService("media_stop")}_handleNext(){this._callService("media_next_track")}_handlePrevious(){this._callService("media_previous_track")}_handleVolumeChange(t){const e=parseInt(t.target.value)/100;this._callService("volume_set",{volume_level:e})}_handleMuteToggle(){const t=this._entity.attributes.is_volume_muted||!1;this._callService("volume_mute",{is_volume_muted:!t})}_handlePlaylistChange(t){const e=t.target.value;e&&this._selectPlaylist(e)}_selectPlaylist(t){this._callService("select_source",{source:t}),this._showToast("success","mdi:check-circle",`Playing: ${t}`)}async _playSong(t){const e=this._entity.attributes.playlist;if(e){if("playing"!==this._entity.state||confirm("Replace current song?"))try{await this._hass.callService("xschedule","play_song",{entity_id:this.config.entity,playlist:e,song:t}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song")}}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _addToQueue(t){const e=this._entity.attributes.playlist;if(e)if(this._queue.some(e=>e.name===t))this._showToast("info","mdi:information","Already in queue");else try{await this._hass.callService("xschedule","add_to_queue",{entity_id:this.config.entity,playlist:e,song:t}),this._showToast("success","mdi:check-circle","Added to queue")}catch(t){this._showToast("error","mdi:alert-circle","Failed to add to queue")}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _handleClearQueue(){if(confirm("Clear entire queue?"))try{await this._hass.callService("xschedule","clear_queue",{entity_id:this.config.entity}),this._showToast("success","mdi:check-circle","Queue cleared")}catch(t){this._showToast("error","mdi:alert-circle","Failed to clear queue")}}_toggleSongs(){"collapsed"===this.config.songsDisplay&&(this._songsExpanded=!this._songsExpanded,this.requestUpdate())}_toggleQueue(){"collapsed"===this.config.queueDisplay&&(this._queueExpanded=!this._queueExpanded,this.requestUpdate())}_handleLongPressStart(t,e){this._longPressTimer&&clearTimeout(this._longPressTimer),this._longPressTimer=setTimeout(()=>{t.preventDefault();const i=t.touches?t.touches[0].clientX:t.clientX,s=t.touches?t.touches[0].clientY:t.clientY;this._contextMenu={songName:e,x:Math.min(i,window.innerWidth-220),y:Math.min(s,window.innerHeight-200)},this.requestUpdate(),navigator.vibrate&&navigator.vibrate(50)},500)}_handleLongPressEnd(){this._longPressTimer&&(clearTimeout(this._longPressTimer),this._longPressTimer=null)}_closeContextMenu(){this._contextMenu=null,this.requestUpdate()}_showSongInfo(t){const e=this._songs.find(e=>e.name===t);if(e){const i=e.duration?this._formatTime(e.duration/1e3):"Unknown";this._showToast("info","mdi:information",`${t} - Duration: ${i}`)}}_callService(t,e={}){this._hass.callService("media_player",t,{entity_id:this.config.entity,...e})}_formatTime(t){if(!t||t<0)return"0:00";return`${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2,"0")}`}_showToast(t,e,i){this._toast={type:t,icon:e,message:i},this.requestUpdate(),setTimeout(()=>{this._toast=null,this.requestUpdate()},2e3)}getCardSize(){return 3}static get styles(){return n`
       :host {
         display: block;
       }
@@ -309,18 +309,18 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
       }
 
       .progress-bar {
-        height: 6px;
-        background: var(--disabled-text-color);
-        border-radius: 3px;
-        cursor: pointer;
+        height: 8px;
+        background: rgba(128, 128, 128, 0.3);
+        border-radius: 4px;
         position: relative;
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        background: var(--accent-color);
-        transition: width 0.3s ease;
+        background: var(--primary-color, #03a9f4);
+        border-radius: 4px;
+        transition: width 0.1s linear;
       }
 
       .time-display {
