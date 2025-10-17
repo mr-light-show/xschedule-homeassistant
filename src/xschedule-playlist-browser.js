@@ -50,29 +50,22 @@ class XSchedulePlaylistBrowser extends LitElement {
     const entityId = this.config.entity;
     this._entity = hass.states[entityId];
 
-    console.log('xSchedule Playlist Browser: hass setter called, entity:', this._entity);
 
     if (this._entity) {
       // Extract playlists from source_list
       const newSourceList = this._entity.attributes.source_list || [];
 
-      console.log('xSchedule Playlist Browser: newSourceList:', newSourceList);
-      console.log('xSchedule Playlist Browser: _lastSourceList:', this._lastSourceList);
-      console.log('xSchedule Playlist Browser: _initialFetchDone:', this._initialFetchDone);
 
       // Fetch on initial load OR when source_list has changed
       const sourceListChanged = JSON.stringify(this._lastSourceList) !== JSON.stringify(newSourceList);
       const shouldFetch = !this._initialFetchDone || sourceListChanged;
 
-      console.log('xSchedule Playlist Browser: sourceListChanged:', sourceListChanged);
-      console.log('xSchedule Playlist Browser: shouldFetch:', shouldFetch);
 
       if (shouldFetch && newSourceList.length > 0) {
         this._playlists = newSourceList;
         this._lastSourceList = [...newSourceList]; // Store copy for comparison
         this._initialFetchDone = true;
 
-        console.log('xSchedule Playlist Browser: Calling _fetchScheduleInfo()');
         // Fetch schedule information for each playlist
         this._fetchScheduleInfo();
       }
@@ -83,7 +76,6 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._loading = true;
     const newSchedules = {};
 
-    console.log('xSchedule Playlist Browser: Fetching schedule info for playlists:', this._playlists);
 
     // Fetch schedule info for each playlist
     for (const playlist of this._playlists) {
@@ -99,11 +91,9 @@ class XSchedulePlaylistBrowser extends LitElement {
           return_response: true,
         });
 
-        console.log(`xSchedule Playlist Browser: Response for "${playlist}":`, response);
 
         if (response && response.response && response.response.schedules && response.response.schedules.length > 0) {
           const schedules = response.response.schedules;
-          console.log(`xSchedule Playlist Browser: Found ${schedules.length} schedules for "${playlist}"`);
 
           // Find the best schedule to display:
           // 1. Currently active schedule (active: "TRUE" or nextactive: "NOW!")
@@ -114,7 +104,6 @@ class XSchedulePlaylistBrowser extends LitElement {
           const activeSchedule = schedules.find(s => s.active === "TRUE" || s.nextactive === "NOW!");
           if (activeSchedule) {
             schedule = activeSchedule;
-            console.log(`xSchedule Playlist Browser: Using active schedule for "${playlist}":`, schedule.name);
           } else {
             // Find soonest upcoming schedule (skip "A long time from now" and invalid dates)
             const upcomingSchedules = schedules
@@ -129,17 +118,13 @@ class XSchedulePlaylistBrowser extends LitElement {
 
             schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
             if (schedule) {
-              console.log(`xSchedule Playlist Browser: Using soonest schedule for "${playlist}":`, schedule.name, schedule.nextactive);
             }
           }
 
           if (!schedule) {
-            console.log(`xSchedule Playlist Browser: No valid schedule found for "${playlist}"`);
             continue; // Skip this playlist
           }
 
-          console.log(`xSchedule Playlist Browser: Schedule object for "${playlist}":`, schedule);
-          console.log(`xSchedule Playlist Browser: Schedule keys:`, Object.keys(schedule));
 
           // Calculate total duration from playlist steps
           const stepsResponse = await this._hass.callWS({
@@ -167,7 +152,6 @@ class XSchedulePlaylistBrowser extends LitElement {
             active: schedule.active,
             duration: totalDuration,
           };
-          console.log(`xSchedule Playlist Browser: Added schedule for "${playlist}":`, newSchedules[playlist]);
         }
       } catch (err) {
         console.error(`Failed to fetch schedule for ${playlist}:`, err);
@@ -175,7 +159,6 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     this._playlistSchedules = newSchedules;
-    console.log('xSchedule Playlist Browser: All schedules:', this._playlistSchedules);
     this._loading = false;
     this.requestUpdate();
   }

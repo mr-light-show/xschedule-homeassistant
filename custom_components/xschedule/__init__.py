@@ -151,17 +151,11 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         else:
             existing = []
 
-        _LOGGER.warning("xSchedule: Found %d existing resources total", len(existing))
-
-        # Log all existing resources for debugging
-        for idx, res in enumerate(existing):
-            _LOGGER.warning("xSchedule: Existing resource #%d: %s (id: %s)", idx, res.get("url", ""), res.get("id", ""))
+        _LOGGER.debug("Found %d existing resources total", len(existing))
 
         for card in cards:
             # Check if already registered (check base URL without timestamp)
             base_url = card["url"].split("?")[0]
-            _LOGGER.warning("xSchedule: Processing card: %s (base: %s)", card["url"], base_url)
-
             already_registered = False
             resources_to_delete = []
 
@@ -170,19 +164,15 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 existing_url = existing_resource.get("url", "")
                 existing_base = existing_url.split("?")[0]
 
-                _LOGGER.warning("xSchedule: Comparing existing '%s' (base: '%s') with card base '%s'",
-                              existing_url, existing_base, base_url)
-
                 if existing_base == base_url:
-                    _LOGGER.warning("xSchedule: MATCH FOUND! existing_base == base_url")
                     # Check if this is exactly the same URL (including timestamp)
                     if existing_url == card["url"]:
                         # Already registered with correct timestamp
-                        _LOGGER.warning("xSchedule: Resource already registered with correct timestamp: %s", card["url"])
+                        _LOGGER.debug("Resource already registered: %s", card["url"])
                         already_registered = True
                     else:
                         # Old entry with different timestamp - mark for deletion
-                        _LOGGER.warning("xSchedule: Marking for deletion (timestamp mismatch): %s", existing_url)
+                        _LOGGER.debug("Marking for deletion (timestamp mismatch): %s", existing_url)
                         resources_to_delete.append(existing_resource)
 
             # Delete old entries BEFORE adding new one
@@ -192,17 +182,17 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                     old_url = old_resource.get("url", "")
                     try:
                         await resources.async_delete_item(resource_id)
-                        _LOGGER.warning("xSchedule: DELETED resource: %s (id: %s)", old_url, resource_id)
+                        _LOGGER.info("Removed old resource: %s", old_url)
                     except Exception as del_err:
-                        _LOGGER.warning("xSchedule: Failed to delete old resource %s: %s", old_url, del_err)
+                        _LOGGER.warning("Failed to delete old resource %s: %s", old_url, del_err)
 
             # Add the resource if not already registered
             if not already_registered:
                 try:
                     await resources.async_create_item(card)
-                    _LOGGER.warning("xSchedule: ADDED new resource: %s", card["url"])
+                    _LOGGER.info("Registered resource: %s", card["url"])
                 except Exception as add_err:
-                    _LOGGER.error("xSchedule: Failed to register resource %s: %s", card["url"], add_err)
+                    _LOGGER.error("Failed to register resource %s: %s", card["url"], add_err)
 
         _LOGGER.info("Frontend resource registration completed")
 
@@ -224,7 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This ensures Lovelace resources are loaded before we try to register
     async def register_resources_when_ready(event):
         """Register resources after Home Assistant has started."""
-        _LOGGER.warning("xSchedule: Home Assistant started, now registering frontend resources")
+        _LOGGER.debug("Home Assistant started, registering frontend resources")
         await _register_frontend_resources(hass, timestamps)
 
     hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
@@ -255,14 +245,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         song = call.data["song"]
 
         for entity_id in entity_ids:
-            entity = hass.states.get(entity_id)
-            if entity and entity.platform == DOMAIN:
-                # Get the media player entity
-                component = hass.data.get("media_player")
-                if component:
-                    entity_obj = component.get_entity(entity_id)
-                    if entity_obj and hasattr(entity_obj, "async_add_to_queue"):
-                        await entity_obj.async_add_to_queue(playlist, song)
+            # Get the media player entity directly from the component
+            component = hass.data.get("media_player")
+            if component:
+                entity_obj = component.get_entity(entity_id)
+                if entity_obj and hasattr(entity_obj, "async_add_to_queue"):
+                    await entity_obj.async_add_to_queue(playlist, song)
 
     async def async_clear_queue(call: ServiceCall) -> None:
         """Handle clear_queue service call."""
