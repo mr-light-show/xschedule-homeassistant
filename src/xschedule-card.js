@@ -477,7 +477,7 @@ class XScheduleCard extends LitElement {
                       ${song.name === currentSong ? html`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
                       <span class="song-name">${song.name}</span>
                       ${this.config.showDuration !== false && song.duration ? html`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
-                      ${(this.config.showSongActions !== false || this.config.showPlayButton !== false || this.config.showAddToQueueButton !== false)
+                      ${this.config.showSongActions !== false
                         ? html`
                             <div class="song-actions">
                               ${this.config.showPlayButton !== false

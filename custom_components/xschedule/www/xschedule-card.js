@@ -200,7 +200,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
                       ${t.name===s?R`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>`:""}
                       <span class="song-name">${t.name}</span>
                       ${!1!==this.config.showDuration&&t.duration?R`<span class="song-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
-                      ${!1!==this.config.showSongActions||!1!==this.config.showPlayButton||!1!==this.config.showAddToQueueButton?R`
+                      ${!1!==this.config.showSongActions?R`
                             <div class="song-actions">
                               ${!1!==this.config.showPlayButton?R`
                                     <button
