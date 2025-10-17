@@ -5,7 +5,7 @@ import asyncio
 import hashlib
 import logging
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import aiohttp
 
@@ -101,7 +101,9 @@ class XScheduleAPIClient:
         """Execute a query against xSchedule API."""
         params = {"Query": query_name}
         if parameters:
-            params["Parameters"] = parameters
+            # Manually encode parameters to use %20 instead of + for spaces
+            # xSchedule doesn't accept + as space encoding
+            params["Parameters"] = quote(parameters, safe='')
 
         _LOGGER.debug("Executing query: %s with params: %s", query_name, parameters)
         return await self._request(API_QUERY, params)
@@ -110,7 +112,9 @@ class XScheduleAPIClient:
         """Execute a command against xSchedule API."""
         params = {"Command": command_name}
         if parameters:
-            params["Parameters"] = parameters
+            # Manually encode parameters to use %20 instead of + for spaces
+            # xSchedule doesn't accept + as space encoding
+            params["Parameters"] = quote(parameters, safe='')
 
         _LOGGER.debug("Executing command: %s with params: %s", command_name, parameters)
         return await self._request(API_COMMAND, params)
