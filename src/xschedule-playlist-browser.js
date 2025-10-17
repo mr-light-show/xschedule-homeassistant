@@ -127,7 +127,7 @@ class XSchedulePlaylistBrowser extends LitElement {
           }
 
           newSchedules[playlist] = {
-            nextActiveTime: schedule.nextactivetime,
+            nextActiveTime: schedule.nextactive,  // Fixed: field is "nextactive" not "nextactivetime"
             enabled: schedule.enabled,
             active: schedule.active,
             duration: totalDuration,
