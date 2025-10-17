@@ -272,7 +272,8 @@ class XSchedulePlaylistBrowser extends LitElement {
 
   _renderScheduleInfo(isPlaying, scheduleInfo) {
     // Always show schedule time as the most important info
-    if (isPlaying) {
+    // Check both isPlaying (current playlist) AND nextActiveTime === "NOW!" (schedule is active)
+    if (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!")) {
       return html`
         <div class="playlist-info-line playing-status">
           [Playing]
@@ -281,6 +282,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     if (scheduleInfo && scheduleInfo.nextActiveTime) {
+      // Skip special values that aren't parseable dates
+      if (scheduleInfo.nextActiveTime === "A long time from now" || scheduleInfo.nextActiveTime === "N/A") {
+        return '';
+      }
+
       const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
       return html`
         <div class="playlist-info-line schedule-time">
