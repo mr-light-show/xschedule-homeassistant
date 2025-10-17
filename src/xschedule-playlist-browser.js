@@ -938,6 +938,13 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
 customElements.define('xschedule-playlist-browser-editor', XSchedulePlaylistBrowserEditor);
 customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
+// Log card info to console
+console.info(
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 0.0.45  ',
+  'color: orange; font-weight: bold; background: black',
+  'color: white; font-weight: bold; background: dimgray'
+);
+
 // Register editor
 XSchedulePlaylistBrowser.getConfigElement = function() {
   return document.createElement('xschedule-playlist-browser-editor');

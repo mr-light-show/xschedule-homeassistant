@@ -1253,6 +1253,13 @@ class XScheduleCard extends LitElement {
 
 customElements.define('xschedule-card', XScheduleCard);
 
+// Log card info to console
+console.info(
+  '%c  XSCHEDULE-CARD  \n%c  Version 0.0.45  ',
+  'color: orange; font-weight: bold; background: black',
+  'color: white; font-weight: bold; background: dimgray'
+);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'xschedule-card',
