@@ -46,8 +46,8 @@ class XScheduleAPIClient:
         # Cache storage: dict[playlist_name, tuple[data, timestamp]]
         self._schedule_cache: dict[str, tuple[list[dict[str, Any]], float]] = {}
         self._steps_cache: dict[str, tuple[list[dict[str, Any]], float]] = {}
-        self._schedule_cache_ttl = 600  # 10 minutes for schedules
-        self._steps_cache_ttl = 300  # 5 minutes for steps/songs
+        self._schedule_cache_ttl = 300  # 5 minutes for schedules (reduced from 10)
+        self._steps_cache_ttl = 180  # 3 minutes for steps/songs (reduced from 5)
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -225,34 +225,48 @@ class XScheduleAPIClient:
 
     async def play_playlist(self, playlist_name: str) -> dict[str, Any]:
         """Play specified playlist."""
-        return await self.command("Play specified playlist", playlist_name)
+        result = await self.command("Play specified playlist", playlist_name)
+        self.invalidate_cache(playlist_name)
+        return result
 
     async def pause(self) -> dict[str, Any]:
         """Pause playback."""
-        return await self.command("Pause")
+        result = await self.command("Pause")
+        self.invalidate_cache()
+        return result
 
     async def stop(self) -> dict[str, Any]:
         """Stop playback."""
-        return await self.command("Stop")
+        result = await self.command("Stop")
+        self.invalidate_cache()
+        return result
 
     async def next_step(self) -> dict[str, Any]:
         """Go to next step in current playlist."""
-        return await self.command("Next step in current playlist")
+        result = await self.command("Next step in current playlist")
+        self.invalidate_cache()
+        return result
 
     async def previous_step(self) -> dict[str, Any]:
         """Go to previous step in current playlist."""
-        return await self.command("Prior step in current playlist")
+        result = await self.command("Prior step in current playlist")
+        self.invalidate_cache()
+        return result
 
     async def restart_step(self) -> dict[str, Any]:
         """Restart current step."""
-        return await self.command("Restart step in current playlist")
+        result = await self.command("Restart step in current playlist")
+        self.invalidate_cache()
+        return result
 
     async def play_playlist_step(
         self, playlist_name: str, step_name: str
     ) -> dict[str, Any]:
         """Play specific step in a playlist."""
         params = f"{playlist_name},{step_name}"
-        return await self.command("Play playlist step", params)
+        result = await self.command("Play playlist step", params)
+        self.invalidate_cache(playlist_name)
+        return result
 
     async def set_step_position(self, position_ms: int) -> dict[str, Any]:
         """Set playback position in current step (seek)."""
@@ -279,11 +293,15 @@ class XScheduleAPIClient:
     ) -> dict[str, Any]:
         """Add a step to the queue."""
         params = f"{playlist_name},{step_name}"
-        return await self.command("Enqueue playlist step", params)
+        result = await self.command("Enqueue playlist step", params)
+        self.invalidate_cache()
+        return result
 
     async def clear_queue(self) -> dict[str, Any]:
         """Clear the playlist queue."""
-        return await self.command("Clear playlist queue")
+        result = await self.command("Clear playlist queue")
+        self.invalidate_cache()
+        return result
 
     # Validation and testing
 

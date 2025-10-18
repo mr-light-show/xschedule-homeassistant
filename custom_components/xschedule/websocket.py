@@ -144,13 +144,14 @@ class XScheduleWebSocket:
                 await asyncio.sleep(delay)
 
     async def _heartbeat(self) -> None:
-        """Send periodic heartbeat to keep connection alive."""
+        """Send periodic status queries to detect state changes."""
         try:
             while self._running and self.connected:
-                await asyncio.sleep(WS_HEARTBEAT_INTERVAL)
+                await asyncio.sleep(30)  # Poll every 30 seconds
                 if self._ws and not self._ws.closed:
-                    # Query status as heartbeat
+                    # Query full status to detect state changes
                     await self.send_query("GetPlayingStatus")
+                    await self.send_query("GetQueuedSteps")
         except asyncio.CancelledError:
             pass
         except Exception as err:  # pylint: disable=broad-except
@@ -162,10 +163,10 @@ class XScheduleWebSocket:
             message = json.loads(data)
             _LOGGER.debug("Received WebSocket message: %s", message)
 
-            # Check for status updates
-            if isinstance(message, dict) and "status" in message:
-                if self._status_callback:
-                    self._status_callback(message)
+            # xSchedule sends status updates - call callback for all messages
+            # Not just those with "status" key
+            if isinstance(message, dict) and self._status_callback:
+                self._status_callback(message)
 
         except json.JSONDecodeError as err:
             _LOGGER.error("Failed to decode WebSocket message: %s", err)

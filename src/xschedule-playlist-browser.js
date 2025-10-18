@@ -25,25 +25,17 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlists = [];
     this._playlistSchedules = {};
     this._loading = false;
-    this._lastSourceList = null; // Track last source_list to detect changes
-    this._initialFetchDone = false; // Track if we've done the initial fetch
     this._expandedPlaylist = null; // Track which playlist is expanded
     this._playlistSongs = {}; // Cache of songs for each playlist
-    this._updateInterval = null; // Timer for periodic updates
-    this._lastFetchTime = null; // Track when we last fetched schedules
+    this._updateInterval = null; // Timer for time display updates only
   }
 
   connectedCallback() {
     super.connectedCallback();
-    // Update every minute to refresh relative time displays
+    // Update every 5 minutes to refresh relative time displays
     this._updateInterval = setInterval(() => {
       this.requestUpdate();
-
-      // Re-fetch schedules every hour or if day has changed
-      if (this._shouldRefetchSchedules()) {
-        this._fetchScheduleInfo();
-      }
-    }, 60000); // 60 seconds
+    }, 300000); // 5 minutes
   }
 
   disconnectedCallback() {
@@ -52,27 +44,6 @@ class XSchedulePlaylistBrowser extends LitElement {
       clearInterval(this._updateInterval);
       this._updateInterval = null;
     }
-  }
-
-  _shouldRefetchSchedules() {
-    // If we have playlists but no schedule data, retry (likely HA startup issue)
-    if (this._playlists.length > 0 && Object.keys(this._playlistSchedules).length === 0) {
-      return true;
-    }
-
-    if (!this._lastFetchTime) return false;
-
-    const now = new Date();
-    const lastFetch = new Date(this._lastFetchTime);
-
-    // Re-fetch if more than 1 hour has passed
-    const hoursPassed = (now - lastFetch) / (1000 * 60 * 60);
-    if (hoursPassed >= 1) return true;
-
-    // Re-fetch if day has changed (crossing midnight)
-    if (now.getDate() !== lastFetch.getDate()) return true;
-
-    return false;
   }
 
   setConfig(config) {
@@ -98,28 +69,14 @@ class XSchedulePlaylistBrowser extends LitElement {
     const entityId = this.config.entity;
     this._entity = hass.states[entityId];
 
-
     if (this._entity) {
-      // Extract playlists from source_list
+      // Always use current source_list from entity (no caching)
       const newSourceList = this._entity.attributes.source_list || [];
 
-
-      // Fetch on initial load OR when source_list has changed
-      const sourceListChanged = JSON.stringify(this._lastSourceList) !== JSON.stringify(newSourceList);
-      const shouldFetch = !this._initialFetchDone || sourceListChanged;
-
-
-      if (shouldFetch && newSourceList.length > 0) {
+      // If playlists changed, update and fetch schedule info
+      if (JSON.stringify(this._playlists) !== JSON.stringify(newSourceList)) {
         this._playlists = newSourceList;
-        this._lastSourceList = [...newSourceList]; // Store copy for comparison
-
-        // On first fetch, add a delay to wait for HA services to be ready
-        if (!this._initialFetchDone) {
-          this._initialFetchDone = true;
-          // Wait 5 seconds for Home Assistant to fully start up before fetching schedules
-          setTimeout(() => this._fetchScheduleInfo(), 5000);
-        } else {
-          // Source list changed after initial load, fetch immediately
+        if (newSourceList.length > 0) {
           this._fetchScheduleInfo();
         }
       }
@@ -217,12 +174,6 @@ class XSchedulePlaylistBrowser extends LitElement {
       }
 
       this._playlistSchedules = newSchedules;
-
-      // Only set last fetch time if we got at least some schedule data
-      // This allows retries if all fetches failed (e.g., during HA startup)
-      if (Object.keys(newSchedules).length > 0) {
-        this._lastFetchTime = new Date();
-      }
     } finally {
       // Always reset loading state, even if there's an unexpected error
       this._loading = false;
@@ -956,7 +907,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre2  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

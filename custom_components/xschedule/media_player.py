@@ -152,6 +152,10 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         """Handle WebSocket status update."""
         _LOGGER.debug("WebSocket status update: %s", data)
 
+        # Store previous state for change detection
+        old_state = self._attr_state
+        old_playlist = self._attr_media_playlist
+
         # Update state from status
         status = data.get("status", "idle").lower()
         if status == "playing":
@@ -191,6 +195,18 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 self._time_remaining = int(data["leftms"]) / 1000
             except (ValueError, TypeError):
                 self._time_remaining = 0
+
+        # Detect state transitions and invalidate cache
+        if old_state != self._attr_state or old_playlist != self._attr_media_playlist:
+            _LOGGER.debug(
+                "State changed: %s → %s, playlist: %s → %s",
+                old_state,
+                self._attr_state,
+                old_playlist,
+                self._attr_media_playlist,
+            )
+            # Invalidate cache when state changes
+            self._api_client.invalidate_cache()
 
         # Schedule entity update (only if entity has been added to hass)
         if self.hass and self.entity_id:
