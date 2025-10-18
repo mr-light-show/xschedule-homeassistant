@@ -248,11 +248,14 @@ class XSchedulePlaylistBrowser extends LitElement {
           <h1 class="card-title">
             <ha-icon icon="mdi:playlist-music"></ha-icon>
             xSchedule Playlists
+            ${this._loading && this._playlists.length > 0
+              ? html`<ha-circular-progress active style="--md-circular-progress-size: 16px; margin-left: 8px;"></ha-circular-progress>`
+              : ''}
           </h1>
         </div>
 
         <div class="card-content ${this.config.compact_mode ? 'compact' : ''}">
-          ${this._loading
+          ${this._loading && this._playlists.length === 0
             ? html`
                 <div class="loading">
                   <ha-circular-progress active></ha-circular-progress>
@@ -510,6 +513,7 @@ class XSchedulePlaylistBrowser extends LitElement {
         ${songs.map((song) => html`
           <div class="song-item-compact">
             <span class="song-name-compact">${song.name}</span>
+            ${song.duration ? html`<span class="song-duration-compact">${this._formatDuration(song.duration / 1000)}</span>` : ''}
             <button
               class="add-queue-btn-compact"
               @click=${(e) => this._addSongToQueue(e, playlistName, song.name)}
@@ -710,6 +714,14 @@ class XSchedulePlaylistBrowser extends LitElement {
         white-space: nowrap;
       }
 
+      .song-duration-compact {
+        font-size: 0.85em;
+        color: var(--secondary-text-color);
+        margin-left: auto;
+        margin-right: 8px;
+        white-space: nowrap;
+      }
+
       .add-queue-btn-compact {
         display: flex;
         align-items: center;
@@ -746,6 +758,10 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       .playlist-item.playing .song-name-compact {
         color: white;
+      }
+
+      .playlist-item.playing .song-duration-compact {
+        color: rgba(255, 255, 255, 0.8);
       }
 
       @media (max-width: 768px) {
@@ -940,7 +956,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

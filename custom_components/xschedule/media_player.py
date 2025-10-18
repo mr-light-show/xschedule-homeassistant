@@ -372,6 +372,8 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 await self._api_client.play_playlist(source)
 
             self._attr_media_playlist = source
+            # Invalidate cache when playlist changes
+            self._api_client.invalidate_cache(source)
             self._hass.bus.fire(
                 EVENT_PLAYLIST_CHANGED,
                 {"entity_id": self.entity_id, "playlist": source},
@@ -435,6 +437,8 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             else:
                 await self._api_client.play_playlist_step(playlist, song)
 
+            # Invalidate cache when playing a song
+            self._api_client.invalidate_cache(playlist)
             self._hass.bus.fire(
                 EVENT_PLAY,
                 {

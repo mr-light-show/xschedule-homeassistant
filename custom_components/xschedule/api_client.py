@@ -43,6 +43,11 @@ class XScheduleAPIClient:
         self._session = session
         self._own_session = session is None
         self._base_url = f"http://{host}:{port}"
+        # Cache storage: dict[playlist_name, tuple[data, timestamp]]
+        self._schedule_cache: dict[str, tuple[list[dict[str, Any]], float]] = {}
+        self._steps_cache: dict[str, tuple[list[dict[str, Any]], float]] = {}
+        self._schedule_cache_ttl = 600  # 10 minutes for schedules
+        self._steps_cache_ttl = 300  # 5 minutes for steps/songs
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session."""
@@ -61,6 +66,20 @@ class XScheduleAPIClient:
         if self.password:
             return hashlib.md5(self.password.encode()).hexdigest()
         return None
+
+    def _is_cache_valid(self, cache_time: float, ttl: int) -> bool:
+        """Check if cache entry is still valid."""
+        import time
+        return (time.time() - cache_time) < ttl
+
+    def invalidate_cache(self, playlist_name: str | None = None) -> None:
+        """Invalidate cache for a playlist or all playlists."""
+        if playlist_name:
+            self._schedule_cache.pop(playlist_name, None)
+            self._steps_cache.pop(playlist_name, None)
+        else:
+            self._schedule_cache.clear()
+            self._steps_cache.clear()
 
     async def _request(
         self,
@@ -151,11 +170,25 @@ class XScheduleAPIClient:
         return []
 
     async def get_playlist_steps(self, playlist_name: str) -> list[dict[str, Any]]:
-        """Get list of steps/songs in a playlist."""
+        """Get list of steps/songs in a playlist (with 5 min caching)."""
+        import time
+
+        # Check cache first
+        if playlist_name in self._steps_cache:
+            cached_steps, cache_time = self._steps_cache[playlist_name]
+            if self._is_cache_valid(cache_time, self._steps_cache_ttl):
+                _LOGGER.debug("Using cached steps for '%s'", playlist_name)
+                return cached_steps
+
+        # Cache miss or expired - fetch from API
+        _LOGGER.debug("Fetching steps for playlist: '%s'", playlist_name)
         result = await self.query("GetPlayListSteps", playlist_name)
         # API returns dict with 'steps' key containing list
         if isinstance(result, dict) and "steps" in result:
-            return result["steps"]
+            steps = result["steps"]
+            # Store in cache with current timestamp
+            self._steps_cache[playlist_name] = (steps, time.time())
+            return steps
         return []
 
     async def get_queued_steps(self) -> list[dict[str, Any]]:
@@ -166,12 +199,25 @@ class XScheduleAPIClient:
         return []
 
     async def get_playlist_schedules(self, playlist_name: str) -> list[dict[str, Any]]:
-        """Get schedule information for a playlist."""
-        _LOGGER.debug("Getting schedules for playlist: '%s'", playlist_name)
+        """Get schedule information for a playlist (with 10 min caching)."""
+        import time
+
+        # Check cache first
+        if playlist_name in self._schedule_cache:
+            cached_schedules, cache_time = self._schedule_cache[playlist_name]
+            if self._is_cache_valid(cache_time, self._schedule_cache_ttl):
+                _LOGGER.debug("Using cached schedules for '%s'", playlist_name)
+                return cached_schedules
+
+        # Cache miss or expired - fetch from API
+        _LOGGER.debug("Fetching schedules for playlist: '%s'", playlist_name)
         result = await self.query("GetPlayListSchedules", playlist_name)
         if isinstance(result, dict) and "schedules" in result:
-            _LOGGER.debug("Found %d schedules for '%s'", len(result["schedules"]), playlist_name)
-            return result["schedules"]
+            schedules = result["schedules"]
+            # Store in cache with current timestamp
+            self._schedule_cache[playlist_name] = (schedules, time.time())
+            _LOGGER.debug("Found %d schedules for '%s'", len(schedules), playlist_name)
+            return schedules
         _LOGGER.debug("No schedules found for '%s'", playlist_name)
         return []
 
