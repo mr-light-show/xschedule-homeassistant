@@ -23,6 +23,7 @@ from .const import (
     CONF_PASSWORD,
     DEFAULT_NAME,
     DOMAIN,
+    EVENT_CACHE_INVALIDATED,
     EVENT_MUTE_TOGGLE,
     EVENT_NEXT,
     EVENT_PAUSE,
@@ -207,6 +208,19 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             )
             # Invalidate cache when state changes
             self._api_client.invalidate_cache()
+
+            # Fire event to notify frontend of cache invalidation
+            if self.hass and self.entity_id:
+                self._hass.bus.fire(
+                    EVENT_CACHE_INVALIDATED,
+                    {
+                        "entity_id": self.entity_id,
+                        "old_state": str(old_state),
+                        "new_state": str(self._attr_state),
+                        "old_playlist": old_playlist,
+                        "new_playlist": self._attr_media_playlist,
+                    },
+                )
 
         # Schedule entity update (only if entity has been added to hass)
         if self.hass and self.entity_id:

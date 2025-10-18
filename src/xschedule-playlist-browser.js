@@ -37,6 +37,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._updateInterval = setInterval(() => {
       this.requestUpdate();
     }, 300000); // 5 minutes
+
+    // Subscribe to cache invalidation events when hass is available
+    if (this._hass) {
+      this._subscribeToCacheEvents();
+    }
   }
 
   disconnectedCallback() {
@@ -45,6 +50,8 @@ class XSchedulePlaylistBrowser extends LitElement {
       clearInterval(this._updateInterval);
       this._updateInterval = null;
     }
+    // Unsubscribe from cache events
+    this._unsubscribeCacheEvents();
   }
 
   setConfig(config) {
@@ -64,7 +71,13 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
   set hass(hass) {
+    const oldHass = this._hass;
     this._hass = hass;
+
+    // Subscribe to events if hass just became available
+    if (!oldHass && hass) {
+      this._subscribeToCacheEvents();
+    }
 
     // Get entity
     const entityId = this.config.entity;
@@ -187,6 +200,29 @@ class XSchedulePlaylistBrowser extends LitElement {
       // Always reset loading state, even if there's an unexpected error
       this._loading = false;
       this.requestUpdate();
+    }
+  }
+
+  _subscribeToCacheEvents() {
+    if (!this._hass || this._cacheEventUnsub) return;
+
+    // Subscribe to xSchedule cache invalidation events
+    this._cacheEventUnsub = this._hass.connection.subscribeEvents(
+      (event) => {
+        // Only refetch if this is our entity
+        if (event.data.entity_id === this.config.entity) {
+          console.debug('Backend cache invalidated, refetching schedule info');
+          this._fetchScheduleInfo(true); // Force refresh to get fresh data
+        }
+      },
+      'xschedule_cache_invalidated'
+    );
+  }
+
+  _unsubscribeCacheEvents() {
+    if (this._cacheEventUnsub) {
+      this._cacheEventUnsub.then(unsub => unsub());
+      this._cacheEventUnsub = null;
     }
   }
 
