@@ -52,6 +52,7 @@ SCHEMA_GET_PLAYLIST_SCHEDULES = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("playlist"): cv.string,
+        vol.Optional("force_refresh", default=False): cv.boolean,
     }
 )
 
@@ -59,6 +60,7 @@ SCHEMA_GET_PLAYLIST_STEPS = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("playlist"): cv.string,
+        vol.Optional("force_refresh", default=False): cv.boolean,
     }
 )
 
@@ -266,13 +268,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle get_playlist_schedules service call."""
         entity_id = call.data["entity_id"]
         playlist = call.data["playlist"]
+        force_refresh = call.data.get("force_refresh", False)
 
         # Get the media player entity directly from the component
         component = hass.data.get("media_player")
         if component:
             entity_obj = component.get_entity(entity_id)
             if entity_obj and hasattr(entity_obj, "async_get_playlist_schedules"):
-                schedules = await entity_obj.async_get_playlist_schedules(playlist)
+                schedules = await entity_obj.async_get_playlist_schedules(playlist, force_refresh)
                 return {"schedules": schedules}
 
         return {"schedules": []}
@@ -281,13 +284,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle get_playlist_steps service call."""
         entity_id = call.data["entity_id"]
         playlist = call.data["playlist"]
+        force_refresh = call.data.get("force_refresh", False)
 
         # Get the media player entity directly from the component
         component = hass.data.get("media_player")
         if component:
             entity_obj = component.get_entity(entity_id)
             if entity_obj and hasattr(entity_obj, "_api_client"):
-                steps = await entity_obj._api_client.get_playlist_steps(playlist)
+                steps = await entity_obj._api_client.get_playlist_steps(playlist, force_refresh)
                 return {"steps": steps}
 
         return {"steps": []}

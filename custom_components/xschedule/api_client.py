@@ -169,9 +169,14 @@ class XScheduleAPIClient:
             return playlists
         return []
 
-    async def get_playlist_steps(self, playlist_name: str) -> list[dict[str, Any]]:
-        """Get list of steps/songs in a playlist (with 5 min caching)."""
+    async def get_playlist_steps(self, playlist_name: str, force_refresh: bool = False) -> list[dict[str, Any]]:
+        """Get list of steps/songs in a playlist (with 3 min caching)."""
         import time
+
+        # Force refresh: invalidate cache first
+        if force_refresh:
+            _LOGGER.debug("Force refresh requested for steps: '%s'", playlist_name)
+            self._steps_cache.pop(playlist_name, None)
 
         # Check cache first
         if playlist_name in self._steps_cache:
@@ -198,9 +203,14 @@ class XScheduleAPIClient:
             return result["steps"]
         return []
 
-    async def get_playlist_schedules(self, playlist_name: str) -> list[dict[str, Any]]:
-        """Get schedule information for a playlist (with 10 min caching)."""
+    async def get_playlist_schedules(self, playlist_name: str, force_refresh: bool = False) -> list[dict[str, Any]]:
+        """Get schedule information for a playlist (with 5 min caching)."""
         import time
+
+        # Force refresh: invalidate cache first
+        if force_refresh:
+            _LOGGER.debug("Force refresh requested for schedules: '%s'", playlist_name)
+            self._schedule_cache.pop(playlist_name, None)
 
         # Check cache first
         if playlist_name in self._schedule_cache:

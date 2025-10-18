@@ -515,10 +515,10 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         """Check if a song is already in the queue."""
         return any(step.get("name") == song_name for step in self._queued_steps)
 
-    async def async_get_playlist_schedules(self, playlist: str) -> list[dict[str, Any]]:
+    async def async_get_playlist_schedules(self, playlist: str, force_refresh: bool = False) -> list[dict[str, Any]]:
         """Get schedule information for a playlist."""
         try:
-            return await self._api_client.get_playlist_schedules(playlist)
+            return await self._api_client.get_playlist_schedules(playlist, force_refresh)
         except XScheduleAPIError as err:
             _LOGGER.error("Error getting playlist schedules: %s", err)
             return []

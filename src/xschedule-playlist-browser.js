@@ -28,6 +28,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._expandedPlaylist = null; // Track which playlist is expanded
     this._playlistSongs = {}; // Cache of songs for each playlist
     this._updateInterval = null; // Timer for time display updates only
+    this._initialLoad = true; // Track if this is the first load
   }
 
   connectedCallback() {
@@ -77,13 +78,19 @@ class XSchedulePlaylistBrowser extends LitElement {
       if (JSON.stringify(this._playlists) !== JSON.stringify(newSourceList)) {
         this._playlists = newSourceList;
         if (newSourceList.length > 0) {
-          this._fetchScheduleInfo();
+          // On initial load: show cached data, then force refresh
+          // On subsequent updates: just use cache normally
+          const forceRefresh = this._initialLoad;
+          if (this._initialLoad) {
+            this._initialLoad = false;
+          }
+          this._fetchScheduleInfo(forceRefresh);
         }
       }
     }
   }
 
-  async _fetchScheduleInfo() {
+  async _fetchScheduleInfo(forceRefresh = false) {
     // Don't fetch if already in progress
     if (this._loading) return;
 
@@ -102,6 +109,7 @@ class XSchedulePlaylistBrowser extends LitElement {
             service_data: {
               entity_id: this.config.entity,
               playlist: playlist,
+              force_refresh: forceRefresh,
             },
             return_response: true,
           });
@@ -149,6 +157,7 @@ class XSchedulePlaylistBrowser extends LitElement {
               service_data: {
                 entity_id: this.config.entity,
                 playlist: playlist,
+                force_refresh: forceRefresh,
               },
               return_response: true,
             });
@@ -417,7 +426,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     this.requestUpdate();
   }
 
-  async _fetchPlaylistSongs(playlistName) {
+  async _fetchPlaylistSongs(playlistName, forceRefresh = false) {
     try {
       const response = await this._hass.callWS({
         type: 'call_service',
@@ -426,6 +435,7 @@ class XSchedulePlaylistBrowser extends LitElement {
         service_data: {
           entity_id: this.config.entity,
           playlist: playlistName,
+          force_refresh: forceRefresh,
         },
         return_response: true,
       });
