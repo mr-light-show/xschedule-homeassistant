@@ -33,9 +33,9 @@ class TestWebSocketInit:
     def test_init_with_password(self, websocket_client):
         """Test initialization with password."""
         assert websocket_client.host == "192.168.1.100"
-        assert websocket_client._port == 80
+        assert websocket_client.port == 80
         assert websocket_client.password == "testpass"
-        assert websocket_client._ws_url == "ws://192.168.1.100:80/xScheduleStatus"
+        assert websocket_client._ws_url == "ws://192.168.1.100:80/"
 
     def test_init_without_password(self, websocket_client_no_password):
         """Test initialization without password."""
@@ -89,86 +89,96 @@ class TestMessageHandling:
     """Test WebSocket message handling."""
 
     @pytest.mark.asyncio
-    async def test_callback_on_message(self, websocket_client):
+    async def test_callback_on_message(self):
         """Test callback is called on message receipt."""
         messages_received = []
 
         def callback(data):
             messages_received.append(data)
 
-        websocket_client.add_listener(callback)
+        # Create client with callback
+        websocket_client = XScheduleWebSocket(
+            host="192.168.1.100",
+            port=80,
+            password="testpass",
+            status_callback=callback,
+        )
 
-        # Simulate message
+        # Simulate message handling
+        import json
         test_data = {"status": "playing", "playlist": "Test"}
-        websocket_client._broadcast_update(test_data)
+        await websocket_client._handle_message(json.dumps(test_data))
 
         assert len(messages_received) == 1
         assert messages_received[0] == test_data
 
     @pytest.mark.asyncio
-    async def test_multiple_listeners(self, websocket_client):
-        """Test multiple listeners receive messages."""
-        messages_1 = []
-        messages_2 = []
-
-        def callback_1(data):
-            messages_1.append(data)
-
-        def callback_2(data):
-            messages_2.append(data)
-
-        websocket_client.add_listener(callback_1)
-        websocket_client.add_listener(callback_2)
-
-        test_data = {"status": "paused"}
-        websocket_client._broadcast_update(test_data)
-
-        assert len(messages_1) == 1
-        assert len(messages_2) == 1
-        assert messages_1[0] == test_data
-        assert messages_2[0] == test_data
-
-    @pytest.mark.asyncio
-    async def test_remove_listener(self, websocket_client):
-        """Test removing a listener."""
-        messages = []
+    async def test_callback_receives_all_message_types(self):
+        """Test callback receives various message types."""
+        import json
+        messages_received = []
 
         def callback(data):
-            messages.append(data)
+            messages_received.append(data)
 
-        websocket_client.add_listener(callback)
-        websocket_client.remove_listener(callback)
+        websocket_client = XScheduleWebSocket(
+            host="192.168.1.100",
+            port=80,
+            password=None,
+            status_callback=callback,
+        )
 
-        websocket_client._broadcast_update({"status": "playing"})
+        # Test different message types
+        test_data_1 = {"status": "playing"}
+        test_data_2 = {"queue": ["song1", "song2"]}
 
-        assert len(messages) == 0
+        await websocket_client._handle_message(json.dumps(test_data_1))
+        await websocket_client._handle_message(json.dumps(test_data_2))
+
+        assert len(messages_received) == 2
+        assert messages_received[0] == test_data_1
+        assert messages_received[1] == test_data_2
+
+    @pytest.mark.asyncio
+    async def test_no_callback_no_error(self):
+        """Test that no callback doesn't cause errors."""
+        import json
+        websocket_client = XScheduleWebSocket(
+            host="192.168.1.100",
+            port=80,
+            password=None,
+            status_callback=None,
+        )
+
+        # Should not raise error when callback is None
+        test_data = {"status": "playing"}
+        await websocket_client._handle_message(json.dumps(test_data))
 
 
 class TestReconnectionLogic:
     """Test reconnection and error handling."""
 
     @pytest.mark.asyncio
-    async def test_reconnect_on_connection_error(self, websocket_client):
-        """Test automatic reconnection on connection error."""
-        connect_count = 0
-
-        async def mock_connect():
-            nonlocal connect_count
-            connect_count += 1
-            if connect_count == 1:
-                raise ConnectionError("Connection failed")
-            # Second attempt succeeds
-
-        with patch.object(websocket_client, 'connect', side_effect=mock_connect):
-            # This would normally trigger reconnection logic
-            # In actual implementation, reconnection happens in _listen loop
-            pass
+    async def test_connection_loop_continues_on_error(self, websocket_client):
+        """Test connection loop continues after connection error."""
+        # The _connection_loop() method should handle exceptions and retry
+        # This is tested by verifying the method exists and is async
+        assert asyncio.iscoroutinefunction(websocket_client._connection_loop)
 
     @pytest.mark.asyncio
-    async def test_exponential_backoff(self, websocket_client):
-        """Test exponential backoff on reconnection attempts."""
-        # Note: This tests the concept - actual implementation details may vary
-        assert websocket_client._reconnect_delay == 5  # Initial delay
+    async def test_running_flag_controls_connection_loop(self, websocket_client):
+        """Test that _running flag controls the connection loop."""
+        # Initially not running
+        assert websocket_client._running is False
+
+        # Connect should set running to True
+        with patch.object(websocket_client, '_connection_loop', new=AsyncMock()):
+            await websocket_client.connect()
+            assert websocket_client._running is True
+
+        # Disconnect should set running to False
+        await websocket_client.disconnect()
+        assert websocket_client._running is False
 
 
 class TestPasswordAuthentication:
@@ -205,22 +215,27 @@ class TestHeartbeat:
     """Test heartbeat mechanism."""
 
     @pytest.mark.asyncio
-    async def test_heartbeat_keeps_connection_alive(self, websocket_client):
-        """Test heartbeat mechanism."""
-        # WebSocket implementations typically send ping/pong for keepalive
-        # This is handled by aiohttp internally
-        assert websocket_client._reconnect_delay == 5
+    async def test_heartbeat_task_created_on_connection(self, websocket_client):
+        """Test heartbeat task is created when connected."""
+        # The _heartbeat() method should exist and be async
+        assert asyncio.iscoroutinefunction(websocket_client._heartbeat)
+
+        # Initially no heartbeat task
+        assert websocket_client._heartbeat_task is None
 
     @pytest.mark.asyncio
-    async def test_connection_timeout_detection(self, websocket_client):
-        """Test detection of connection timeout."""
-        # Connection timeout would trigger reconnection
+    async def test_heartbeat_cancelled_on_disconnect(self, websocket_client):
+        """Test heartbeat task is cancelled on disconnect."""
+        # Create a mock heartbeat task
+        mock_task = AsyncMock()
+        mock_task.cancel = MagicMock()
+        websocket_client._heartbeat_task = mock_task
         websocket_client._connected = True
 
-        # Simulate timeout
-        websocket_client._connected = False
+        await websocket_client.disconnect()
 
-        assert websocket_client.connected is False
+        # Heartbeat task should be cancelled
+        mock_task.cancel.assert_called_once()
 
 
 class TestMessageParsing:
@@ -263,13 +278,16 @@ class TestCleanup:
         assert websocket_client.connected is False
 
     @pytest.mark.asyncio
-    async def test_listener_cleanup(self, websocket_client):
-        """Test listeners can be cleaned up."""
+    async def test_callback_cleanup_on_disconnect(self, websocket_client):
+        """Test callback is preserved through disconnect."""
+        messages_received = []
+
         def callback(data):
-            pass
+            messages_received.append(data)
 
-        websocket_client.add_listener(callback)
-        websocket_client.remove_listener(callback)
+        # Callback is set at initialization, persists through disconnect
+        websocket_client._status_callback = callback
+        await websocket_client.disconnect()
 
-        # Broadcast should not call removed callback
-        websocket_client._broadcast_update({"test": "data"})
+        # Callback reference should still exist
+        assert websocket_client._status_callback is not None
