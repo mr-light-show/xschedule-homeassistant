@@ -1,7 +1,7 @@
 import { html, fixture, expect } from '@open-wc/testing';
 import { stub } from 'sinon';
 import '../src/xschedule-playlist-browser.js';
-import { createMockHass, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
+import { createMockHass, createMockEntityState, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
 
 describe('XSchedulePlaylistBrowser', () => {
   let element;
@@ -167,6 +167,118 @@ describe('XSchedulePlaylistBrowser', () => {
       element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       expect(element.config).to.exist;
+    });
+  });
+
+  describe('Render Optimization', () => {
+    it('should not re-render when entity updates with no meaningful changes', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          source_list: ['Playlist 1', 'Playlist 2'],
+          friendly_name: 'xSchedule',
+        }
+      );
+
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+
+      // Track render count
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      // Update with same source_list (simulates backend polling)
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          source_list: ['Playlist 1', 'Playlist 2'],
+          friendly_name: 'xSchedule',
+        }
+      );
+
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      // Should NOT trigger a re-render since no meaningful data changed
+      expect(renderCount).to.equal(0);
+    });
+
+    it('should re-render when source_list changes', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2'],
+        }
+      );
+
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+
+      // Track render count
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      // Update with new playlist
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2', 'Playlist 3'],
+        }
+      );
+
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      // SHOULD trigger a re-render since source_list changed
+      expect(renderCount).to.be.greaterThan(0);
+    });
+
+    it('should re-render when state changes', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1'],
+        }
+      );
+
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+
+      // Track render count
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      // Change state to playing
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          source_list: ['Playlist 1'],
+        }
+      );
+
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      // SHOULD trigger a re-render since state changed
+      expect(renderCount).to.be.greaterThan(0);
     });
   });
 });

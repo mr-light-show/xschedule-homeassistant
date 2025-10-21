@@ -29,6 +29,10 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlistSongs = {}; // Cache of songs for each playlist
     this._updateInterval = null; // Timer for time display updates only
     this._initialLoad = true; // Track if this is the first load
+
+    // Track previous values for render optimization
+    this._previousState = null;
+    this._previousPlaylists = null;
   }
 
   connectedCallback() {
@@ -101,6 +105,29 @@ class XSchedulePlaylistBrowser extends LitElement {
         }
       }
     }
+
+    // Trigger update check
+    this.requestUpdate();
+  }
+
+  shouldUpdate(changedProperties) {
+    // If entity exists, check if meaningful data changed
+    if (this._entity) {
+      // Check if this is the first time we have entity data
+      const isFirstRender = this._previousState === null;
+
+      const stateChanged = this._entity.state !== this._previousState;
+      const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
+
+      // Update tracking variables
+      this._previousState = this._entity.state;
+      this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+
+      // Allow first render, or only if something meaningful changed
+      return isFirstRender || stateChanged || playlistsChanged;
+    }
+
+    return super.shouldUpdate(changedProperties);
   }
 
   async _fetchScheduleInfo(forceRefresh = false) {

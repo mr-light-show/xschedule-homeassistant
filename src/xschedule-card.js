@@ -98,6 +98,14 @@ class XScheduleCard extends LitElement {
     this._progressInterval = null;
     this._lastPlaylist = null;
     this._lastPlaylistSongs = [];
+
+    // Track previous values for render optimization
+    this._previousState = null;
+    this._previousTitle = null;
+    this._previousPlaylist = null;
+    this._previousPlaylists = null;
+    this._previousSongs = null;
+    this._previousQueue = null;
   }
 
   setConfig(config) {
@@ -120,11 +128,39 @@ class XScheduleCard extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     // Start progress bar update interval (every second)
+    // Only update the progress bar DOM element directly, not the entire component
     this._progressInterval = setInterval(() => {
       if (this._entity?.state === 'playing') {
-        this.requestUpdate();
+        this._updateProgressBar();
       }
     }, 1000);
+  }
+
+  _updateProgressBar() {
+    // Update progress bar directly without triggering full re-render
+    const progressFill = this.shadowRoot?.querySelector('.progress-fill');
+    if (progressFill && this._entity) {
+      const percentage = this._calculateProgress();
+      progressFill.style.width = `${percentage}%`;
+    }
+  }
+
+  _calculateProgress() {
+    if (!this._entity?.attributes) return 0;
+
+    const duration = this._entity.attributes.media_duration;
+    const position = this._entity.attributes.media_position;
+    const updatedAt = this._entity.attributes.media_position_updated_at;
+
+    if (!duration || !position || !updatedAt) return 0;
+
+    // Calculate current position based on when it was last updated
+    const lastUpdate = new Date(updatedAt);
+    const now = new Date();
+    const elapsed = (now - lastUpdate) / 1000;
+    const currentPosition = position + elapsed;
+
+    return Math.min(100, (currentPosition / duration) * 100);
   }
 
   disconnectedCallback() {
@@ -162,6 +198,38 @@ class XScheduleCard extends LitElement {
       // Extract queue
       this._queue = this._entity.attributes.queue || [];
     }
+
+    // Trigger update check
+    this.requestUpdate();
+  }
+
+  shouldUpdate(changedProperties) {
+    // If entity exists, check if meaningful data changed
+    if (this._entity) {
+      // Check if this is the first time we have entity data
+      const isFirstRender = this._previousState === null;
+
+      const stateChanged = this._entity.state !== this._previousState;
+      const titleChanged = this._entity.attributes.media_title !== this._previousTitle;
+      const playlistChanged = this._entity.attributes.playlist !== this._previousPlaylist;
+      const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
+      const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
+      const queueChanged = JSON.stringify(this._entity.attributes.queue) !== this._previousQueue;
+
+      // Update tracking variables
+      this._previousState = this._entity.state;
+      this._previousTitle = this._entity.attributes.media_title;
+      this._previousPlaylist = this._entity.attributes.playlist;
+      this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+      this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
+      this._previousQueue = JSON.stringify(this._entity.attributes.queue);
+
+      // Allow first render, or only if something meaningful changed
+      return isFirstRender || stateChanged || titleChanged || playlistChanged ||
+             playlistsChanged || songsChanged || queueChanged;
+    }
+
+    return super.shouldUpdate(changedProperties);
   }
 
   render() {
@@ -263,26 +331,20 @@ class XScheduleCard extends LitElement {
     // Don't show progress bar if we don't have valid duration data
     if (!duration || duration <= 0) return '';
 
-    // Calculate current position based on media_position and when it was last updated
-    let position = basePosition || 0;
+    // Use shared calculation method
+    const progress = this._calculateProgress();
 
-    // If playing, calculate current position based on elapsed time since last update
+    // Calculate position for time display
+    let position = basePosition || 0;
     if (this._entity.state === 'playing') {
       const updatedAt = this._entity.attributes.media_position_updated_at;
       if (updatedAt) {
         const lastUpdate = new Date(updatedAt);
         const now = new Date();
-        const elapsed = (now - lastUpdate) / 1000; // Convert to seconds
-        position = position + elapsed;
-
-        // Don't exceed duration
-        if (position > duration) {
-          position = duration;
-        }
+        const elapsed = (now - lastUpdate) / 1000;
+        position = Math.min(duration, position + elapsed);
       }
     }
-
-    const progress = (position / duration) * 100;
 
     return html`
       <div class="progress-container">
