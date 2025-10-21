@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.xschedule.const import DOMAIN, CONF_PASSWORD
-from custom_components.xschedule.config_flow import XScheduleConfigFlow
+from custom_components.xschedule.config_flow import ConfigFlow
 
 
 @pytest.fixture
