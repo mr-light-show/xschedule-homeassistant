@@ -165,6 +165,12 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PAUSED
         else:
             self._attr_state = MediaPlayerState.IDLE
+            # Clear media attributes when idle to prevent stale data
+            self._attr_media_title = None
+            self._attr_media_playlist = None
+            self._attr_media_position = None
+            self._attr_media_duration = None
+            self._time_remaining = None
 
         # Update current media info
         if "playlist" in data:
