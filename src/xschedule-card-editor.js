@@ -156,7 +156,7 @@ class XScheduleCardEditor extends LitElement {
           >
             ${DISPLAY_MODE_OPTIONS.map(
               (option) => html`
-                <option value=${option.value}>
+                <option value=${option.value} ?selected=${(this.config.playlistDisplay || 'collapsed') === option.value}>
                   ${option.label}
                 </option>
               `
@@ -173,7 +173,7 @@ class XScheduleCardEditor extends LitElement {
           >
             ${DISPLAY_MODE_OPTIONS.map(
               (option) => html`
-                <option value=${option.value}>
+                <option value=${option.value} ?selected=${(this.config.songsDisplay || 'collapsed') === option.value}>
                   ${option.label}
                 </option>
               `
@@ -190,7 +190,7 @@ class XScheduleCardEditor extends LitElement {
           >
             ${QUEUE_DISPLAY_OPTIONS.map(
               (option) => html`
-                <option value=${option.value}>
+                <option value=${option.value} ?selected=${(this.config.queueDisplay || 'auto') === option.value}>
                   ${option.label}
                 </option>
               `
