@@ -144,14 +144,13 @@ class XScheduleWebSocket:
                 await asyncio.sleep(delay)
 
     async def _heartbeat(self) -> None:
-        """Send periodic status queries to detect state changes."""
+        """Send periodic heartbeat to keep connection alive."""
         try:
             while self._running and self.connected:
-                await asyncio.sleep(30)  # Poll every 30 seconds
+                await asyncio.sleep(WS_HEARTBEAT_INTERVAL)
                 if self._ws and not self._ws.closed:
-                    # Query full status to detect state changes
+                    # Single query as keepalive - xSchedule pushes updates via WebSocket
                     await self.send_query("GetPlayingStatus")
-                    await self.send_query("GetQueuedSteps")
         except asyncio.CancelledError:
             pass
         except Exception as err:  # pylint: disable=broad-except
