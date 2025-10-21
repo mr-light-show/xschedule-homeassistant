@@ -7,49 +7,44 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  # backend-tests:
-  #   name: Backend Tests (Python)
-  #   runs-on: ubuntu-latest
-  #   # TODO: Backend tests are placeholder stubs that don't match actual implementation
-  #   # Issues found:
-  #   # - test_api_client.py: calls get_schedules() but actual method is get_playlist_schedules(playlist_name)
-  #   # - test_websocket.py: expects ._host, ._password, .is_connected, .add_listener() - none exist
-  #   # - test_config_flow.py: expects Home Assistant test fixtures not configured
-  #   # - test_media_player.py: missing Home Assistant test environment setup
-  #   # See: https://github.com/mr-light-show/xschedule-homeassistant/issues/XXX
-  #   if: false
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.11'
-  #         cache: 'pip'
-  #         cache-dependency-path: 'requirements_test.txt'
-  #
-  #     - name: Install dependencies
-  #       run: |
-  #         pip install -r requirements_test.txt
-  #
-  #     - name: Run pytest
-  #       run: |
-  #         pytest tests/ \
-  #           --cov=custom_components.xschedule \
-  #           --cov-report=xml \
-  #           --cov-report=term-missing \
-  #           -v
-  #
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         file: ./coverage.xml
-  #         flags: backend
-  #         name: backend-coverage
-  #       env:
-  #         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  backend-tests:
+    name: Backend Tests (Python)
+    runs-on: ubuntu-latest
+    # Note: Many tests still need Phase 2 & 3 fixes (see BACKEND_TESTS_TODO.md)
+    # Currently passing: ~23-26 tests (Phase 1 fixes applied)
+    continue-on-error: true  # Don't fail CI while tests are being fixed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'requirements_test.txt'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements_test.txt
+
+      - name: Run pytest
+        run: |
+          pytest tests/ \
+            --cov=custom_components.xschedule \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: backend
+          name: backend-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   frontend-tests:
     name: Frontend Tests (JavaScript)
@@ -112,9 +107,9 @@ jobs:
     steps:
       - name: Check job results
         run: |
+          echo "Backend tests: ${{ needs.backend-tests.result }} (continue-on-error, Phase 1 applied)"
           echo "Frontend tests: ${{ needs.frontend-tests.result }}"
           echo "Lint: ${{ needs.lint.result }}"
-          echo "Note: Backend tests disabled (placeholder stubs need implementation)"
 
           if [ "${{ needs.frontend-tests.result }}" != "success" ] || \
              [ "${{ needs.lint.result }}" != "success" ]; then
@@ -122,4 +117,4 @@ jobs:
             exit 1
           fi
 
-          echo "Quality gate passed"
+          echo "Quality gate passed (backend tests informational only)"
