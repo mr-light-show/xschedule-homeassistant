@@ -102,34 +102,48 @@ Backend tests are **placeholder stubs** that were created to show the structure 
 
 ## Test Results Summary
 
-From GitHub Actions run:
-- ✅ **21 passing** - Basic API client tests that don't need mocking
-- ❌ **44 failing** - Tests with implementation mismatches or missing fixtures
+### Phase 1 Results (commit 2b8acd6):
+- ✅ **29 passing** (44%) - Quick fixes for method/property names
+- ❌ **36 failing/errors** - Remaining mismatches and missing fixtures
 
-### Passing Tests (21):
+### Phase 2 Results (commit 954f614):
+- ✅ **35 passing** (54%) - WebSocket event handling fixed
+- ❌ **13 failing** - WebSocket connection management issues
+- ❌ **20 errors** - Home Assistant fixture issues
+
+**Progress**: +14 tests passing from original baseline (21 → 35)
+
+### Currently Passing (35):
 - API client initialization tests
-- Basic caching tests
-- Simple request tests
+- API client caching tests
+- API client request tests
 - Error handling tests
+- WebSocket initialization tests
+- WebSocket message handling tests (NEW in Phase 2)
+- WebSocket reconnection logic tests (NEW in Phase 2)
 
-### Failing Tests (44):
-- 2 API client tests (method name mismatch)
-- 18 WebSocket tests (attribute/method mismatch)
+### Still Failing (13):
+- 4 WebSocket connection tests (mock setup issues)
 - 9 Config flow tests (missing HA fixtures)
-- 15 Media player tests (missing HA fixtures)
+
+### Still Erroring (20):
+- 17 Media player tests (missing HA fixtures)
+- 3 WebSocket tests (lingering tasks - cleanup needed)
 
 ---
 
 ## Recommended Fix Approach
 
-### Phase 1: Quick Fixes (Low-hanging fruit)
-1. Fix API client method name: `get_schedules()` → `get_playlist_schedules()`
-2. Update WebSocket property access: `.is_connected` → `.connected`
+### Phase 1: Quick Fixes (Low-hanging fruit) ✅ COMPLETED
+1. ✅ Fix API client method name: `get_schedules()` → `get_playlist_schedules()`
+2. ✅ Update WebSocket property access: `.is_connected` → `.connected`
+3. ✅ Update WebSocket property access: `._host` → `.host`, `._password` → `.password`
 
-### Phase 2: Medium Effort
-1. Review WebSocket implementation to understand event handling
-2. Update WebSocket tests to match actual implementation
-3. Remove tests for non-existent methods or add those methods
+### Phase 2: Medium Effort ✅ COMPLETED
+1. ✅ Review WebSocket implementation to understand event handling
+2. ✅ Update WebSocket tests to match actual implementation (callback-based)
+3. ✅ Remove tests for non-existent methods (add_listener/remove_listener)
+4. ✅ Fix WebSocket property and attribute references
 
 ### Phase 3: High Effort (Requires HA expertise)
 1. Set up proper Home Assistant test environment
