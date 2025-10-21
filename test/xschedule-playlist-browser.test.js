@@ -1,7 +1,7 @@
 import { html, fixture, expect } from '@open-wc/testing';
 import { stub } from 'sinon';
 import '../src/xschedule-playlist-browser.js';
-import { createMockHass, createMockCardConfig } from './helpers/mock-hass.js';
+import { createMockHass, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
 
 describe('XSchedulePlaylistBrowser', () => {
   let element;
@@ -13,15 +13,8 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Initialization', () => {
     it('renders with basic config', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       expect(element).to.exist;
       expect(element.config.entity).to.equal('media_player.xschedule');
@@ -40,15 +33,8 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Cache Invalidation Events', () => {
     it('has connection object for events', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Verify hass connection exists
       expect(element.hass.connection).to.exist;
@@ -56,44 +42,23 @@ describe('XSchedulePlaylistBrowser', () => {
     });
 
     it('handles cache event subscription lifecycle', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Component is configured and ready
       expect(element.config.entity).to.equal('media_player.xschedule');
     });
 
     it('validates entity ID configuration', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig({ entity: 'media_player.xschedule' });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       expect(element.config.entity).to.equal('media_player.xschedule');
     });
 
     it('cleans up on disconnect', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Remove element to trigger disconnect
       element.remove();
@@ -105,45 +70,24 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Schedule Display', () => {
     it('initializes with empty schedules', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Initial state should have empty or default schedules
       expect(element._schedules).to.exist;
     });
 
     it('tracks loading state', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Loading state exists and can be tracked
       expect(element._loading !== undefined).to.be.true;
     });
 
     it('can track error state', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Error state can be set
       element._error = 'Test error';
@@ -153,15 +97,8 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Playlist Selection', () => {
     it('tracks selected playlist', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Playlist selection can be tracked
       element._selectedPlaylist = 'Playlist 1';
@@ -171,15 +108,8 @@ describe('XSchedulePlaylistBrowser', () => {
     });
 
     it('stores playlist steps data', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       element._playlistSteps = [
         { name: 'Song 1', duration: 180 },
@@ -193,28 +123,16 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Queue Operations', () => {
     it('has access to hass service calls', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Hass object with callService should be available
       expect(element.hass.callService).to.exist;
     });
 
     it('can track selected playlist for operations', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       element._selectedPlaylist = 'Test Playlist';
 
@@ -226,15 +144,8 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Force Refresh', () => {
     it('supports configuration', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Component configured successfully
       expect(element.config).to.exist;
@@ -243,29 +154,15 @@ describe('XSchedulePlaylistBrowser', () => {
 
   describe('Compact Layout', () => {
     it('supports compact layout config', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig({ compactLayout: true });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       expect(element.config.compactLayout).to.be.true;
     });
 
     it('uses default layout when not specified', async () => {
-      element = await fixture(html`
-        <xschedule-playlist-browser></xschedule-playlist-browser>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       expect(element.config).to.exist;
     });

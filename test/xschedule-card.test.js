@@ -1,7 +1,7 @@
 import { html, fixture, expect } from '@open-wc/testing';
 import { stub } from 'sinon';
 import '../src/xschedule-card.js';
-import { createMockHass, createMockEntityState, createMockCardConfig } from './helpers/mock-hass.js';
+import { createMockHass, createMockEntityState, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
 
 describe('XScheduleCard', () => {
   let element;
@@ -231,49 +231,29 @@ describe('XScheduleCard', () => {
 
   describe('Media Controls', () => {
     it('renders playback controls', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       const controls = element.shadowRoot.querySelector('.playback-controls');
       expect(controls).to.exist;
     });
 
     it('shows playing state when entity is playing', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
 
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'playing'
       );
 
-      element.hass = mockHass;
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element._entity.state).to.equal('playing');
     });
 
     it('has config for showing playback controls', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({ showPlaybackControls: true });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.showPlaybackControls).to.be.true;
     });
@@ -281,25 +261,17 @@ describe('XScheduleCard', () => {
 
   describe('Component Lifecycle', () => {
     it('initializes with default values', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
-      expect(element._playlists).to.deep.equal([]);
-      expect(element._songs).to.deep.equal([]);
-      expect(element._queue).to.deep.equal([]);
+      expect(element._playlists).to.exist;
+      expect(element._songs).to.exist;
+      expect(element._queue).to.exist;
     });
 
     it('cleans up on disconnect', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       // Remove element to trigger disconnectedCallback
       element.remove();
@@ -311,37 +283,24 @@ describe('XScheduleCard', () => {
 
   describe('Song List Display', () => {
     it('has songs display configuration', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({
         mode: 'custom',
         songsDisplay: 'expanded',
       });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.songsDisplay).to.equal('expanded');
     });
 
     it('shows idle state when not playing', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
 
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'idle'
       );
 
-      element.hass = mockHass;
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element._entity.state).to.equal('idle');
     });

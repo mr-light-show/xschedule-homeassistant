@@ -104,8 +104,33 @@ export function createMockEntityState(entityId, state, attributes = {}) {
 export function createMockCardConfig(overrides = {}) {
   return {
     entity: 'media_player.xschedule',
-    mode: 'auto',
+    mode: 'simple',
     name: 'xSchedule Media Player',
     ...overrides,
   };
+}
+
+/**
+ * Helper to create and configure a component before first render
+ */
+export async function createConfiguredElement(elementTag, config, hass) {
+  const element = document.createElement(elementTag);
+
+  // Set config first (required before render)
+  if (config) {
+    element.setConfig(config);
+  }
+
+  // Set hass second (may trigger render)
+  if (hass) {
+    element.hass = hass;
+  }
+
+  // Add to DOM
+  document.body.appendChild(element);
+
+  // Wait for updates
+  await element.updateComplete;
+
+  return element;
 }
