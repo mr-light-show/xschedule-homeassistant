@@ -32,18 +32,18 @@ class TestWebSocketInit:
 
     def test_init_with_password(self, websocket_client):
         """Test initialization with password."""
-        assert websocket_client._host == "192.168.1.100"
+        assert websocket_client.host == "192.168.1.100"
         assert websocket_client._port == 80
-        assert websocket_client._password == "testpass"
+        assert websocket_client.password == "testpass"
         assert websocket_client._ws_url == "ws://192.168.1.100:80/xScheduleStatus"
 
     def test_init_without_password(self, websocket_client_no_password):
         """Test initialization without password."""
-        assert websocket_client_no_password._password is None
+        assert websocket_client_no_password.password is None
 
     def test_initial_connection_state(self, websocket_client):
         """Test initial connection state."""
-        assert websocket_client.is_connected is False
+        assert websocket_client.connected is False
         assert websocket_client._ws is None
 
 
@@ -60,7 +60,7 @@ class TestConnectionManagement:
         with patch('aiohttp.ClientSession', return_value=mock_session):
             await websocket_client.connect()
 
-            assert websocket_client.is_connected is True
+            assert websocket_client.connected is True
             assert websocket_client._ws == mock_ws
 
     @pytest.mark.asyncio
@@ -74,7 +74,7 @@ class TestConnectionManagement:
         await websocket_client.disconnect()
 
         mock_ws.close.assert_called_once()
-        assert websocket_client.is_connected is False
+        assert websocket_client.connected is False
 
     @pytest.mark.asyncio
     async def test_disconnect_when_not_connected(self, websocket_client):
@@ -82,7 +82,7 @@ class TestConnectionManagement:
         # Should not raise error
         await websocket_client.disconnect()
 
-        assert websocket_client.is_connected is False
+        assert websocket_client.connected is False
 
 
 class TestMessageHandling:
@@ -186,7 +186,7 @@ class TestPasswordAuthentication:
 
             # Verify password was hashed and included
             call_args = mock_session.ws_connect.call_args
-            assert "Pass=" in str(call_args) or websocket_client._password is not None
+            assert "Pass=" in str(call_args) or websocket_client.password is not None
 
     @pytest.mark.asyncio
     async def test_connect_without_password(self, websocket_client_no_password):
@@ -198,7 +198,7 @@ class TestPasswordAuthentication:
         with patch('aiohttp.ClientSession', return_value=mock_session):
             await websocket_client_no_password.connect()
 
-            assert websocket_client_no_password._password is None
+            assert websocket_client_no_password.password is None
 
 
 class TestHeartbeat:
@@ -220,7 +220,7 @@ class TestHeartbeat:
         # Simulate timeout
         websocket_client._connected = False
 
-        assert websocket_client.is_connected is False
+        assert websocket_client.connected is False
 
 
 class TestMessageParsing:
@@ -260,7 +260,7 @@ class TestCleanup:
         await websocket_client.disconnect()
 
         assert websocket_client._ws is None
-        assert websocket_client.is_connected is False
+        assert websocket_client.connected is False
 
     @pytest.mark.asyncio
     async def test_listener_cleanup(self, websocket_client):

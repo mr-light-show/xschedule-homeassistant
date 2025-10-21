@@ -159,26 +159,26 @@ class TestAPIRequests:
 
     @pytest.mark.asyncio
     async def test_get_schedules_with_cache(self, api_client):
-        """Test get_schedules uses cache when valid."""
+        """Test get_playlist_schedules uses cache when valid."""
         cached_data = [{"name": "Schedule 1"}]
-        api_client._schedule_cache["schedules"] = (cached_data, time.time())
+        api_client._schedule_cache["TestPlaylist"] = (cached_data, time.time())
 
-        result = await api_client.get_schedules()
+        result = await api_client.get_playlist_schedules("TestPlaylist")
 
         assert result == cached_data
 
     @pytest.mark.asyncio
     async def test_get_schedules_expired_cache(self, api_client):
-        """Test get_schedules fetches fresh data when cache expired."""
+        """Test get_playlist_schedules fetches fresh data when cache expired."""
         cached_data = [{"name": "Old Schedule"}]
         old_time = time.time() - 400  # Expired
-        api_client._schedule_cache["schedules"] = (cached_data, old_time)
+        api_client._schedule_cache["TestPlaylist"] = (cached_data, old_time)
 
         new_data = [{"name": "New Schedule"}]
         mock_response = {"schedules": new_data}
 
         with patch.object(api_client, '_request', new=AsyncMock(return_value=mock_response)):
-            result = await api_client.get_schedules()
+            result = await api_client.get_playlist_schedules("TestPlaylist")
 
             assert result == new_data
 
