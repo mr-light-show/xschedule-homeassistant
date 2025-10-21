@@ -116,18 +116,18 @@ export function createMockCardConfig(overrides = {}) {
 export async function createConfiguredElement(elementTag, config, hass) {
   const element = document.createElement(elementTag);
 
-  // Set config first (required before render)
+  // Set config first (required before render and before setting hass)
   if (config) {
     element.setConfig(config);
   }
 
-  // Set hass second (may trigger render)
+  // Add to DOM before setting hass (some components need to be in DOM)
+  document.body.appendChild(element);
+
+  // Set hass after element is in DOM (may trigger render)
   if (hass) {
     element.hass = hass;
   }
-
-  // Add to DOM
-  document.body.appendChild(element);
 
   // Wait for updates
   await element.updateComplete;

@@ -36,9 +36,10 @@ describe('XSchedulePlaylistBrowser', () => {
       const config = createMockCardConfig();
       element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
-      // Verify hass connection exists
-      expect(element.hass.connection).to.exist;
-      expect(element.hass.connection.subscribeEvents).to.exist;
+      // Verify hass connection exists (component uses _hass internally)
+      expect(element._hass).to.exist;
+      expect(element._hass.connection).to.exist;
+      expect(element._hass.connection.subscribeEvents).to.exist;
     });
 
     it('handles cache event subscription lifecycle', async () => {
@@ -74,7 +75,7 @@ describe('XSchedulePlaylistBrowser', () => {
       element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
       // Initial state should have empty or default schedules
-      expect(element._schedules).to.exist;
+      expect(element._playlistSchedules).to.exist;
     });
 
     it('tracks loading state', async () => {
@@ -126,8 +127,9 @@ describe('XSchedulePlaylistBrowser', () => {
       const config = createMockCardConfig();
       element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
 
-      // Hass object with callService should be available
-      expect(element.hass.callService).to.exist;
+      // Hass object with callService should be available (component uses _hass internally)
+      expect(element._hass).to.exist;
+      expect(element._hass.callService).to.exist;
     });
 
     it('can track selected playlist for operations', async () => {

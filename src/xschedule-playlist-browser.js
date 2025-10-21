@@ -227,6 +227,10 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
   render() {
+    if (!this.config) {
+      return html``;
+    }
+
     if (!this._entity) {
       return html`
         <ha-card>

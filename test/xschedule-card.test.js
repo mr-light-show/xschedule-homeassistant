@@ -13,15 +13,8 @@ describe('XScheduleCard', () => {
 
   describe('Initialization', () => {
     it('renders with basic config', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element).to.exist;
       expect(element.config.entity).to.equal('media_player.xschedule');
@@ -38,15 +31,8 @@ describe('XScheduleCard', () => {
     });
 
     it('displays card when configured', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       const card = element.shadowRoot.querySelector('ha-card');
       expect(card).to.exist;
@@ -55,43 +41,22 @@ describe('XScheduleCard', () => {
 
   describe('Mode Switching', () => {
     it('defaults to simple mode', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig();
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.mode).to.equal('simple');
     });
 
     it('renders custom mode when configured', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({ mode: 'custom' });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.mode).to.equal('custom');
     });
 
     it('renders minimal mode when configured', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({ mode: 'minimal' });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.mode).to.equal('minimal');
     });
@@ -99,8 +64,6 @@ describe('XScheduleCard', () => {
 
   describe('State Display', () => {
     it('displays playing state', async () => {
-      const config = createMockCardConfig();
-
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'playing',
@@ -110,40 +73,25 @@ describe('XScheduleCard', () => {
         }
       );
 
-      element = await fixture(html`
-        <xschedule-card .hass=${mockHass} .config=${config}></xschedule-card>
-      `);
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element._entity.state).to.equal('playing');
     });
 
     it('displays idle state with no media info', async () => {
-      const config = createMockCardConfig();
-
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'idle'
       );
 
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element._entity.state).to.equal('idle');
     });
 
     it('tracks state transitions', async () => {
-      const config = createMockCardConfig();
-
-      // First set playing state with media
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'playing',
@@ -153,13 +101,8 @@ describe('XScheduleCard', () => {
         }
       );
 
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element._entity.state).to.equal('playing');
 
@@ -178,52 +121,31 @@ describe('XScheduleCard', () => {
 
   describe('Playlist Display Toggle', () => {
     it('shows playlist when display mode is expanded', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({
         mode: 'custom',
         playlistDisplay: 'expanded',
       });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.playlistDisplay).to.equal('expanded');
     });
 
     it('collapses playlist when display mode is collapsed', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({
         mode: 'custom',
         playlistDisplay: 'collapsed',
       });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.playlistDisplay).to.equal('collapsed');
     });
 
     it('hides playlist when display mode is hidden', async () => {
-      element = await fixture(html`
-        <xschedule-card></xschedule-card>
-      `);
-
       const config = createMockCardConfig({
         mode: 'custom',
         playlistDisplay: 'hidden',
       });
-      element.setConfig(config);
-      element.hass = mockHass;
-
-      await element.updateComplete;
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       expect(element.config.playlistDisplay).to.equal('hidden');
     });
