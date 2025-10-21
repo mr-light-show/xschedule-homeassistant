@@ -142,7 +142,7 @@ yarn-error.log*
 dist/
 
 # Package lock files
-package-lock.json
+# package-lock.json - now tracked for CI/CD reproducibility
 yarn.lock
 
 # Release artifacts
