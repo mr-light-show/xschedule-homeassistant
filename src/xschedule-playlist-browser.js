@@ -112,8 +112,7 @@ class XSchedulePlaylistBrowser extends LitElement {
       }
     }
 
-    // Trigger update check
-    this.requestUpdate();
+    // Note: Don't call requestUpdate() here - let _fetchScheduleInfo() trigger it when data is ready
   }
 
   shouldUpdate(changedProperties) {
@@ -238,6 +237,8 @@ class XSchedulePlaylistBrowser extends LitElement {
       }
 
       this._playlistSchedules = newSchedules;
+      // Force shouldUpdate to detect this change by clearing previous state
+      this._previousSchedules = null;
     } finally {
       // Always reset loading state, even if there's an unexpected error
       this._loading = false;
