@@ -34,12 +34,17 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._previousState = null;
     this._previousPlaylists = null;
     this._previousSchedules = null;
+    this._previousExpandedPlaylist = null;
+    this._previousPlaylistSongs = null;
+    this._previousTimeUpdate = null;
+    this._lastTimeUpdate = Date.now();
   }
 
   connectedCallback() {
     super.connectedCallback();
     // Update every 5 minutes to refresh relative time displays
     this._updateInterval = setInterval(() => {
+      this._lastTimeUpdate = Date.now();
       this.requestUpdate();
     }, 300000); // 5 minutes
 
@@ -120,15 +125,21 @@ class XSchedulePlaylistBrowser extends LitElement {
       const stateChanged = this._entity.state !== this._previousState;
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
       const schedulesChanged = JSON.stringify(this._playlistSchedules) !== this._previousSchedules;
+      const expandedChanged = this._expandedPlaylist !== this._previousExpandedPlaylist;
+      const songsChanged = JSON.stringify(this._playlistSongs) !== this._previousPlaylistSongs;
+      const timeElapsed = this._lastTimeUpdate !== this._previousTimeUpdate;
 
       // Update tracking variables
       this._previousState = this._entity.state;
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
       this._previousSchedules = JSON.stringify(this._playlistSchedules);
+      this._previousExpandedPlaylist = this._expandedPlaylist;
+      this._previousPlaylistSongs = JSON.stringify(this._playlistSongs);
+      this._previousTimeUpdate = this._lastTimeUpdate;
 
       // Allow first render, or only if something meaningful changed
-      // Include schedulesChanged to allow time display updates from the interval timer
-      return isFirstRender || stateChanged || playlistsChanged || schedulesChanged;
+      return isFirstRender || stateChanged || playlistsChanged || schedulesChanged ||
+             expandedChanged || songsChanged || timeElapsed;
     }
 
     return super.shouldUpdate(changedProperties);
