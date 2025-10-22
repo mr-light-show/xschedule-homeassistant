@@ -280,7 +280,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             attributes["playlist_songs"] = [
                 {
                     "name": step.get("name"),
-                    "duration": step.get("duration"),
+                    "duration": step.get("lengthms"),  # Use lengthms (milliseconds) from API
                 }
                 for step in self._current_playlist_steps
             ]
@@ -291,7 +291,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 {
                     "name": step.get("name"),
                     "id": step.get("id"),
-                    "duration": step.get("length"),
+                    "duration": step.get("lengthms"),  # Use lengthms (milliseconds) from API
                 }
                 for step in self._queued_steps
             ]
