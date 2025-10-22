@@ -106,6 +106,7 @@ class XScheduleCard extends LitElement {
     this._previousPlaylists = null;
     this._previousSongs = null;
     this._previousQueue = null;
+    this._previousMediaPositionUpdatedAt = null;
   }
 
   setConfig(config) {
@@ -215,6 +216,7 @@ class XScheduleCard extends LitElement {
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
       const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
       const queueChanged = JSON.stringify(this._entity.attributes.queue) !== this._previousQueue;
+      const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
 
       // Update tracking variables
       this._previousState = this._entity.state;
@@ -223,10 +225,11 @@ class XScheduleCard extends LitElement {
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
       this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
       this._previousQueue = JSON.stringify(this._entity.attributes.queue);
+      this._previousMediaPositionUpdatedAt = this._entity.attributes.media_position_updated_at;
 
       // Allow first render, or only if something meaningful changed
       return isFirstRender || stateChanged || titleChanged || playlistChanged ||
-             playlistsChanged || songsChanged || queueChanged;
+             playlistsChanged || songsChanged || queueChanged || mediaPositionUpdatedAtChanged;
     }
 
     return super.shouldUpdate(changedProperties);
