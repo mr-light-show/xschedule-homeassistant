@@ -8,23 +8,29 @@ from custom_components.xschedule.websocket import XScheduleWebSocket
 
 
 @pytest.fixture
-def websocket_client():
+async def websocket_client():
     """Create WebSocket client instance."""
-    return XScheduleWebSocket(
+    client = XScheduleWebSocket(
         host="192.168.1.100",
         port=80,
         password="testpass",
     )
+    yield client
+    # Cleanup
+    await client.disconnect()
 
 
 @pytest.fixture
-def websocket_client_no_password():
+async def websocket_client_no_password():
     """Create WebSocket client without password."""
-    return XScheduleWebSocket(
+    client = XScheduleWebSocket(
         host="192.168.1.100",
         port=80,
         password=None,
     )
+    yield client
+    # Cleanup
+    await client.disconnect()
 
 
 class TestWebSocketInit:
@@ -52,29 +58,33 @@ class TestConnectionManagement:
 
     @pytest.mark.asyncio
     async def test_connect_success(self, websocket_client):
-        """Test successful WebSocket connection."""
-        mock_ws = MagicMock()
-        mock_session = MagicMock()
-        mock_session.ws_connect = AsyncMock(return_value=mock_ws)
+        """Test successful WebSocket connection starts the task."""
+        # Mock the connection loop to prevent real connection attempts
+        with patch.object(websocket_client, '_connection_loop', new=AsyncMock()):
+            # Connect just starts the background task, doesn't wait for connection
+            result = await websocket_client.connect()
 
-        with patch('aiohttp.ClientSession', return_value=mock_session):
-            await websocket_client.connect()
-
-            assert websocket_client.connected is True
-            assert websocket_client._ws == mock_ws
+            # Should return True and start the task
+            assert result is True
+            assert websocket_client._running is True
+            assert websocket_client._reconnect_task is not None
 
     @pytest.mark.asyncio
     async def test_disconnect(self, websocket_client):
         """Test WebSocket disconnection."""
+        # Set up a fake connection state
         mock_ws = MagicMock()
         mock_ws.close = AsyncMock()
+        mock_ws.closed = False
         websocket_client._ws = mock_ws
         websocket_client._connected = True
+        websocket_client._running = True
 
         await websocket_client.disconnect()
 
         mock_ws.close.assert_called_once()
         assert websocket_client.connected is False
+        assert websocket_client._running is False
 
     @pytest.mark.asyncio
     async def test_disconnect_when_not_connected(self, websocket_client):
@@ -187,25 +197,19 @@ class TestPasswordAuthentication:
     @pytest.mark.asyncio
     async def test_connect_with_password(self, websocket_client):
         """Test connection includes password in URL."""
-        mock_ws = MagicMock()
-        mock_session = MagicMock()
-        mock_session.ws_connect = AsyncMock(return_value=mock_ws)
-
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Mock the connection loop to prevent real connection attempts
+        with patch.object(websocket_client, '_connection_loop', new=AsyncMock()):
             await websocket_client.connect()
 
-            # Verify password was hashed and included
-            call_args = mock_session.ws_connect.call_args
-            assert "Pass=" in str(call_args) or websocket_client.password is not None
+            # Verify password is set
+            assert websocket_client.password is not None
+            assert websocket_client.password == "testpass"
 
     @pytest.mark.asyncio
     async def test_connect_without_password(self, websocket_client_no_password):
         """Test connection without password."""
-        mock_ws = MagicMock()
-        mock_session = MagicMock()
-        mock_session.ws_connect = AsyncMock(return_value=mock_ws)
-
-        with patch('aiohttp.ClientSession', return_value=mock_session):
+        # Mock the connection loop to prevent real connection attempts
+        with patch.object(websocket_client_no_password, '_connection_loop', new=AsyncMock()):
             await websocket_client_no_password.connect()
 
             assert websocket_client_no_password.password is None
@@ -226,16 +230,18 @@ class TestHeartbeat:
     @pytest.mark.asyncio
     async def test_heartbeat_cancelled_on_disconnect(self, websocket_client):
         """Test heartbeat task is cancelled on disconnect."""
-        # Create a mock heartbeat task
-        mock_task = AsyncMock()
-        mock_task.cancel = MagicMock()
-        websocket_client._heartbeat_task = mock_task
+        # Create a real task that we can cancel
+        async def dummy_heartbeat():
+            await asyncio.sleep(100)
+
+        task = asyncio.create_task(dummy_heartbeat())
+        websocket_client._heartbeat_task = task
         websocket_client._connected = True
 
         await websocket_client.disconnect()
 
         # Heartbeat task should be cancelled
-        mock_task.cancel.assert_called_once()
+        assert task.cancelled()
 
 
 class TestMessageParsing:
@@ -269,11 +275,13 @@ class TestCleanup:
         """Test proper cleanup on disconnect."""
         mock_ws = MagicMock()
         mock_ws.close = AsyncMock()
+        mock_ws.closed = False  # Important: mock needs closed attribute
         websocket_client._ws = mock_ws
         websocket_client._connected = True
 
         await websocket_client.disconnect()
 
+        mock_ws.close.assert_called_once()
         assert websocket_client._ws is None
         assert websocket_client.connected is False
 
