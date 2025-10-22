@@ -203,6 +203,14 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             except (ValueError, TypeError):
                 self._time_remaining = 0
 
+        # Update volume level from status
+        if "volume" in data:
+            # Convert 0-100 to 0-1 (handle both int and string)
+            try:
+                self._attr_volume_level = int(data["volume"]) / 100
+            except (ValueError, TypeError):
+                self._attr_volume_level = None
+
         # Detect state transitions and invalidate cache
         if old_state != self._attr_state or old_playlist != self._attr_media_playlist:
             _LOGGER.debug(
