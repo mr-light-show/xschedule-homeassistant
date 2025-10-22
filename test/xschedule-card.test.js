@@ -265,8 +265,9 @@ describe('XScheduleCard', () => {
       element.hass = mockHass;
       await element.updateComplete;
 
-      // Should NOT trigger a re-render since no meaningful data changed
-      expect(renderCount).to.equal(0);
+      // Should trigger a re-render because media_position_updated_at changed (fix from pre12)
+      // This allows the media position display to update during playback
+      expect(renderCount).to.equal(1);
     });
 
     it('should re-render when media title changes', async () => {
