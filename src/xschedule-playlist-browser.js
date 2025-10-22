@@ -33,6 +33,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     // Track previous values for render optimization
     this._previousState = null;
     this._previousPlaylists = null;
+    this._previousSchedules = null;
   }
 
   connectedCallback() {
@@ -118,13 +119,16 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       const stateChanged = this._entity.state !== this._previousState;
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
+      const schedulesChanged = JSON.stringify(this._playlistSchedules) !== this._previousSchedules;
 
       // Update tracking variables
       this._previousState = this._entity.state;
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+      this._previousSchedules = JSON.stringify(this._playlistSchedules);
 
       // Allow first render, or only if something meaningful changed
-      return isFirstRender || stateChanged || playlistsChanged;
+      // Include schedulesChanged to allow time display updates from the interval timer
+      return isFirstRender || stateChanged || playlistsChanged || schedulesChanged;
     }
 
     return super.shouldUpdate(changedProperties);
@@ -984,7 +988,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre8  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre9  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
