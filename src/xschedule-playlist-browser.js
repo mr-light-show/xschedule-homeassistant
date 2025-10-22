@@ -17,6 +17,7 @@ class XSchedulePlaylistBrowser extends LitElement {
       _loading: { type: Boolean },
       _expandedPlaylist: { type: String },
       _playlistSongs: { type: Object },
+      _timeUpdateTrigger: { type: Number },
     };
   }
 
@@ -29,6 +30,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlistSongs = {}; // Cache of songs for each playlist
     this._updateInterval = null; // Timer for time display updates only
     this._initialLoad = true; // Track if this is the first load
+    this._timeUpdateTrigger = 0; // Counter to force time display updates
 
     // Track previous values for render optimization
     this._previousState = null;
@@ -40,7 +42,8 @@ class XSchedulePlaylistBrowser extends LitElement {
     super.connectedCallback();
     // Update every 5 minutes to refresh relative time displays
     this._updateInterval = setInterval(() => {
-      this.requestUpdate();
+      // Increment counter to force a re-render for time display updates
+      this._timeUpdateTrigger++;
     }, 300000); // 5 minutes
 
     // Subscribe to cache invalidation events when hass is available
@@ -988,7 +991,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre9  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre10  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
