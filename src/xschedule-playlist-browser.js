@@ -788,25 +788,7 @@ class XSchedulePlaylistBrowser extends LitElement {
         --mdc-icon-size: 18px;
       }
 
-      .playlist-item.playing .song-list {
-        border-top-color: rgba(255, 255, 255, 0.3);
-      }
-
-      .playlist-item.playing .song-item-compact {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .playlist-item.playing .song-item-compact:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-      .playlist-item.playing .song-name-compact {
-        color: white;
-      }
-
-      .playlist-item.playing .song-duration-compact {
-        color: rgba(255, 255, 255, 0.8);
-      }
+      /* Removed special styling for songs in playing playlist - songs use normal colors */
 
       @media (max-width: 768px) {
         .card-header {
