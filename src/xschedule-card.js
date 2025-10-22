@@ -907,6 +907,26 @@ class XScheduleCard extends LitElement {
         padding: 12px;
       }
 
+      /* Compact mode: reduce font size by ~2pt for expanded lists */
+      .card-content.compact .song-list,
+      .card-content.compact .queue-list,
+      .card-content.compact .playlist-list {
+        font-size: 0.875em; /* Reduces base font from ~14px to ~12px */
+      }
+
+      .card-content.compact .song-duration,
+      .card-content.compact .queue-duration {
+        font-size: 0.8em; /* Already small, reduce proportionally */
+      }
+
+      .card-content.compact .section h3 {
+        font-size: 0.9em; /* Section headers slightly smaller */
+      }
+
+      .card-content.compact .badge {
+        font-size: 0.75em; /* Badges slightly smaller */
+      }
+
       .error {
         display: flex;
         flex-direction: column;
