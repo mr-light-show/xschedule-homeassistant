@@ -171,6 +171,11 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._attr_media_position = None
             self._attr_media_duration = None
             self._time_remaining = None
+            # Also clear playlist/queue data if truly stopped (not just between songs)
+            # Check: no playlist field AND outputtolights is false
+            if "playlist" not in data and data.get("outputtolights", "false") == "false":
+                self._current_playlist_steps = []
+                self._queued_steps = []
 
         # Update current media info
         if "playlist" in data:
