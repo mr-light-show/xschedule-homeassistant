@@ -29,6 +29,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._playlistSongs = {}; // Cache of songs for each playlist
     this._updateInterval = null; // Timer for time display updates only
     this._initialLoad = true; // Track if this is the first load
+
+    // Track previous values for render optimization
+    this._previousState = null;
+    this._previousPlaylists = null;
+    this._previousSchedules = null;
   }
 
   connectedCallback() {
@@ -101,6 +106,32 @@ class XSchedulePlaylistBrowser extends LitElement {
         }
       }
     }
+
+    // Trigger update check
+    this.requestUpdate();
+  }
+
+  shouldUpdate(changedProperties) {
+    // If entity exists, check if meaningful data changed
+    if (this._entity) {
+      // Check if this is the first time we have entity data
+      const isFirstRender = this._previousState === null;
+
+      const stateChanged = this._entity.state !== this._previousState;
+      const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
+      const schedulesChanged = JSON.stringify(this._playlistSchedules) !== this._previousSchedules;
+
+      // Update tracking variables
+      this._previousState = this._entity.state;
+      this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+      this._previousSchedules = JSON.stringify(this._playlistSchedules);
+
+      // Allow first render, or only if something meaningful changed
+      // Include schedulesChanged to allow time display updates from the interval timer
+      return isFirstRender || stateChanged || playlistsChanged || schedulesChanged;
+    }
+
+    return super.shouldUpdate(changedProperties);
   }
 
   async _fetchScheduleInfo(forceRefresh = false) {
@@ -957,7 +988,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre11  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.0.2-pre9  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
