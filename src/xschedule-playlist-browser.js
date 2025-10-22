@@ -194,13 +194,17 @@ class XSchedulePlaylistBrowser extends LitElement {
                   return new Date(a.nextactive) - new Date(b.nextactive);
                 });
 
-              schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
-              if (schedule) {
+              // Use first valid upcoming schedule, or if none, use first schedule from array
+              if (upcomingSchedules.length > 0) {
+                schedule = upcomingSchedules[0];
+              } else if (schedules.length > 0) {
+                schedule = schedules[0];
               }
             }
 
-            if (!schedule) {
-              continue; // Skip this playlist
+            // If we still don't have a schedule, skip this playlist
+            if (!schedule || !schedule.nextactive) {
+              continue;
             }
 
 
