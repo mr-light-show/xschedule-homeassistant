@@ -716,6 +716,26 @@ Could add controller health monitoring:
 
 ## Enhancement Opportunities
 
+### Implemented Enhancements ✅
+
+The following enhancements have been implemented in the integration:
+
+**5. Playlist Duration Display** (High Value - User-Facing)
+- **Fields:** `lengthms` from GetPlaylists API
+- **Implementation:** xschedule-playlist-browser.js displays duration alongside schedule time
+- **Usage:** Shows when `show_duration: true` in card config (default)
+- **Format:** Duration displayed as "[MM:SS]" or "[HH:MM:SS]" for playlists over 1 hour
+- **Benefit:** Users can see playlist length before playing
+
+**6. Controller Health Monitoring** (Medium Value - Monitoring)
+- **Fields:** `pingstatus` array with controller, ip, result, failcount
+- **Implementation:** binary_sensor.py creates binary sensors for each controller
+- **State:** ON = healthy ("Ok"), OFF = failed ("Failed")
+- **Attributes:** controller_name, ip_address, result, fail_count
+- **Icons:** mdi:check-network (healthy) / mdi:close-network (failed)
+- **Updates:** Real-time via WebSocket events
+- **Benefit:** At-a-glance health monitoring, alerts on failures, historical tracking
+
 ### High Value (User-Facing)
 
 1. **Total Playlist Progress**
@@ -738,46 +758,36 @@ Could add controller health monitoring:
    - Show: "Next: Pirates of the Caribbean"
    - Benefit: See what's coming
 
-5. **Playlist Duration Display**
-   - Fields from GetPlaylists: `length`, `lengthms`
-   - Show: Total playlist length in source list
-   - Benefit: Know playlist length before playing
-
 ### Medium Value (Monitoring)
 
-6. **Controller Health Monitoring**
-   - Field: `pingstatus` array
-   - Create: Binary sensors for each controller
-   - Benefit: Alert on controller failures
-
-7. **Brightness Control**
+5. **Brightness Control**
    - Field: `brightness`
    - Expose: As additional control
    - Benefit: Match volume control capability
 
-8. **Random Mode Indicator**
+6. **Random Mode Indicator**
    - Field: `random`
    - Show: Shuffle icon when active
    - Benefit: Know playback mode
 
-9. **Playlist Offset Timeline**
+7. **Playlist Offset Timeline**
    - Field from GetPlayListSteps: `offset`
    - Show: Visual timeline of playlist
    - Benefit: See playlist structure
 
 ### Low Value (Informational)
 
-10. **Server Information**
-    - Fields: `version`, `ip`, `time`
-    - Show: In integration info/diagnostics
-    - Benefit: Troubleshooting
+8. **Server Information**
+   - Fields: `version`, `ip`, `time`
+   - Show: In integration info/diagnostics
+   - Benefit: Troubleshooting
 
-11. **Step Type Indicators**
-    - Fields from GetPlayListSteps: `startonly`, `endonly`, `everystep`
-    - Show: Icons for special steps
-    - Benefit: Understand playlist structure
+9. **Step Type Indicators**
+   - Fields from GetPlayListSteps: `startonly`, `endonly`, `everystep`
+   - Show: Icons for special steps
+   - Benefit: Understand playlist structure
 
-12. **Trigger Source Badge**
+10. **Trigger Source Badge**
     - Field: `trigger` (Manual/Queued/Scheduled)
     - Show: How playback started
     - Benefit: Context for current playback
