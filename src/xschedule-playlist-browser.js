@@ -377,22 +377,25 @@ class XSchedulePlaylistBrowser extends LitElement {
   _renderScheduleInfo(isPlaying, scheduleInfo) {
     const parts = [];
 
-    // Always show schedule time as the most important info
+    // Always show playing status first
     // Check both isPlaying (current playlist) AND nextActiveTime === "NOW!" (schedule is active)
     if (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!")) {
       parts.push(html`<span class="schedule-info playing-status">[Playing]</span>`);
-    } else if (scheduleInfo && scheduleInfo.nextActiveTime) {
+    }
+
+    // Show duration first (if enabled and available)
+    if (this.config.show_duration && scheduleInfo && scheduleInfo.duration > 0) {
+      const durationStr = this._formatDuration(scheduleInfo.duration);
+      parts.push(html`<span class="schedule-info duration">[${durationStr}]</span>`);
+    }
+
+    // Show schedule time second (if not playing)
+    if (!isPlaying && scheduleInfo && scheduleInfo.nextActiveTime && scheduleInfo.nextActiveTime !== "NOW!") {
       // Skip special values that aren't parseable dates
       if (scheduleInfo.nextActiveTime !== "A long time from now" && scheduleInfo.nextActiveTime !== "N/A") {
         const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
         parts.push(html`<span class="schedule-info schedule-time">[${timeStr}]</span>`);
       }
-    }
-
-    // Show duration if enabled and available
-    if (this.config.show_duration && scheduleInfo && scheduleInfo.duration > 0) {
-      const durationStr = this._formatDuration(scheduleInfo.duration);
-      parts.push(html`<span class="schedule-info duration">[${durationStr}]</span>`);
     }
 
     return parts;
@@ -1058,7 +1061,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.0-pre7  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.0  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
