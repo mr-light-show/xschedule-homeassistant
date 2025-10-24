@@ -720,14 +720,14 @@ Could add controller health monitoring:
 
 The following enhancements have been implemented in the integration:
 
-**5. Playlist Duration Display** (High Value - User-Facing)
+**Playlist Duration Display** (High Value - User-Facing)
 - **Fields:** `lengthms` from GetPlaylists API
 - **Implementation:** xschedule-playlist-browser.js displays duration alongside schedule time
 - **Usage:** Shows when `show_duration: true` in card config (default)
 - **Format:** Duration displayed as "[MM:SS]" or "[HH:MM:SS]" for playlists over 1 hour
 - **Benefit:** Users can see playlist length before playing
 
-**6. Controller Health Monitoring** (Medium Value - Monitoring)
+**Controller Health Monitoring** (Medium Value - Monitoring)
 - **Fields:** `pingstatus` array with controller, ip, result, failcount
 - **Implementation:** binary_sensor.py creates binary sensors for each controller
 - **State:** ON = healthy ("Ok"), OFF = failed ("Failed")
