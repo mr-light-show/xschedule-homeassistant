@@ -61,6 +61,13 @@ async def async_setup_entry(
     # Create media player entity
     entity = XScheduleMediaPlayer(config_entry, api_client, hass)
 
+    # Store entity reference in hass.data for binary_sensor to access
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if "entities" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["entities"] = {}
+    hass.data[DOMAIN]["entities"][config_entry.entry_id] = entity
+
     async_add_entities([entity], True)
 
 

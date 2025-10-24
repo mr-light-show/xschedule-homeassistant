@@ -29,20 +29,12 @@ async def async_setup_entry(
     """Set up xSchedule controller health binary sensors."""
     _LOGGER.debug("Binary sensor platform setup starting for entry %s", config_entry.entry_id)
 
-    # Get the media player entity to access controller status
-    media_player_component = hass.data.get("media_player")
-    if not media_player_component:
-        _LOGGER.warning("Media player component not loaded, cannot create controller sensors")
+    # Get the media player entity from hass.data where it was stored during setup
+    if DOMAIN not in hass.data or "entities" not in hass.data[DOMAIN]:
+        _LOGGER.warning("xSchedule domain data not initialized, cannot create controller sensors")
         return
 
-    # Find our media player entity by matching config_entry
-    # The entity may not use a simple "media_player.xschedule" ID
-    media_player_entity = None
-    for entity in media_player_component.entities:
-        if hasattr(entity, "_config_entry") and entity._config_entry.entry_id == config_entry.entry_id:
-            media_player_entity = entity
-            _LOGGER.debug("Found media player entity for config entry: %s", entity.entity_id)
-            break
+    media_player_entity = hass.data[DOMAIN]["entities"].get(config_entry.entry_id)
 
     if not media_player_entity:
         _LOGGER.warning("xSchedule media player entity not found for config entry %s", config_entry.entry_id)
