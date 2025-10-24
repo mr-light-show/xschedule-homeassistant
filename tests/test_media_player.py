@@ -166,6 +166,9 @@ class TestCacheInvalidation:
         """Test cache is invalidated when state changes."""
         media_player_entity._attr_state = MediaPlayerState.PLAYING
 
+        # Reset mock to ignore any setup calls
+        mock_api_client.invalidate_cache.reset_mock()
+
         data = {"status": "paused"}
         media_player_entity._handle_websocket_update(data)
 
@@ -177,6 +180,9 @@ class TestCacheInvalidation:
         """Test cache is invalidated when playlist changes."""
         media_player_entity._attr_state = MediaPlayerState.PLAYING
         media_player_entity._attr_media_playlist = "Old Playlist"
+
+        # Reset mock to ignore any setup calls
+        mock_api_client.invalidate_cache.reset_mock()
 
         data = {
             "status": "playing",
@@ -192,6 +198,9 @@ class TestCacheInvalidation:
         """Test cache is not invalidated when no state/playlist change."""
         media_player_entity._attr_state = MediaPlayerState.PLAYING
         media_player_entity._attr_media_playlist = "Test Playlist"
+
+        # Reset mock to ignore any setup calls
+        mock_api_client.invalidate_cache.reset_mock()
 
         data = {
             "status": "playing",
@@ -297,6 +306,10 @@ class TestMediaPlayerServices:
     @pytest.mark.asyncio
     async def test_select_source_playlist(self, media_player_entity, mock_api_client):
         """Test select_source service to play a playlist."""
+        # Reset mocks to ignore setup calls
+        mock_api_client.play_playlist.reset_mock()
+        mock_api_client.invalidate_cache.reset_mock()
+
         await media_player_entity.async_select_source("Test Playlist")
 
         # Verify API client was called to play the playlist
@@ -307,6 +320,10 @@ class TestMediaPlayerServices:
     @pytest.mark.asyncio
     async def test_play_song(self, media_player_entity, mock_api_client):
         """Test playing a specific song from a playlist."""
+        # Reset mocks to ignore setup calls
+        mock_api_client.play_playlist_step.reset_mock()
+        mock_api_client.invalidate_cache.reset_mock()
+
         await media_player_entity.async_play_song(
             playlist="Test Playlist",
             song="Test Song"
@@ -323,6 +340,9 @@ class TestMediaPlayerServices:
     @pytest.mark.asyncio
     async def test_update_fetches_status(self, media_player_entity, mock_api_client):
         """Test update method fetches current status."""
+        # Reset mock to ignore setup call
+        mock_api_client.get_playing_status.reset_mock()
+
         await media_player_entity.async_update()
 
         mock_api_client.get_playing_status.assert_called_once()

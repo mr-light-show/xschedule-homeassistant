@@ -1,6 +1,7 @@
 """Media player platform for xSchedule integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 from datetime import datetime
@@ -139,6 +140,22 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         if self._websocket:
             await self._websocket.connect()
 
+            # If WebSocket is connected, it will send data soon
+            # Wait a brief moment for initial data
+            await asyncio.sleep(0.1)
+
+        # Fetch initial status if controller data not yet populated
+        # This handles the case where WebSocket hasn't connected or sent data yet
+        if not self._controller_status:
+            _LOGGER.info("Controller status empty after WebSocket connect, fetching via API")
+            try:
+                await self.async_update()
+            except Exception as err:
+                _LOGGER.error("Failed to fetch initial status: %s", err)
+        else:
+            _LOGGER.debug("Controller status already populated via WebSocket (%d controllers)",
+                         len(self._controller_status))
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -220,6 +237,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         # Update controller health status
         if "pingstatus" in data and isinstance(data["pingstatus"], list):
             self._controller_status = data["pingstatus"]
+            _LOGGER.debug("Updated controller status: %d controllers found", len(self._controller_status))
             # Fire event for binary sensors to update
             self.hass.bus.async_fire(
                 f"{DOMAIN}_controller_status_update",
@@ -228,6 +246,8 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     "controllers": self._controller_status,
                 },
             )
+            _LOGGER.debug("Fired controller_status_update event for %d controllers",
+                         len(self._controller_status))
 
         # Detect state transitions and invalidate cache
         if old_state != self._attr_state or old_playlist != self._attr_media_playlist:
