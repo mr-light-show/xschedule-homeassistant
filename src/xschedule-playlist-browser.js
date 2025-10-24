@@ -153,6 +153,31 @@ class XSchedulePlaylistBrowser extends LitElement {
     try {
       const newSchedules = {};
 
+      // Fetch playlist metadata (including durations) once for all playlists
+      let playlistsMetadata = {};
+      try {
+        const metadataResponse = await this._hass.callWS({
+          type: 'call_service',
+          domain: 'xschedule',
+          service: 'get_playlists_with_metadata',
+          service_data: {
+            entity_id: this.config.entity,
+            force_refresh: forceRefresh,
+          },
+          return_response: true,
+        });
+
+        if (metadataResponse && metadataResponse.response && metadataResponse.response.playlists) {
+          // Convert array to map by playlist name
+          playlistsMetadata = metadataResponse.response.playlists.reduce((acc, playlist) => {
+            acc[playlist.name] = playlist;
+            return acc;
+          }, {});
+        }
+      } catch (err) {
+        console.error('Failed to fetch playlists metadata:', err);
+      }
+
       // Fetch schedule info for each playlist
       for (const playlist of this._playlists) {
         try {
@@ -202,26 +227,10 @@ class XSchedulePlaylistBrowser extends LitElement {
               continue; // Skip this playlist
             }
 
-
-            // Calculate total duration from playlist steps
-            const stepsResponse = await this._hass.callWS({
-              type: 'call_service',
-              domain: 'xschedule',
-              service: 'get_playlist_steps',
-              service_data: {
-                entity_id: this.config.entity,
-                playlist: playlist,
-                force_refresh: forceRefresh,
-              },
-              return_response: true,
-            });
-
+            // Get duration from metadata (lengthms field is milliseconds, convert to seconds)
             let totalDuration = 0;
-            if (stepsResponse && stepsResponse.response && stepsResponse.response.steps) {
-              totalDuration = stepsResponse.response.steps.reduce(
-                (sum, step) => sum + (step.duration || 0),
-                0
-              );
+            if (playlistsMetadata[playlist] && playlistsMetadata[playlist].lengthms) {
+              totalDuration = parseInt(playlistsMetadata[playlist].lengthms) / 1000;
             }
 
             newSchedules[playlist] = {
@@ -359,27 +368,27 @@ class XSchedulePlaylistBrowser extends LitElement {
   }
 
   _renderScheduleInfo(isPlaying, scheduleInfo) {
+    const parts = [];
+
     // Always show schedule time as the most important info
     // Check both isPlaying (current playlist) AND nextActiveTime === "NOW!" (schedule is active)
     if (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!")) {
-      return html`
-        <span class="schedule-info playing-status">[Playing]</span>
-      `;
-    }
-
-    if (scheduleInfo && scheduleInfo.nextActiveTime) {
+      parts.push(html`<span class="schedule-info playing-status">[Playing]</span>`);
+    } else if (scheduleInfo && scheduleInfo.nextActiveTime) {
       // Skip special values that aren't parseable dates
-      if (scheduleInfo.nextActiveTime === "A long time from now" || scheduleInfo.nextActiveTime === "N/A") {
-        return '';
+      if (scheduleInfo.nextActiveTime !== "A long time from now" && scheduleInfo.nextActiveTime !== "N/A") {
+        const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
+        parts.push(html`<span class="schedule-info schedule-time">[${timeStr}]</span>`);
       }
-
-      const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);
-      return html`
-        <span class="schedule-info schedule-time">[${timeStr}]</span>
-      `;
     }
 
-    return '';
+    // Show duration if enabled and available
+    if (this.config.show_duration && scheduleInfo && scheduleInfo.duration > 0) {
+      const durationStr = this._formatDuration(scheduleInfo.duration);
+      parts.push(html`<span class="schedule-info duration">[${durationStr}]</span>`);
+    }
+
+    return parts;
   }
 
   _getSortedPlaylists() {
@@ -718,6 +727,15 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       .playlist-item.playing .schedule-info.schedule-time {
         color: rgba(255, 255, 255, 0.8);
+      }
+
+      .schedule-info.duration {
+        color: var(--secondary-text-color);
+        opacity: 0.85;
+      }
+
+      .playlist-item.playing .schedule-info.duration {
+        color: rgba(255, 255, 255, 0.7);
       }
 
       .song-list {

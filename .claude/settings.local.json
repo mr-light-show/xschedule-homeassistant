@@ -14,7 +14,12 @@
       "Bash(git tag:*)",
       "Bash(gh release list:*)",
       "WebSearch",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(gh release delete:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pytest:*)"
     ],
     "deny": [],
     "ask": []

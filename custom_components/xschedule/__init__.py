@@ -25,6 +25,7 @@ SERVICE_ADD_TO_QUEUE = "add_to_queue"
 SERVICE_CLEAR_QUEUE = "clear_queue"
 SERVICE_GET_PLAYLIST_SCHEDULES = "get_playlist_schedules"
 SERVICE_GET_PLAYLIST_STEPS = "get_playlist_steps"
+SERVICE_GET_PLAYLISTS_WITH_METADATA = "get_playlists_with_metadata"
 
 SCHEMA_PLAY_SONG = vol.Schema(
     {
@@ -60,6 +61,13 @@ SCHEMA_GET_PLAYLIST_STEPS = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("playlist"): cv.string,
+        vol.Optional("force_refresh", default=False): cv.boolean,
+    }
+)
+
+SCHEMA_GET_PLAYLISTS_WITH_METADATA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_id,
         vol.Optional("force_refresh", default=False): cv.boolean,
     }
 )
@@ -296,6 +304,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return {"steps": []}
 
+    async def async_get_playlists_with_metadata(call: ServiceCall) -> dict[str, Any]:
+        """Handle get_playlists_with_metadata service call."""
+        entity_id = call.data["entity_id"]
+        force_refresh = call.data.get("force_refresh", False)
+
+        # Get the media player entity directly from the component
+        component = hass.data.get("media_player")
+        if component:
+            entity_obj = component.get_entity(entity_id)
+            if entity_obj and hasattr(entity_obj, "_api_client"):
+                playlists = await entity_obj._api_client.get_playlists_with_metadata(force_refresh)
+                return {"playlists": playlists}
+
+        return {"playlists": []}
+
     hass.services.async_register(
         DOMAIN, SERVICE_PLAY_SONG, async_play_song, schema=SCHEMA_PLAY_SONG
     )
@@ -319,6 +342,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SCHEMA_GET_PLAYLIST_STEPS,
         supports_response=True,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PLAYLISTS_WITH_METADATA,
+        async_get_playlists_with_metadata,
+        schema=SCHEMA_GET_PLAYLISTS_WITH_METADATA,
+        supports_response=True,
+    )
 
     return True
 
@@ -339,5 +369,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_CLEAR_QUEUE)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_SCHEDULES)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_STEPS)
+        hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLISTS_WITH_METADATA)
 
     return unload_ok

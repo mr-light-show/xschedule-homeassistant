@@ -169,6 +169,38 @@ class XScheduleAPIClient:
             return playlists
         return []
 
+    async def get_playlists_with_metadata(self, force_refresh: bool = False) -> list[dict[str, Any]]:
+        """Get full playlist objects with all metadata (duration, loop status, etc.)."""
+        import time
+
+        # Force refresh: invalidate cache first
+        if force_refresh:
+            _LOGGER.debug("Force refresh requested for playlists metadata")
+            self._playlists_cache = {}
+            self._playlists_cache_time = 0
+
+        # Check cache first (same cache as get_playlists, 5 min TTL)
+        if self._playlists_cache_time and (time.time() - self._playlists_cache_time < 300):
+            if "metadata" in self._playlists_cache:
+                _LOGGER.debug("Using cached playlists metadata")
+                return self._playlists_cache["metadata"]
+
+        try:
+            result = await self._request("GetPlaylists")
+        except XScheduleAPIError as err:
+            _LOGGER.error("Failed to get playlists metadata: %s", err)
+            return []
+
+        # API returns dict with 'playlists' key containing list of playlist objects
+        if isinstance(result, dict) and "playlists" in result:
+            playlists = result["playlists"]
+            if playlists and isinstance(playlists[0], dict):
+                # Cache full playlist objects
+                self._playlists_cache["metadata"] = playlists
+                self._playlists_cache_time = time.time()
+                return playlists
+        return []
+
     async def get_playlist_steps(self, playlist_name: str, force_refresh: bool = False) -> list[dict[str, Any]]:
         """Get list of steps/songs in a playlist (with 3 min caching)."""
         import time
