@@ -8,8 +8,40 @@ from homeassistant.const import STATE_ON, STATE_OFF, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from custom_components.xschedule import async_setup_entry
-from custom_components.xschedule.binary_sensor import XScheduleControllerSensor
+from custom_components.xschedule.binary_sensor import XScheduleControllerSensor, clean_controller_name
 from custom_components.xschedule.const import DOMAIN, CONF_PASSWORD, DEFAULT_NAME
+
+
+class TestCleanControllerName:
+    """Test clean_controller_name helper function."""
+
+    def test_removes_ip_from_start(self):
+        """Test that IP address is removed from the start of controller name."""
+        assert clean_controller_name("192.168.1.101 Tree / Eves") == "Tree / Eves"
+        assert clean_controller_name("192.168.1.102 Web") == "Web"
+        assert clean_controller_name("192.168.1.103 Pumpkins") == "Pumpkins"
+
+    def test_preserves_name_without_ip(self):
+        """Test that names without IP addresses are unchanged."""
+        assert clean_controller_name("Tree / Eves") == "Tree / Eves"
+        assert clean_controller_name("Web") == "Web"
+        assert clean_controller_name("Test Controller") == "Test Controller"
+
+    def test_trims_whitespace(self):
+        """Test that extra whitespace is trimmed."""
+        assert clean_controller_name("192.168.1.101  Tree / Eves  ") == "Tree / Eves"
+        assert clean_controller_name("  Tree / Eves  ") == "Tree / Eves"
+
+    def test_handles_various_ip_formats(self):
+        """Test handling of various IP address formats."""
+        assert clean_controller_name("10.0.0.1 Controller") == "Controller"
+        assert clean_controller_name("172.16.254.1 Device") == "Device"
+        assert clean_controller_name("255.255.255.255 Max") == "Max"
+
+    def test_ip_not_at_start_preserved(self):
+        """Test that IP addresses not at the start are preserved."""
+        assert clean_controller_name("Controller 192.168.1.101") == "Controller 192.168.1.101"
+        assert clean_controller_name("Test (192.168.1.101)") == "Test (192.168.1.101)"
 
 
 class TestBinarySensorSetup:
@@ -56,7 +88,7 @@ class TestControllerSensor:
 
         assert sensor.is_on is True
         assert sensor.device_class == BinarySensorDeviceClass.CONNECTIVITY
-        assert sensor.name == "192.168.1.101 Tree / Eves Health"
+        assert sensor.name == "Tree / Eves Health"  # IP address should be removed from display name
         assert "192.168.1.101" in sensor.extra_state_attributes["ip_address"]
 
     def test_sensor_init_with_failed_controller(self, mock_config_entry):

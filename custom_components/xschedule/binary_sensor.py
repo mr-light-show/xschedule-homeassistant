@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -19,6 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 
 # Storage key for sensor registry
 SENSOR_REGISTRY_KEY = f"{DOMAIN}_controller_sensors"
+
+
+def clean_controller_name(name: str) -> str:
+    """Remove IP address from controller name if present and trim whitespace.
+
+    Examples:
+        "192.168.1.101 Tree / Eves" -> "Tree / Eves"
+        "192.168.1.102 Web" -> "Web"
+        "Tree / Eves" -> "Tree / Eves"
+    """
+    # Pattern matches IP address at start of string followed by optional whitespace
+    # IP pattern: xxx.xxx.xxx.xxx where xxx is 1-3 digits
+    ip_pattern = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\s+"
+    cleaned = re.sub(ip_pattern, "", name)
+    return cleaned.strip()
 
 
 async def async_setup_entry(
@@ -145,9 +161,12 @@ class XScheduleControllerSensor(BinarySensorEntity):
         self._controller_name = controller_data.get("controller", "Unknown")
         self._controller_ip = controller_data.get("ip", "0.0.0.0")
 
+        # Clean the controller name by removing IP address if present
+        display_name = clean_controller_name(self._controller_name)
+
         # Set unique_id and name
         self._attr_unique_id = f"{DOMAIN}_{config_entry.entry_id}_controller_{self._controller_name}"
-        self._attr_name = f"{self._controller_name} Health"
+        self._attr_name = f"{display_name} Health"
 
         # Set device info to group with xSchedule integration
         self._attr_device_info = DeviceInfo(
