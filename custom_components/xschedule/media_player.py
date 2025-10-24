@@ -115,6 +115,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         self._current_playlist_steps: list[dict[str, Any]] = []
         self._queued_steps: list[dict[str, Any]] = []
         self._time_remaining = None
+        self._controller_status: list[dict[str, Any]] = []  # Controller health (pingstatus)
 
         # WebSocket connection
         self._websocket: XScheduleWebSocket | None = None
@@ -215,6 +216,18 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 self._attr_volume_level = int(data["volume"]) / 100
             except (ValueError, TypeError):
                 self._attr_volume_level = None
+
+        # Update controller health status
+        if "pingstatus" in data and isinstance(data["pingstatus"], list):
+            self._controller_status = data["pingstatus"]
+            # Fire event for binary sensors to update
+            self.hass.bus.async_fire(
+                f"{DOMAIN}_controller_status_update",
+                {
+                    "entry_id": self._config_entry.entry_id,
+                    "controllers": self._controller_status,
+                },
+            )
 
         # Detect state transitions and invalidate cache
         if old_state != self._attr_state or old_playlist != self._attr_media_playlist:

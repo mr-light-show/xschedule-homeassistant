@@ -212,16 +212,16 @@ curl "http://{host}:{port}/xScheduleQuery?Query=GetPlayingStatus"
 | `autooutputtolights` | string | Auto output mode | "false" | ❌ No | Advanced feature |
 | `passwordset` | string | Whether password configured | "false" | ❌ No | Security info |
 | `outputtolights` | string | Output active | "true" | ✅ Yes | media_player.py:176 - Used to detect truly stopped |
-| `pingstatus` | array | Controller health status | [...] | ❌ No | Could monitor controllers |
+| `pingstatus` | array | Controller health status | [...] | ✅ Yes | binary_sensor.py - Controller health monitoring |
 
 **pingstatus Array Fields:**
 
 | Field | Type | Description | Example | Used? |
 |-------|------|-------------|---------|-------|
-| `controller` | string | Controller name | "192.168.1.101 Tree / Eves" | ❌ No |
-| `ip` | string | Controller IP | "192.168.1.101" | ❌ No |
-| `result` | string | Health: "Ok" or "Failed" | "Ok" | ❌ No |
-| `failcount` | string | Consecutive failures | "0" | ❌ No |
+| `controller` | string | Controller name | "192.168.1.101 Tree / Eves" | ✅ Yes |
+| `ip` | string | Controller IP | "192.168.1.101" | ✅ Yes |
+| `result` | string | Health: "Ok" or "Failed" | "Ok" | ✅ Yes |
+| `failcount` | string | Consecutive failures | "0" | ✅ Yes |
 
 **Integration Usage:**
 - **File:** `media_player.py:_handle_websocket_update()`
@@ -508,17 +508,17 @@ Complete cross-API field reference:
 | active | GetPlayListSchedules | string | Is schedule running now | ✅ Likely | Shows active state |
 | autooutputtolights | GetPlayingStatus | string | Auto output mode | ❌ No | Advanced feature |
 | brightness | GetPlayingStatus | string | Current brightness (0-100) | ❌ No | Enhancement opportunity |
-| controller | GetPlayingStatus.pingstatus | string | Controller name | ❌ No | Could monitor health |
+| controller | GetPlayingStatus.pingstatus | string | Controller name | ✅ Yes | binary_sensor.py - Entity name |
 | enabled | GetPlayListSchedules | string | Can schedule run | ✅ Likely | Filter schedules |
 | endonly | GetPlayListSteps | string | Step type: end only | ❌ No | Step classification |
 | everystep | GetPlayListSteps | string | Step type: every step | ❌ No | Step classification |
-| failcount | GetPlayingStatus.pingstatus | string | Consecutive failures | ❌ No | Controller monitoring |
+| failcount | GetPlayingStatus.pingstatus | string | Consecutive failures | ✅ Yes | binary_sensor.py - Attribute |
 | id | All | string | Session-specific unique ID | Mixed | Don't persist |
-| ip | GetPlayingStatus, pingstatus | string | IP address | ❌ No | Network info |
+| ip | GetPlayingStatus, pingstatus | string | IP address | ✅ Yes | binary_sensor.py - Attribute |
 | left | GetPlayingStatus | string | Time remaining (formatted) | ❌ No | Use leftms instead |
 | leftms | GetPlayingStatus | string | Time remaining (ms) | ✅ Yes | Used for time_remaining |
 | length | All | string | Duration (formatted) | ❌ No | Use lengthms instead |
-| lengthms | All | string | Duration (milliseconds) | ✅ Yes | Preferred time format |
+| lengthms | All | string | Duration (milliseconds) | ✅ Yes | api_client.py:233 - Playlist durations, xschedule-playlist-browser.js:233 - Duration display |
 | looping | GetPlaylists, GetPlayListSchedules | string | Loop enabled | ❌ No | Enhancement opportunity |
 | loops | GetPlayListSchedules | string | Loop count limit | ❌ No | Enhancement opportunity |
 | name | All | string | Item identifier | ✅ Yes | Primary identifier |
@@ -529,7 +529,7 @@ Complete cross-API field reference:
 | offset | GetPlayListSteps | string | Cumulative position | ❌ No | Timeline feature |
 | outputtolights | GetPlayingStatus | string | Output active | ✅ Yes | Stop detection |
 | passwordset | GetPlayingStatus | string | Password configured | ❌ No | Security info |
-| pingstatus | GetPlayingStatus | array | Controller health | ❌ No | Monitoring feature |
+| pingstatus | GetPlayingStatus | array | Controller health | ✅ Yes | binary_sensor.py - Health monitoring |
 | playlist | GetPlayingStatus | string | Current playlist name | ✅ Yes | Core field |
 | playlistid | GetPlayingStatus | string | Playlist session ID | ❌ No | Session-specific |
 | playlistleft | GetPlayingStatus | string | Playlist time left (fmt) | ❌ No | Use playlistleftms |
@@ -543,7 +543,7 @@ Complete cross-API field reference:
 | queuelength | GetPlayingStatus | string | Number queued | ❌ No | Redundant |
 | random | GetPlayingStatus, GetPlayListSchedules | string | Random mode | ❌ No | Enhancement opportunity |
 | reference | All | string | Reference field | ❌ No | Usually empty |
-| result | GetPlayingStatus.pingstatus | string | Health: Ok/Failed | ❌ No | Controller monitoring |
+| result | GetPlayingStatus.pingstatus | string | Health: Ok/Failed | ✅ Yes | binary_sensor.py - Binary state |
 | scheduleend | GetPlayingStatus, GetPlayListSchedules | string | Schedule stop time | ❌ No | Enhancement opportunity |
 | scheduleid | GetPlayingStatus | string | Schedule session ID | ❌ No | Session-specific |
 | schedulename | GetPlayingStatus | string | Active schedule name | ❌ No | Enhancement opportunity |

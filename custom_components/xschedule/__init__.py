@@ -17,7 +17,7 @@ from homeassistant.helpers import entity_platform
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "xschedule"
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
 # Service schemas
 SERVICE_PLAY_SONG = "play_song"
