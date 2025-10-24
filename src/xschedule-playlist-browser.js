@@ -356,6 +356,13 @@ class XSchedulePlaylistBrowser extends LitElement {
           ></ha-icon>
           <div class="playlist-name">${playlistName}</div>
           ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
+          <button
+            class="play-btn"
+            @click=${(e) => this._playPlaylist(e, playlistName)}
+            title="Play playlist"
+          >
+            <ha-icon icon="mdi:play"></ha-icon>
+          </button>
           <ha-icon
             icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
             class="expand-icon"
@@ -594,6 +601,27 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
   }
 
+  async _playPlaylist(e, playlistName) {
+    e.stopPropagation(); // Prevent playlist toggle
+
+    // Check if confirmation is required
+    if (this.config.confirm_play) {
+      const confirmed = confirm(`Play playlist "${playlistName}"?`);
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    try {
+      await this._hass.callService('media_player', 'select_source', {
+        entity_id: this.config.entity,
+        source: playlistName,
+      });
+    } catch (err) {
+      console.error('Failed to play playlist:', err);
+    }
+  }
+
   getCardSize() {
     return this.config.compact_mode ? 4 : 6;
   }
@@ -704,6 +732,40 @@ class XSchedulePlaylistBrowser extends LitElement {
         flex-shrink: 0;
         opacity: 0.7;
         transition: transform 0.2s;
+      }
+
+      .play-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+      }
+
+      .play-btn:hover {
+        background: var(--dark-primary-color);
+        transform: scale(1.1);
+      }
+
+      .play-btn ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .playlist-item.playing .play-btn {
+        background: white;
+        color: var(--accent-color);
+      }
+
+      .playlist-item.playing .play-btn:hover {
+        background: rgba(255, 255, 255, 0.9);
       }
 
       .schedule-info {
