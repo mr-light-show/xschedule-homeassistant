@@ -585,7 +585,7 @@ class XScheduleCard extends LitElement {
                                       class="action-btn-compact"
                                       title="Play Now"
                                     >
-                                      <ha-icon icon="mdi:play"></ha-icon>
+                                      <ha-icon icon="mdi:play-outline"></ha-icon>
                                     </button>
                                   `
                                 : ''}
@@ -641,7 +641,7 @@ class XScheduleCard extends LitElement {
               this._closeContextMenu();
             }}
           >
-            <ha-icon icon="mdi:play"></ha-icon>
+            <ha-icon icon="mdi:play-outline"></ha-icon>
             <span>Play Now</span>
           </button>
           <button

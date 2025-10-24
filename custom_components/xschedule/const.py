@@ -6,6 +6,7 @@ DOMAIN = "xschedule"
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_PASSWORD = "password"
+CONF_SHOW_PLAY_BUTTONS = "show_play_buttons"
 
 # Default values
 DEFAULT_PORT = 80

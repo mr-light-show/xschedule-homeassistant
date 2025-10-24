@@ -68,7 +68,7 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
             @click=${e=>this._playPlaylist(e,t)}
             title="Play playlist"
           >
-            <ha-icon icon="mdi:play"></ha-icon>
+            <ha-icon icon="mdi:play-outline"></ha-icon>
           </button>
           <ha-icon
             icon=${n?"mdi:chevron-up":"mdi:chevron-down"}
@@ -469,4 +469,4 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
       .form-group label input[type="checkbox"] {
         margin-right: 8px;
       }
-    `}}),customElements.define("xschedule-playlist-browser",at),console.info("%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.0-pre2  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),at.getConfigElement=function(){return document.createElement("xschedule-playlist-browser-editor")},at.getStubConfig=function(){return{entity:"",sort_by:"schedule",show_duration:!0,show_status:!0,compact_mode:!1,confirm_play:!0}},window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-playlist-browser",name:"xSchedule Playlist Browser",description:"Browse and select xSchedule playlists with schedule information",preview:!0});
+    `}}),customElements.define("xschedule-playlist-browser",at),console.info("%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.0-pre4  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),at.getConfigElement=function(){return document.createElement("xschedule-playlist-browser-editor")},at.getStubConfig=function(){return{entity:"",sort_by:"schedule",show_duration:!0,show_status:!0,compact_mode:!1,confirm_play:!0}},window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-playlist-browser",name:"xSchedule Playlist Browser",description:"Browse and select xSchedule playlists with schedule information",preview:!0});

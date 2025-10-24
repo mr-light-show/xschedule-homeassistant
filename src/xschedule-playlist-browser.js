@@ -361,7 +361,7 @@ class XSchedulePlaylistBrowser extends LitElement {
             @click=${(e) => this._playPlaylist(e, playlistName)}
             title="Play playlist"
           >
-            <ha-icon icon="mdi:play"></ha-icon>
+            <ha-icon icon="mdi:play-outline"></ha-icon>
           </button>
           <ha-icon
             icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
