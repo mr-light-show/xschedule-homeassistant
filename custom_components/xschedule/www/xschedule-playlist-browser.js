@@ -213,34 +213,30 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 6px;
-        background: var(--primary-color);
-        color: white;
+        padding: 4px;
+        background: transparent;
+        color: var(--primary-text-color);
         border: none;
-        border-radius: 50%;
         cursor: pointer;
         transition: all 0.2s;
         flex-shrink: 0;
-        width: 32px;
-        height: 32px;
       }
 
       .play-btn:hover {
-        background: var(--dark-primary-color);
+        color: var(--primary-color);
         transform: scale(1.1);
       }
 
       .play-btn ha-icon {
-        --mdc-icon-size: 20px;
+        --mdc-icon-size: 24px;
       }
 
       .playlist-item.playing .play-btn {
-        background: white;
-        color: var(--accent-color);
+        color: white;
       }
 
       .playlist-item.playing .play-btn:hover {
-        background: rgba(255, 255, 255, 0.9);
+        color: rgba(255, 255, 255, 0.8);
       }
 
       .schedule-info {
