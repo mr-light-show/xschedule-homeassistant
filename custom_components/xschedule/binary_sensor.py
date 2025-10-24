@@ -35,12 +35,17 @@ async def async_setup_entry(
         _LOGGER.warning("Media player component not loaded, cannot create controller sensors")
         return
 
-    # Find our media player entity
-    entity_id = f"media_player.{DOMAIN}"
-    media_player_entity = media_player_component.get_entity(entity_id)
+    # Find our media player entity by matching config_entry
+    # The entity may not use a simple "media_player.xschedule" ID
+    media_player_entity = None
+    for entity in media_player_component.entities:
+        if hasattr(entity, "_config_entry") and entity._config_entry.entry_id == config_entry.entry_id:
+            media_player_entity = entity
+            _LOGGER.debug("Found media player entity for config entry: %s", entity.entity_id)
+            break
 
     if not media_player_entity:
-        _LOGGER.warning("xSchedule media player entity not found")
+        _LOGGER.warning("xSchedule media player entity not found for config entry %s", config_entry.entry_id)
         return
 
     if not hasattr(media_player_entity, "_controller_status"):

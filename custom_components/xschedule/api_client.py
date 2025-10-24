@@ -186,7 +186,7 @@ class XScheduleAPIClient:
                 return self._playlists_cache["metadata"]
 
         try:
-            result = await self._request("GetPlaylists")
+            result = await self.query("GetPlaylists")
         except XScheduleAPIError as err:
             _LOGGER.error("Failed to get playlists metadata: %s", err)
             return []
