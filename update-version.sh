@@ -146,8 +146,18 @@ echo "  - package.json"
 echo "  - src/xschedule-card.js"
 echo "  - src/xschedule-playlist-browser.js"
 echo ""
+
+# Build minified files
+print_info "Building minified files..."
+if npm run build; then
+    print_success "Minified files built successfully"
+else
+    print_error "Failed to build minified files"
+    exit 1
+fi
+echo ""
+
 print_info "Next steps:"
-echo "  1. Run 'npm run build' to rebuild minified files"
-echo "  2. Review changes with 'git diff'"
-echo "  3. Commit changes with 'git add' and 'git commit'"
+echo "  1. Review changes with 'git diff'"
+echo "  2. Commit changes with 'git add' and 'git commit'"
 echo ""
