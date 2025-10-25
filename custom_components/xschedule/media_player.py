@@ -75,6 +75,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
     """Representation of an xSchedule media player."""
 
     _attr_media_content_type = MediaType.PLAYLIST
+    _attr_should_poll = False  # WebSocket provides real-time updates
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
@@ -124,10 +125,15 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         self._queued_steps: list[dict[str, Any]] = []
         self._time_remaining = None
         self._controller_status: list[dict[str, Any]] = []  # Controller health (pingstatus)
+        self._previous_controller_status: list[dict[str, Any]] = []  # For change detection
 
         # WebSocket connection
         self._websocket: XScheduleWebSocket | None = None
         self._setup_websocket()
+
+        # Debouncing for WebSocket updates
+        self._update_debounce_task: asyncio.Task | None = None
+        self._update_debounce_delay = 0.2  # 200ms debounce window
 
     def _setup_websocket(self) -> None:
         """Set up WebSocket connection."""
@@ -243,18 +249,27 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         # Update controller health status
         if "pingstatus" in data and isinstance(data["pingstatus"], list):
-            self._controller_status = data["pingstatus"]
-            _LOGGER.debug("Updated controller status: %d controllers found", len(self._controller_status))
-            # Fire event for binary sensors to update
-            self.hass.bus.async_fire(
-                f"{DOMAIN}_controller_status_update",
-                {
-                    "entry_id": self._config_entry.entry_id,
-                    "controllers": self._controller_status,
-                },
-            )
-            _LOGGER.debug("Fired controller_status_update event for %d controllers",
-                         len(self._controller_status))
+            new_status = data["pingstatus"]
+
+            # Only fire event if controller status actually changed
+            if new_status != self._previous_controller_status:
+                self._controller_status = new_status
+                self._previous_controller_status = new_status.copy() if new_status else []
+
+                _LOGGER.debug("Controller status changed: %d controllers found", len(self._controller_status))
+                # Fire event for binary sensors to update
+                self.hass.bus.async_fire(
+                    f"{DOMAIN}_controller_status_update",
+                    {
+                        "entry_id": self._config_entry.entry_id,
+                        "controllers": self._controller_status,
+                    },
+                )
+                _LOGGER.debug("Fired controller_status_update event for %d controllers",
+                             len(self._controller_status))
+            else:
+                # Status unchanged, just update the reference (no event)
+                self._controller_status = new_status
 
         # Detect state transitions and invalidate cache
         if old_state != self._attr_state or old_playlist != self._attr_media_playlist:
@@ -281,29 +296,59 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     },
                 )
 
-        # Schedule entity update (only if entity has been added to hass)
+        # Schedule entity update with debouncing (only if entity has been added to hass)
         if self.hass and self.entity_id:
-            self.schedule_update_ha_state()
+            self._schedule_debounced_update()
+
+    def _schedule_debounced_update(self) -> None:
+        """Schedule a debounced update to avoid excessive state updates.
+
+        Batches rapid WebSocket updates within a 200ms window into a single
+        Home Assistant state update.
+        """
+        # Cancel any pending debounce task
+        if self._update_debounce_task and not self._update_debounce_task.done():
+            self._update_debounce_task.cancel()
+
+        # Create new debounce task
+        async def debounced_update():
+            """Wait for debounce delay, then update state."""
+            try:
+                await asyncio.sleep(self._update_debounce_delay)
+                self.schedule_update_ha_state()
+            except asyncio.CancelledError:
+                pass  # Task was cancelled, another update is coming
+
+        self._update_debounce_task = asyncio.create_task(debounced_update())
 
     async def async_update(self) -> None:
-        """Update the entity state."""
+        """Update the entity state.
+
+        Note: should_poll = False, so this is only called manually
+        or when WebSocket is disconnected.
+        """
         try:
             # Get playing status (only if WebSocket not connected)
             if not self._websocket or not self._websocket.connected:
                 status = await self._api_client.get_playing_status()
                 self._handle_websocket_update(status)
 
-            # Get playlists
-            self._playlists = await self._api_client.get_playlists()
+            # Only fetch playlists if we don't have them yet
+            # Frontend can force refresh via services if needed
+            if not self._playlists:
+                self._playlists = await self._api_client.get_playlists()
 
-            # Get current playlist steps if playlist is playing
-            if self._attr_media_playlist:
+            # Get current playlist steps only if playlist is playing
+            # and we don't already have them cached
+            if self._attr_media_playlist and not self._current_playlist_steps:
                 self._current_playlist_steps = await self._api_client.get_playlist_steps(
                     self._attr_media_playlist
                 )
 
-            # Get queued steps
-            self._queued_steps = await self._api_client.get_queued_steps()
+            # Only fetch queue if WebSocket is disconnected
+            # WebSocket doesn't push queue updates, but we can be selective
+            if not self._websocket or not self._websocket.connected:
+                self._queued_steps = await self._api_client.get_queued_steps()
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error updating xSchedule state: %s", err)

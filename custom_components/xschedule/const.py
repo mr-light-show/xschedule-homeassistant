@@ -14,7 +14,7 @@ DEFAULT_NAME = "xSchedule"
 
 # WebSocket
 WS_RETRY_DELAY = 5  # seconds
-WS_HEARTBEAT_INTERVAL = 30  # seconds
+WS_HEARTBEAT_INTERVAL = 60  # seconds (reduced from 30 to lower CPU usage)
 
 # Update intervals
 UPDATE_INTERVAL = 1  # seconds (fallback if WebSocket unavailable)
