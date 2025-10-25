@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),i=new WeakMap;let n=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const s=this.t;if(e&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=i.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&i.set(s,t))}return t}toString(){return this.cssText}};const o=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,s,i)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[i+1],t[0]);return new n(i,t,s)},r=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return(t=>new n("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:a,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:p}=Object,u=globalThis,y=u.trustedTypes,_=y?y.emptyScript:"",g=u.reactiveElementPolyfillSupport,f=(t,e)=>t,m={toAttribute(t,e){switch(e){case Boolean:t=t?_:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let s=t;switch(e){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t)}catch(t){s=null}}return s}},v=(t,e)=>!a(t,e),$={attribute:!0,type:String,converter:m,reflect:!1,useDefault:!1,hasChanged:v};
+const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),i=new WeakMap;let n=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const s=this.t;if(e&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=i.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&i.set(s,t))}return t}toString(){return this.cssText}};const o=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,s,i)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[i+1],t[0]);return new n(i,t,s)},r=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return(t=>new n("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:a,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:p}=Object,u=globalThis,_=u.trustedTypes,y=_?_.emptyScript:"",g=u.reactiveElementPolyfillSupport,f=(t,e)=>t,m={toAttribute(t,e){switch(e){case Boolean:t=t?y:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let s=t;switch(e){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t)}catch(t){s=null}}return s}},v=(t,e)=>!a(t,e),$={attribute:!0,type:String,converter:m,reflect:!1,useDefault:!1,hasChanged:v};
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -177,8 +177,8 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
       }
 
       .playlist-item.playing {
-        background: var(--accent-color);
-        color: white;
+        border-left: 4px solid var(--accent-color);
+        font-weight: 600;
       }
 
       .playlist-header {
@@ -213,30 +213,22 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 4px;
-        background: transparent;
-        color: var(--primary-text-color);
+        padding: 6px;
+        background: var(--primary-color);
+        color: white;
         border: none;
+        border-radius: 4px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: background 0.2s;
         flex-shrink: 0;
       }
 
       .play-btn:hover {
-        color: var(--primary-color);
-        transform: scale(1.1);
+        background: var(--dark-primary-color);
       }
 
       .play-btn ha-icon {
         --mdc-icon-size: 24px;
-      }
-
-      .playlist-item.playing .play-btn {
-        color: white;
-      }
-
-      .playlist-item.playing .play-btn:hover {
-        color: rgba(255, 255, 255, 0.8);
       }
 
       .schedule-info {
@@ -250,25 +242,13 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
         font-weight: 600;
       }
 
-      .playlist-item.playing .schedule-info.playing-status {
-        color: white;
-      }
-
       .schedule-info.schedule-time {
         color: var(--secondary-text-color);
-      }
-
-      .playlist-item.playing .schedule-info.schedule-time {
-        color: rgba(255, 255, 255, 0.8);
       }
 
       .schedule-info.duration {
         color: var(--secondary-text-color);
         opacity: 0.85;
-      }
-
-      .playlist-item.playing .schedule-info.duration {
-        color: rgba(255, 255, 255, 0.7);
       }
 
       .song-list {
@@ -465,4 +445,4 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
       .form-group label input[type="checkbox"] {
         margin-right: 8px;
       }
-    `}}),customElements.define("xschedule-playlist-browser",at),console.info("%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.1-pre1  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),at.getConfigElement=function(){return document.createElement("xschedule-playlist-browser-editor")},at.getStubConfig=function(){return{entity:"",sort_by:"schedule",show_duration:!0,show_status:!0,compact_mode:!1,confirm_play:!0}},window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-playlist-browser",name:"xSchedule Playlist Browser",description:"Browse and select xSchedule playlists with schedule information",preview:!0});
+    `}}),customElements.define("xschedule-playlist-browser",at),console.info("%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.1-pre2  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),at.getConfigElement=function(){return document.createElement("xschedule-playlist-browser-editor")},at.getStubConfig=function(){return{entity:"",sort_by:"schedule",show_duration:!0,show_status:!0,compact_mode:!1,confirm_play:!0}},window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-playlist-browser",name:"xSchedule Playlist Browser",description:"Browse and select xSchedule playlists with schedule information",preview:!0});

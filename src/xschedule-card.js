@@ -1095,8 +1095,8 @@ class XScheduleCard extends LitElement {
       }
 
       .playlist-item.active {
-        background: var(--accent-color);
-        color: white;
+        border-left: 4px solid var(--accent-color);
+        font-weight: 600;
       }
 
       .song-item {
@@ -1106,8 +1106,8 @@ class XScheduleCard extends LitElement {
       }
 
       .song-item.current {
-        background: var(--accent-color);
-        color: white;
+        border-left: 4px solid var(--accent-color);
+        font-weight: 600;
       }
 
       .song-item .current-icon {
@@ -1373,7 +1373,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.2.1-pre1  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.2.1-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

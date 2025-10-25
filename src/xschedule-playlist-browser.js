@@ -705,8 +705,8 @@ class XSchedulePlaylistBrowser extends LitElement {
       }
 
       .playlist-item.playing {
-        background: var(--accent-color);
-        color: white;
+        border-left: 4px solid var(--accent-color);
+        font-weight: 600;
       }
 
       .playlist-header {
@@ -741,30 +741,22 @@ class XSchedulePlaylistBrowser extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 4px;
-        background: transparent;
-        color: var(--primary-text-color);
+        padding: 6px;
+        background: var(--primary-color);
+        color: white;
         border: none;
+        border-radius: 4px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: background 0.2s;
         flex-shrink: 0;
       }
 
       .play-btn:hover {
-        color: var(--primary-color);
-        transform: scale(1.1);
+        background: var(--dark-primary-color);
       }
 
       .play-btn ha-icon {
         --mdc-icon-size: 24px;
-      }
-
-      .playlist-item.playing .play-btn {
-        color: white;
-      }
-
-      .playlist-item.playing .play-btn:hover {
-        color: rgba(255, 255, 255, 0.8);
       }
 
       .schedule-info {
@@ -778,25 +770,13 @@ class XSchedulePlaylistBrowser extends LitElement {
         font-weight: 600;
       }
 
-      .playlist-item.playing .schedule-info.playing-status {
-        color: white;
-      }
-
       .schedule-info.schedule-time {
         color: var(--secondary-text-color);
-      }
-
-      .playlist-item.playing .schedule-info.schedule-time {
-        color: rgba(255, 255, 255, 0.8);
       }
 
       .schedule-info.duration {
         color: var(--secondary-text-color);
         opacity: 0.85;
-      }
-
-      .playlist-item.playing .schedule-info.duration {
-        color: rgba(255, 255, 255, 0.7);
       }
 
       .song-list {
@@ -1061,7 +1041,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.1-pre1  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.2.1-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
