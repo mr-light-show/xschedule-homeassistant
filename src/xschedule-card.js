@@ -186,9 +186,18 @@ class XScheduleCard extends LitElement {
 
       const currentPlaylist = this._entity.attributes.playlist;
       const playlistSongs = this._entity.attributes.playlist_songs || [];
+      const isIdle = this._entity.state === 'idle' ||
+                     this._entity.state === 'off' ||
+                     this._entity.state === 'unavailable' ||
+                     this._entity.state === 'unknown';
 
+      // Clear cached songs when player is idle and no current playlist
+      // This ensures song list disappears when playback fully stops
+      if (isIdle && !currentPlaylist) {
+        this._lastPlaylistSongs = [];
+      }
       // Remember the last playlist and its songs when not playing from queue
-      if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
+      else if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
         this._lastPlaylist = currentPlaylist;
         this._lastPlaylistSongs = playlistSongs;
       }
@@ -1373,7 +1382,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.2.2-pre1  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.2.2-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
