@@ -283,6 +283,11 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # Invalidate cache when state changes
             self._api_client.invalidate_cache()
 
+            # Clear entity-level cached playlist steps when playlist changes
+            # This ensures fresh data is fetched for the new playlist
+            if old_playlist != self._attr_media_playlist:
+                self._current_playlist_steps = []
+
             # Fire event to notify frontend of cache invalidation
             if self.hass and self.entity_id:
                 self._hass.bus.fire(
