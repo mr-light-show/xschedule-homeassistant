@@ -288,6 +288,15 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             if old_playlist != self._attr_media_playlist:
                 self._current_playlist_steps = []
 
+                # Trigger async update to fetch new playlist steps immediately
+                # This prevents the card from showing blank when playlist starts
+                async def fetch_playlist_steps():
+                    """Fetch playlist steps and notify Home Assistant."""
+                    await self.async_update()
+                    self.schedule_update_ha_state()
+
+                asyncio.create_task(fetch_playlist_steps())
+
             # Fire event to notify frontend of cache invalidation
             if self.hass and self.entity_id:
                 self._hass.bus.fire(
