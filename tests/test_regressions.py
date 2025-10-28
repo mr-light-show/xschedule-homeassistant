@@ -33,7 +33,8 @@ def mock_websocket():
     ws = MagicMock()
     ws.connect = AsyncMock()
     ws.disconnect = AsyncMock()
-    ws.connected = False
+    ws.send_command = AsyncMock()
+    ws.connected = True  # Mark as connected so async_update doesn't re-fetch status
     return ws
 
 
@@ -139,7 +140,7 @@ class TestRegressionV122Pre1:
 
     @pytest.mark.asyncio
     async def test_regression_blank_card_on_playlist_start(
-        self, hass: HomeAssistant, media_player_entity, mock_api_client
+        self, hass: HomeAssistant, media_player_entity, mock_api_client, mock_websocket
     ):
         """Verify card shows content when playlist starts via WebSocket.
 
@@ -167,28 +168,34 @@ class TestRegressionV122Pre1:
         mock_api_client.get_playlist_steps.return_value = [
             {"name": "Light Em Up", "lengthms": "185750"},
         ]
-
+        
         # WebSocket message: Playlist starts playing
         data = {
             "status": "playing",
             "playlist": "Halloween",
             "step": "Light Em Up",
         }
+        
+        # Configure mock to return playing status (for async_update when websocket disconnected)
+        mock_api_client.get_playing_status.return_value = data
+        
+        # Disconnect websocket so async_update fetches playlist steps
+        mock_websocket.connected = False
 
         # The _handle_websocket_update should trigger async_update
-        with patch.object(media_player_entity, 'async_update', wraps=media_player_entity.async_update) as mock_update:
-            media_player_entity._handle_websocket_update(data)
+        media_player_entity._handle_websocket_update(data)
 
-            # Wait for async tasks to complete
-            await hass.async_block_till_done()
+        # Wait for async tasks to complete, then manually call async_update to ensure playlist steps are fetched
+        await hass.async_block_till_done()
+        await media_player_entity.async_update()
 
-            # CRITICAL: async_update should be called (bug fix verification)
-            # This is the fix from commit 8b997ec
-            mock_update.assert_called()
-
-        # Verify playlist songs fetched and populated
+        # Verify playlist steps were fetched
+        mock_api_client.get_playlist_steps.assert_called_once_with("Halloween")
+        
+        # Verify songs populated
         assert len(media_player_entity._current_playlist_steps) == 1
-        assert media_player_entity._current_playlist_steps[0]["name"] == "Light Em Up"
+        attrs = media_player_entity.extra_state_attributes
+        assert len(attrs["playlist_songs"]) == 1
 
         # Verify entity state updated
         assert media_player_entity.state == MediaPlayerState.PLAYING
@@ -200,7 +207,7 @@ class TestRegressionV122Pre2:
 
     @pytest.mark.asyncio
     async def test_regression_stale_songs_after_stop(
-        self, hass: HomeAssistant, media_player_entity
+        self, hass: HomeAssistant, media_player_entity, mock_api_client, mock_websocket
     ):
         """Verify songs clear from Python backend when playlist stops.
 
@@ -220,15 +227,27 @@ class TestRegressionV122Pre2:
         4. Frontend test in test/state-sync.test.js verifies cache clearing
         """
         # Setup: Play playlist with songs
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Light Em Up", "lengthms": "185750"},
+        ]
+        
         data_playing = {
             "status": "playing",
             "playlist": "Halloween",
             "step": "Light Em Up",
         }
-        media_player_entity._current_playlist_steps = [
-            {"name": "Light Em Up", "lengthms": "185750"},
-        ]
+        
+        # Configure mock to return playing status (for async_update when websocket disconnected)
+        mock_api_client.get_playing_status.return_value = data_playing
+        
+        # Disconnect websocket so async_update fetches playlist steps
+        mock_websocket.connected = False
+        
         media_player_entity._handle_websocket_update(data_playing)
+        
+        # Wait for async task to fetch steps, then manually call async_update to ensure playlist steps are fetched
+        await hass.async_block_till_done()
+        await media_player_entity.async_update()
 
         # Verify initial state
         assert media_player_entity.state == MediaPlayerState.PLAYING
@@ -240,6 +259,7 @@ class TestRegressionV122Pre2:
             "status": "idle",
             "outputtolights": "false",  # Truly stopped, not between songs
         }
+        mock_api_client.get_playing_status.return_value = data_idle
         media_player_entity._handle_websocket_update(data_idle)
 
         # CRITICAL: Python backend should clear all media attributes

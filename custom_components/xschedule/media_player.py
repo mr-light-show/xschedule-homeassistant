@@ -257,16 +257,17 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 self._previous_controller_status = new_status.copy() if new_status else []
 
                 _LOGGER.debug("Controller status changed: %d controllers found", len(self._controller_status))
-                # Fire event for binary sensors to update
-                self.hass.bus.async_fire(
-                    f"{DOMAIN}_controller_status_update",
-                    {
-                        "entry_id": self._config_entry.entry_id,
-                        "controllers": self._controller_status,
-                    },
-                )
-                _LOGGER.debug("Fired controller_status_update event for %d controllers",
-                             len(self._controller_status))
+                # Fire event for binary sensors to update (only if entity is attached to hass)
+                if self._hass is not None:
+                    self._hass.bus.async_fire(
+                        f"{DOMAIN}_controller_status_update",
+                        {
+                            "entry_id": self._config_entry.entry_id,
+                            "controllers": self._controller_status,
+                        },
+                    )
+                    _LOGGER.debug("Fired controller_status_update event for %d controllers",
+                                 len(self._controller_status))
             else:
                 # Status unchanged, just update the reference (no event)
                 self._controller_status = new_status
@@ -293,9 +294,13 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 async def fetch_playlist_steps():
                     """Fetch playlist steps and notify Home Assistant."""
                     await self.async_update()
-                    self.schedule_update_ha_state()
+                    # Only schedule state update if entity is still attached to hass
+                    if self.hass is not None:
+                        self.schedule_update_ha_state()
 
-                asyncio.create_task(fetch_playlist_steps())
+                # Use hass.async_create_task to tie task to HA lifecycle
+                if self.hass is not None:
+                    self.hass.async_create_task(fetch_playlist_steps())
 
             # Fire event to notify frontend of cache invalidation
             if self.hass and self.entity_id:
@@ -324,16 +329,22 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         if self._update_debounce_task and not self._update_debounce_task.done():
             self._update_debounce_task.cancel()
 
+        # Only create debounce task if entity is attached to hass
+        if self.hass is None:
+            return
+
         # Create new debounce task
         async def debounced_update():
             """Wait for debounce delay, then update state."""
             try:
                 await asyncio.sleep(self._update_debounce_delay)
-                self.schedule_update_ha_state()
+                # Only schedule state update if entity is still attached to hass
+                if self.hass is not None:
+                    self.schedule_update_ha_state()
             except asyncio.CancelledError:
                 pass  # Task was cancelled, another update is coming
 
-        self._update_debounce_task = asyncio.create_task(debounced_update())
+        self._update_debounce_task = self.hass.async_create_task(debounced_update())
 
     async def async_update(self) -> None:
         """Update the entity state.
@@ -359,9 +370,9 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     self._attr_media_playlist
                 )
 
-            # Only fetch queue if WebSocket is disconnected
-            # WebSocket doesn't push queue updates, but we can be selective
-            if not self._websocket or not self._websocket.connected:
+            # Fetch queue if we don't have it yet or WebSocket is disconnected
+            # WebSocket doesn't push queue updates, so we need to poll periodically
+            if (not self._queued_steps) or (not self._websocket or not self._websocket.connected):
                 self._queued_steps = await self._api_client.get_queued_steps()
 
         except XScheduleAPIError as err:
@@ -385,28 +396,27 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             "playlist": self._attr_media_playlist,
             "song": self._attr_media_title,
             "time_remaining": self._time_remaining,
+            "source_list": self._playlists or [],  # Available playlists for frontend selector
         }
 
-        # Add current playlist steps (songs)
-        if self._current_playlist_steps:
-            attributes["playlist_songs"] = [
-                {
-                    "name": step.get("name"),
-                    "duration": step.get("lengthms"),  # Use lengthms (milliseconds) from API
-                }
-                for step in self._current_playlist_steps
-            ]
+        # Add current playlist steps (always include for frontend compatibility)
+        attributes["playlist_songs"] = [
+            {
+                "name": step.get("name"),
+                "duration": int(step.get("lengthms") or 0),  # Convert string to int milliseconds
+            }
+            for step in (self._current_playlist_steps or [])
+        ]
 
-        # Add queued steps
-        if self._queued_steps:
-            attributes["queue"] = [
-                {
-                    "name": step.get("name"),
-                    "id": step.get("id"),
-                    "duration": step.get("lengthms"),  # Use lengthms (milliseconds) from API
-                }
-                for step in self._queued_steps
-            ]
+        # Add queued steps (always include queue key for frontend compatibility)
+        attributes["queue"] = [
+            {
+                "name": step.get("name"),
+                "id": step.get("id"),
+                "duration": int(step.get("lengthms") or 0),  # Convert string to int milliseconds
+            }
+            for step in (self._queued_steps or [])
+        ]
 
         return attributes
 

@@ -53,7 +53,8 @@ def mock_websocket():
     ws = MagicMock()
     ws.connect = AsyncMock()
     ws.disconnect = AsyncMock()
-    ws.connected = False
+    ws.send_command = AsyncMock()
+    ws.connected = True  # Mark as connected so async_update doesn't re-fetch status
     ws.register_callback = MagicMock()
     ws.unregister_callback = MagicMock()
     return ws
@@ -304,11 +305,14 @@ class TestMediaPlayerServices:
     """Test media player service calls."""
 
     @pytest.mark.asyncio
-    async def test_select_source_playlist(self, media_player_entity, mock_api_client):
+    async def test_select_source_playlist(self, media_player_entity, mock_api_client, mock_websocket):
         """Test select_source service to play a playlist."""
         # Reset mocks to ignore setup calls
         mock_api_client.play_playlist.reset_mock()
         mock_api_client.invalidate_cache.reset_mock()
+        
+        # Simulate WebSocket disconnection so API client is used
+        mock_websocket.connected = False
 
         await media_player_entity.async_select_source("Test Playlist")
 
@@ -318,11 +322,14 @@ class TestMediaPlayerServices:
         mock_api_client.invalidate_cache.assert_called_once_with("Test Playlist")
 
     @pytest.mark.asyncio
-    async def test_play_song(self, media_player_entity, mock_api_client):
+    async def test_play_song(self, media_player_entity, mock_api_client, mock_websocket):
         """Test playing a specific song from a playlist."""
         # Reset mocks to ignore setup calls
         mock_api_client.play_playlist_step.reset_mock()
         mock_api_client.invalidate_cache.reset_mock()
+        
+        # Simulate WebSocket disconnection so API client is used
+        mock_websocket.connected = False
 
         await media_player_entity.async_play_song(
             playlist="Test Playlist",
@@ -338,10 +345,13 @@ class TestMediaPlayerServices:
         mock_api_client.invalidate_cache.assert_called_once_with("Test Playlist")
 
     @pytest.mark.asyncio
-    async def test_update_fetches_status(self, media_player_entity, mock_api_client):
-        """Test update method fetches current status."""
+    async def test_update_fetches_status(self, media_player_entity, mock_api_client, mock_websocket):
+        """Test update method fetches current status when WebSocket disconnected."""
         # Reset mock to ignore setup call
         mock_api_client.get_playing_status.reset_mock()
+        
+        # Simulate WebSocket disconnection
+        mock_websocket.connected = False
 
         await media_player_entity.async_update()
 

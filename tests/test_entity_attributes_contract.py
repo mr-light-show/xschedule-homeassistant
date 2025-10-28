@@ -36,7 +36,8 @@ def mock_websocket():
     ws = MagicMock()
     ws.connect = AsyncMock()
     ws.disconnect = AsyncMock()
-    ws.connected = False
+    ws.send_command = AsyncMock()
+    ws.connected = True  # Mark as connected so async_update doesn't re-fetch status
     return ws
 
 
@@ -331,30 +332,42 @@ class TestEntityAttributesCacheInvalidation:
         assert attrs["playlist_songs"][0]["name"] == "House lights"
 
     @pytest.mark.asyncio
-    async def test_no_stale_data_after_stop(self, media_player_entity):
+    async def test_no_stale_data_after_stop(self, hass: HomeAssistant, media_player_entity, mock_api_client, mock_websocket):
         """Verify no stale data in attributes after stop.
 
         Critical for bug fix from v1.2.2-pre2 (commit 587828c).
         Frontend should not display old songs.
         """
-        # Play with songs
-        data_playing = {"status": "playing", "playlist": "Halloween"}
-        media_player_entity._current_playlist_steps = [
+        # Setup: Play with songs
+        mock_api_client.get_playlist_steps.return_value = [
             {"name": "Light Em Up", "lengthms": "185750"}
         ]
+        
+        # Configure mock to return playing status (for async_update when websocket disconnected)
+        data_playing = {"status": "playing", "playlist": "Halloween"}
+        mock_api_client.get_playing_status.return_value = data_playing
+        
+        # Disconnect websocket so async_update fetches playlist steps
+        mock_websocket.connected = False
+        
         media_player_entity._handle_websocket_update(data_playing)
+        
+        # Wait for async task, then manually call async_update to ensure playlist steps are fetched
+        await hass.async_block_till_done()
+        await media_player_entity.async_update()
 
         # Verify songs present
         attrs = media_player_entity.extra_state_attributes
         assert len(attrs["playlist_songs"]) == 1
 
-        # Stop
+        # Now stop
         data_idle = {"status": "idle", "outputtolights": "false"}
+        mock_api_client.get_playing_status.return_value = data_idle
         media_player_entity._handle_websocket_update(data_idle)
 
-        # Attributes should be cleared
+        # Verify songs cleared
         attrs = media_player_entity.extra_state_attributes
-        assert attrs["playlist_songs"] == []
+        assert len(attrs["playlist_songs"]) == 0
 
 
 class TestEntityAttributeTypes:
