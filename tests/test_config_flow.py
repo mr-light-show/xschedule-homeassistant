@@ -195,7 +195,6 @@ class TestConfigFlow:
 class TestOptionsFlow:
     """Test options flow."""
 
-    @pytest.mark.skip(reason="Options flow not implemented in integration yet")
     @pytest.mark.asyncio
     async def test_options_flow(self, hass: HomeAssistant, mock_config_entry):
         """Test options flow initialization."""
@@ -208,9 +207,8 @@ class TestOptionsFlow:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
 
-    @pytest.mark.skip(reason="Options flow not implemented in integration yet")
     @pytest.mark.asyncio
-    async def test_options_flow_update(self, hass: HomeAssistant, mock_config_entry):
+    async def test_options_flow_update(self, hass: HomeAssistant, mock_config_entry, mock_api_client):
         """Test options flow updates configuration."""
         mock_config_entry.add_to_hass(hass)
 
@@ -218,14 +216,26 @@ class TestOptionsFlow:
             mock_config_entry.entry_id
         )
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_PASSWORD: "newpassword",
-            },
-        )
+        # Patch the API client for validation
+        with patch(
+            "custom_components.xschedule.config_flow.XScheduleAPIClient",
+            return_value=mock_api_client,
+        ):
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                user_input={
+                    CONF_HOST: "192.168.1.200",
+                    CONF_PORT: 8080,
+                    CONF_PASSWORD: "newpassword",
+                },
+            )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
+
+        # Verify config entry was updated
+        assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+        assert mock_config_entry.data[CONF_PORT] == 8080
+        assert mock_config_entry.data[CONF_PASSWORD] == "newpassword"
 
 
 class TestValidation:

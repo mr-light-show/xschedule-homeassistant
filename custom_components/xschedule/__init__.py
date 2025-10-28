@@ -210,6 +210,11 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         _LOGGER.error("Error registering frontend resources: %s", err, exc_info=True)
 
 
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up xSchedule from a config entry."""
     _LOGGER.debug("Setting up xSchedule integration")
@@ -230,6 +235,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register update listener for options changes
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # Register services
     async def async_play_song(call: ServiceCall) -> None:

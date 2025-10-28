@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -74,6 +74,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return OptionsFlow(config_entry)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -99,5 +107,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+
+class OptionsFlow(config_entries.OptionsFlow):
+    """Handle options flow for xSchedule."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        errors = {}
+
+        if user_input is not None:
+            # Validate the new connection settings
+            errors = await validate_connection(self.hass, user_input)
+
+            if not errors:
+                # Update the config entry with new data
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=user_input,
+                )
+                return self.async_create_entry(title="", data={})
+
+        # Pre-fill form with current values
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=self.config_entry.data.get(CONF_HOST),
+                    ): cv.string,
+                    vol.Required(
+                        CONF_PORT,
+                        default=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    ): cv.port,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=self.config_entry.data.get(CONF_PASSWORD, ""),
+                    ): cv.string,
+                }
+            ),
             errors=errors,
         )

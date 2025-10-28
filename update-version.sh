@@ -1,9 +1,14 @@
 #!/bin/bash
 
 # Script to update version numbers across xSchedule project files
-# Usage: ./update-version.sh <new-version>
-# Example: ./update-version.sh 1.2.2
-# Example: ./update-version.sh 1.2.2-pre1
+# Usage: ./update-version.sh <action|new-version>
+# Actions: major, minor, patch, pre
+# Examples:
+#   ./update-version.sh major    # 1.3.0 -> 2.0.0
+#   ./update-version.sh minor    # 1.3.0 -> 1.4.0
+#   ./update-version.sh patch    # 1.3.0 -> 1.3.1
+#   ./update-version.sh pre      # 1.3.0 -> 1.3.1-pre1
+#   ./update-version.sh 1.2.2    # Explicit version (backward compatible)
 
 set -e  # Exit on error
 
@@ -26,27 +31,127 @@ print_info() {
     echo -e "${YELLOW}→ $1${NC}"
 }
 
-# Check if version argument is provided
-if [ -z "$1" ]; then
-    print_error "Version argument is required"
-    echo "Usage: $0 <new-version>"
-    echo "Example: $0 1.2.2"
-    echo "Example: $0 1.2.2-pre1"
-    exit 1
-fi
-
-NEW_VERSION="$1"
-
-# Validate version format (basic semantic versioning with optional pre-release)
-if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
-    print_error "Invalid version format: $NEW_VERSION"
-    echo "Version must follow format: X.Y.Z or X.Y.Z-preN"
-    echo "Examples: 1.2.2, 1.2.2-pre1, 1.2.2-alpha"
-    exit 1
-fi
-
 # Get script directory (repository root)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Function to get current version from manifest.json
+get_current_version_from_manifest() {
+    local manifest="$SCRIPT_DIR/custom_components/xschedule/manifest.json"
+    if [ ! -f "$manifest" ]; then
+        print_error "manifest.json not found at: $manifest"
+        exit 1
+    fi
+    grep -o '"version": "[^"]*"' "$manifest" | sed 's/"version": "\(.*\)"/\1/'
+}
+
+# Function to calculate next version based on action
+calculate_next_version() {
+    local current="$1"
+    local action="$2"
+
+    # Parse version: extract major, minor, patch, and optional prerelease
+    if [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-pre([0-9]+))?$ ]]; then
+        local major="${BASH_REMATCH[1]}"
+        local minor="${BASH_REMATCH[2]}"
+        local patch="${BASH_REMATCH[3]}"
+        local has_pre="${BASH_REMATCH[4]}"
+        local pre_num="${BASH_REMATCH[5]}"
+    else
+        print_error "Cannot parse current version: $current"
+        exit 1
+    fi
+
+    local new_version=""
+
+    case "$action" in
+        major)
+            # Increment major, reset minor and patch to 0
+            major=$((major + 1))
+            minor=0
+            patch=0
+            new_version="${major}.${minor}.${patch}"
+            ;;
+        minor)
+            # Increment minor, reset patch to 0
+            minor=$((minor + 1))
+            patch=0
+            new_version="${major}.${minor}.${patch}"
+            ;;
+        patch)
+            # Increment patch
+            patch=$((patch + 1))
+            new_version="${major}.${minor}.${patch}"
+            ;;
+        pre)
+            if [ -n "$has_pre" ]; then
+                # Already a prerelease - increment pre number
+                pre_num=$((pre_num + 1))
+                new_version="${major}.${minor}.${patch}-pre${pre_num}"
+            else
+                # Not a prerelease - increment patch and add -pre1
+                patch=$((patch + 1))
+                new_version="${major}.${minor}.${patch}-pre1"
+            fi
+            ;;
+        *)
+            print_error "Unknown action: $action"
+            exit 1
+            ;;
+    esac
+
+    echo "$new_version"
+}
+
+# Check if action or version argument is provided
+if [ -z "$1" ]; then
+    print_error "Action or version argument is required"
+    echo "Usage: $0 <action|version>"
+    echo ""
+    echo "Actions:"
+    echo "  major    Increment major version (X.0.0)"
+    echo "  minor    Increment minor version (x.Y.0)"
+    echo "  patch    Increment patch version (x.y.Z)"
+    echo "  pre      Create or increment prerelease (x.y.Z-preN)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 major      # 1.3.0 -> 2.0.0"
+    echo "  $0 minor      # 1.3.0 -> 1.4.0"
+    echo "  $0 patch      # 1.3.0 -> 1.3.1"
+    echo "  $0 pre        # 1.3.0 -> 1.3.1-pre1"
+    echo "  $0 pre        # 1.3.1-pre1 -> 1.3.1-pre2"
+    echo "  $0 1.5.0      # Explicit version (backward compatible)"
+    exit 1
+fi
+
+ACTION_OR_VERSION="$1"
+
+# Check if input is an action keyword or explicit version
+if [[ "$ACTION_OR_VERSION" =~ ^(major|minor|patch|pre)$ ]]; then
+    # It's an action - calculate next version
+    CURRENT_VERSION=$(get_current_version_from_manifest)
+    NEW_VERSION=$(calculate_next_version "$CURRENT_VERSION" "$ACTION_OR_VERSION")
+
+    echo ""
+    print_info "Action: $ACTION_OR_VERSION"
+    print_info "Current version: $CURRENT_VERSION"
+    print_info "New version: $NEW_VERSION"
+    echo ""
+else
+    # It's an explicit version - use it directly (backward compatibility)
+    NEW_VERSION="$ACTION_OR_VERSION"
+
+    # Validate version format (basic semantic versioning with optional pre-release)
+    if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+        print_error "Invalid version format: $NEW_VERSION"
+        echo "Version must follow format: X.Y.Z or X.Y.Z-preN"
+        echo "Examples: 1.2.2, 1.2.2-pre1, 1.2.2-alpha"
+        exit 1
+    fi
+
+    echo ""
+    print_info "Using explicit version: $NEW_VERSION"
+    echo ""
+fi
 
 # Define files to update
 MANIFEST_FILE="$SCRIPT_DIR/custom_components/xschedule/manifest.json"
