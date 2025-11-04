@@ -5,6 +5,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
+import { MODE_PRESETS } from './mode-presets.js';
 
 const MODE_OPTIONS = [
   { value: 'simple', label: 'Simple (Default)' },
@@ -42,7 +43,21 @@ class XScheduleCardEditor extends LitElement {
   }
 
   setConfig(config) {
-    this.config = config;
+    if (!config) {
+      this.config = config;
+      return;
+    }
+    
+    const mode = config.mode || 'simple';
+    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+    
+    // Merge mode preset with config (same logic as card)
+    this.config = {
+      entity: config.entity,
+      mode,
+      ...modePreset,
+      ...config, // User config overrides preset
+    };
   }
 
   render() {

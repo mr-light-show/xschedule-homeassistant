@@ -98,6 +98,100 @@ describe('XScheduleCardEditor', () => {
 
       expect(element.config.mode).to.equal('custom');
     });
+
+    it('merges simple mode preset values', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      // Only pass entity and mode - presets should be merged
+      const config = { entity: 'media_player.xschedule', mode: 'simple' };
+      element.setConfig(config);
+      element.hass = mockHass;
+
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('simple');
+      expect(element.config.playlistDisplay).to.equal('collapsed');
+      expect(element.config.songsDisplay).to.equal('hidden');
+      expect(element.config.queueDisplay).to.equal('hidden');
+      expect(element.config.showSongActions).to.equal(false);
+    });
+
+    it('merges dj mode preset values', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      const config = { entity: 'media_player.xschedule', mode: 'dj' };
+      element.setConfig(config);
+      element.hass = mockHass;
+
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('dj');
+      expect(element.config.playlistDisplay).to.equal('expanded');
+      expect(element.config.songsDisplay).to.equal('expanded');
+      expect(element.config.queueDisplay).to.equal('expanded');
+      expect(element.config.showSongActions).to.equal(true);
+    });
+
+    it('merges jukebox mode preset values', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      const config = { entity: 'media_player.xschedule', mode: 'jukebox' };
+      element.setConfig(config);
+      element.hass = mockHass;
+
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('jukebox');
+      expect(element.config.playlistDisplay).to.equal('collapsed');
+      expect(element.config.songsDisplay).to.equal('expanded');
+      expect(element.config.queueDisplay).to.equal('expanded');
+      expect(element.config.showSongActions).to.equal(true);
+    });
+
+    it('merges minimal mode preset values', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      const config = { entity: 'media_player.xschedule', mode: 'minimal' };
+      element.setConfig(config);
+      element.hass = mockHass;
+
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('minimal');
+      expect(element.config.playlistDisplay).to.equal('hidden');
+      expect(element.config.songsDisplay).to.equal('hidden');
+      expect(element.config.queueDisplay).to.equal('hidden');
+      expect(element.config.showSongActions).to.equal(false);
+    });
+
+    it('allows user config to override preset values', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      // User config should override preset
+      const config = {
+        entity: 'media_player.xschedule',
+        mode: 'simple',
+        playlistDisplay: 'expanded', // Override preset
+      };
+      element.setConfig(config);
+      element.hass = mockHass;
+
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('simple');
+      expect(element.config.playlistDisplay).to.equal('expanded'); // User override
+      expect(element.config.songsDisplay).to.equal('hidden'); // From preset
+    });
   });
 
   describe('Display Mode Configuration', () => {

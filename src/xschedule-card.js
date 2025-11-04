@@ -5,69 +5,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
-
-// Mode configurations with default settings
-const MODE_PRESETS = {
-  simple: {
-    playlistDisplay: 'collapsed',
-    songsDisplay: 'hidden',
-    queueDisplay: 'hidden',
-    showVolumeControl: false,
-    showProgressBar: true,
-    showPlaybackControls: true,
-    enableSeek: false,
-    showEntityName: false,
-    showPlaylistName: false,
-    showSongActions: false,
-    showPlayButton: true,
-    showAddToQueueButton: true,
-  },
-  dj: {
-    playlistDisplay: 'expanded',
-    songsDisplay: 'expanded',
-    queueDisplay: 'expanded',
-    showVolumeControl: false,
-    showProgressBar: true,
-    showPlaybackControls: true,
-    showSongActions: true,
-    enableSeek: false,
-    showEntityName: false,
-    showPlaylistName: false,
-    showPlayButton: true,
-    showAddToQueueButton: true,
-  },
-  jukebox: {
-    playlistDisplay: 'collapsed',
-    songsDisplay: 'expanded',
-    queueDisplay: 'expanded',
-    showVolumeControl: false,
-    showProgressBar: true,
-    showPlaybackControls: true,
-    showSongActions: true,
-    enableSeek: false,
-    showEntityName: false,
-    showPlaylistName: false,
-    showPlayButton: true,
-    showAddToQueueButton: true,
-  },
-  minimal: {
-    playlistDisplay: 'hidden',
-    songsDisplay: 'hidden',
-    queueDisplay: 'hidden',
-    showVolumeControl: false,
-    showProgressBar: true,
-    showPlaybackControls: true,
-    enableSeek: false,
-    showEntityName: false,
-    showPlaylistName: false,
-    showSongActions: false,
-    showPlayButton: true,
-    showAddToQueueButton: true,
-  },
-  custom: {
-    // Custom mode uses user-provided settings
-  },
-};
+import { MODE_PRESETS } from './mode-presets.js';
 
 class XScheduleCard extends LitElement {
   static get properties() {
@@ -214,6 +152,12 @@ class XScheduleCard extends LitElement {
   }
 
   shouldUpdate(changedProperties) {
+    // Always update if config changed (mode or display settings)
+    // This ensures all mode preset values are reflected when switching modes
+    if (changedProperties.has('config')) {
+      return true;
+    }
+
     // If entity exists, check if meaningful data changed
     if (this._entity) {
       // Check if this is the first time we have entity data
@@ -1382,7 +1326,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.3.1-pre2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.3.1-pre3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

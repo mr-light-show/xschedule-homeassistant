@@ -41,5 +41,6 @@ const createConfig = (inputFile, outputFile) => ({
 
 export default [
   createConfig('src/xschedule-card.js', 'dist/xschedule-card.js'),
+  createConfig('src/xschedule-card-editor.js', 'dist/xschedule-card-editor.js'),
   createConfig('src/xschedule-playlist-browser.js', 'dist/xschedule-playlist-browser.js'),
 ];
