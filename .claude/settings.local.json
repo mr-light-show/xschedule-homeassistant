@@ -21,7 +21,8 @@
       "Bash(source venv/bin/activate)",
       "Bash(pytest:*)",
       "Bash(./update-version.sh:*)",
-      "Bash(gh release create:*)"
+      "Bash(gh release create:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

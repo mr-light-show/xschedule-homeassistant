@@ -192,6 +192,84 @@ describe('XScheduleCardEditor', () => {
       expect(element.config.playlistDisplay).to.equal('expanded'); // User override
       expect(element.config.songsDisplay).to.equal('hidden'); // From preset
     });
+
+    it('replaces preset-related settings when mode changes', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      // Start with minimal mode
+      const config1 = {
+        entity: 'media_player.xschedule',
+        mode: 'minimal',
+        maxVisibleSongs: 20, // Advanced setting
+        confirmDisruptive: false, // Advanced setting
+      };
+      element.setConfig(config1);
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      expect(element.config.mode).to.equal('minimal');
+      expect(element.config.playlistDisplay).to.equal('hidden');
+      expect(element.config.maxVisibleSongs).to.equal(20);
+      expect(element.config.confirmDisruptive).to.equal(false);
+
+      // Simulate mode change to jukebox
+      const modeSelect = element.shadowRoot.querySelector('select#mode');
+      modeSelect.value = 'jukebox';
+      modeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      await element.updateComplete;
+
+      // Preset-related settings should be replaced with jukebox preset
+      expect(element.config.mode).to.equal('jukebox');
+      expect(element.config.playlistDisplay).to.equal('collapsed'); // From jukebox preset
+      expect(element.config.songsDisplay).to.equal('expanded'); // From jukebox preset
+      expect(element.config.queueDisplay).to.equal('expanded'); // From jukebox preset
+      
+      // Advanced settings should be preserved
+      expect(element.config.maxVisibleSongs).to.equal(20);
+      expect(element.config.confirmDisruptive).to.equal(false);
+    });
+
+    it('preserves advanced settings when resetting to defaults', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      // Set up config with advanced settings
+      const config = {
+        entity: 'media_player.xschedule',
+        mode: 'dj',
+        maxVisibleSongs: 15,
+        confirmDisruptive: true,
+        showTooltips: false,
+      };
+      element.setConfig(config);
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      // Mock confirm to return true
+      const originalConfirm = window.confirm;
+      window.confirm = () => true;
+
+      try {
+        // Reset to defaults
+        element._resetToDefaults();
+        await element.updateComplete;
+
+        // Should reset to simple mode preset
+        expect(element.config.mode).to.equal('simple');
+      expect(element.config.playlistDisplay).to.equal('collapsed'); // From simple preset
+      
+        // Advanced settings should be preserved
+        expect(element.config.maxVisibleSongs).to.equal(15);
+        expect(element.config.confirmDisruptive).to.equal(true);
+        expect(element.config.showTooltips).to.equal(false);
+      } finally {
+        // Restore original confirm
+        window.confirm = originalConfirm;
+      }
+    });
   });
 
   describe('Display Mode Configuration', () => {

@@ -439,11 +439,36 @@ class XScheduleCardEditor extends LitElement {
 
   _modeChanged(e) {
     const mode = e.target.value;
-
-    // Reset to mode defaults when switching modes
-    const newConfig = { entity: this.config.entity, mode };
-
-    this._updateConfig(newConfig);
+    
+    // Get mode preset and create FRESH config with preset values
+    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+    
+    // Preserve advanced settings from current config
+    const advancedSettings = {
+      maxVisibleSongs: this.config.maxVisibleSongs,
+      confirmDisruptive: this.config.confirmDisruptive,
+      showTooltips: this.config.showTooltips,
+    };
+    
+    // Create new config: preset values override preset-related settings,
+    // but advanced settings are preserved
+    const newConfig = {
+      entity: this.config.entity,
+      mode,
+      ...modePreset, // Preset values (playlistDisplay, songsDisplay, etc.)
+      ...advancedSettings, // Preserve advanced settings
+    };
+    
+    // Replace config entirely (don't merge with old preset-related properties)
+    this.config = newConfig;
+    
+    // Dispatch event with fresh config
+    const event = new CustomEvent('config-changed', {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
   }
 
   _valueChanged(e) {
@@ -496,7 +521,35 @@ class XScheduleCardEditor extends LitElement {
 
   _resetToDefaults() {
     if (confirm('Reset all settings to Simple mode defaults?')) {
-      this._updateConfig({ entity: this.config.entity, mode: 'simple' });
+      // Use same logic as _modeChanged to properly reset to mode preset
+      const mode = 'simple';
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      
+      // Preserve advanced settings from current config
+      const advancedSettings = {
+        maxVisibleSongs: this.config.maxVisibleSongs,
+        confirmDisruptive: this.config.confirmDisruptive,
+        showTooltips: this.config.showTooltips,
+      };
+      
+      // Create new config with preset values and preserved advanced settings
+      const newConfig = {
+        entity: this.config.entity,
+        mode,
+        ...modePreset,
+        ...advancedSettings,
+      };
+      
+      // Replace config entirely
+      this.config = newConfig;
+      
+      // Dispatch event with fresh config
+      const event = new CustomEvent('config-changed', {
+        detail: { config: this.config },
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
     }
   }
 
