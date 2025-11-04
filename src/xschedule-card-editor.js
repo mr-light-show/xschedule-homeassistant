@@ -440,11 +440,17 @@ class XScheduleCardEditor extends LitElement {
   _modeChanged(e) {
     const mode = e.target.value;
     
-    // Get mode preset and create FRESH config with preset values
-    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
-    
-    // Get all keys that are in mode presets (these will be replaced)
+    // Get all keys that are in mode presets
     const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+    
+    // Extract current preset-related values BEFORE clearing
+    // These will be preserved when switching to custom mode
+    const currentPresetValues = {};
+    for (const key of presetKeys) {
+      if (this.config[key] !== undefined) {
+        currentPresetValues[key] = this.config[key];
+      }
+    }
     
     // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
     const preservedFields = {};
@@ -456,13 +462,24 @@ class XScheduleCardEditor extends LitElement {
       }
     }
     
+    // Determine which preset values to use
+    let presetValuesToApply;
+    if (mode === 'custom') {
+      // Custom mode: preserve current preset values
+      presetValuesToApply = currentPresetValues;
+    } else {
+      // Preset mode: apply preset values
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      presetValuesToApply = modePreset;
+    }
+    
     // Create new config: preset values override preset-related settings,
     // but all non-preset fields are preserved
     const newConfig = {
       ...preservedFields, // Preserve all fields not in mode-presets
       entity: this.config.entity,
       mode,
-      ...modePreset, // Preset values (playlistDisplay, songsDisplay, etc.)
+      ...presetValuesToApply, // Either current values (custom) or preset values
     };
     
     // Replace config entirely (don't merge with old preset-related properties)

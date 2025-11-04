@@ -236,6 +236,55 @@ describe('XScheduleCardEditor', () => {
       expect(element.config.type).to.equal('custom:xschedule-card');
     });
 
+    it('preserves current preset values when switching to custom mode', async () => {
+      element = await fixture(html`
+        <xschedule-card-editor></xschedule-card-editor>
+      `);
+
+      // Start with jukebox mode (has expanded songs and queue)
+      const config1 = {
+        type: 'custom:xschedule-card',
+        entity: 'media_player.xschedule',
+        mode: 'jukebox',
+        maxVisibleSongs: 25, // Advanced setting
+        confirmDisruptive: false, // Advanced setting
+      };
+      element.setConfig(config1);
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      // Verify jukebox preset values are applied
+      expect(element.config.mode).to.equal('jukebox');
+      expect(element.config.playlistDisplay).to.equal('collapsed'); // From jukebox preset
+      expect(element.config.songsDisplay).to.equal('expanded'); // From jukebox preset
+      expect(element.config.queueDisplay).to.equal('expanded'); // From jukebox preset
+      expect(element.config.showSongActions).to.equal(true); // From jukebox preset
+      expect(element.config.showPlaybackControls).to.equal(true); // From jukebox preset
+
+      // Simulate mode change to custom
+      const modeSelect = element.shadowRoot.querySelector('select#mode');
+      modeSelect.value = 'custom';
+      modeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      await element.updateComplete;
+
+      // Mode should be custom
+      expect(element.config.mode).to.equal('custom');
+      
+      // All jukebox preset values should be preserved
+      expect(element.config.playlistDisplay).to.equal('collapsed'); // Preserved from jukebox
+      expect(element.config.songsDisplay).to.equal('expanded'); // Preserved from jukebox
+      expect(element.config.queueDisplay).to.equal('expanded'); // Preserved from jukebox
+      expect(element.config.showSongActions).to.equal(true); // Preserved from jukebox
+      expect(element.config.showPlaybackControls).to.equal(true); // Preserved from jukebox
+      
+      // Advanced settings should be preserved
+      expect(element.config.maxVisibleSongs).to.equal(25);
+      expect(element.config.confirmDisruptive).to.equal(false);
+      
+      // Type property should be preserved
+      expect(element.config.type).to.equal('custom:xschedule-card');
+    });
+
     it('preserves advanced settings when resetting to defaults', async () => {
       element = await fixture(html`
         <xschedule-card-editor></xschedule-card-editor>
