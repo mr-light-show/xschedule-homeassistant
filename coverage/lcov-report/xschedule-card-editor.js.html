@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.33% </span>
+                <span class="strong">66.89% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>473/713</span>
+                <span class='fraction'>485/725</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">58.69% </span>
+                <span class="strong">64.81% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>27/46</span>
+                <span class='fraction'>35/54</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.33% </span>
+                <span class="strong">66.89% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>473/713</span>
+                <span class='fraction'>485/725</span>
             </div>
         
             
@@ -776,7 +776,19 @@
 <a name='L711'></a><a href='#L711'>711</a>
 <a name='L712'></a><a href='#L712'>712</a>
 <a name='L713'></a><a href='#L713'>713</a>
-<a name='L714'></a><a href='#L714'>714</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L714'></a><a href='#L714'>714</a>
+<a name='L715'></a><a href='#L715'>715</a>
+<a name='L716'></a><a href='#L716'>716</a>
+<a name='L717'></a><a href='#L717'>717</a>
+<a name='L718'></a><a href='#L718'>718</a>
+<a name='L719'></a><a href='#L719'>719</a>
+<a name='L720'></a><a href='#L720'>720</a>
+<a name='L721'></a><a href='#L721'>721</a>
+<a name='L722'></a><a href='#L722'>722</a>
+<a name='L723'></a><a href='#L723'>723</a>
+<a name='L724'></a><a href='#L724'>724</a>
+<a name='L725'></a><a href='#L725'>725</a>
+<a name='L726'></a><a href='#L726'>726</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1227,6 +1239,12 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1309,6 +1327,12 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1934,20 +1958,26 @@ class XScheduleCardEditor extends LitElement {
     // Get mode preset and create FRESH config with preset values
     const modePreset = MODE_PRESETS[mode] <span class="branch-0 cbranch-no" title="branch not covered" >|| MODE_PRESETS.simple;</span>
     
-    // Preserve advanced settings from current config
-    const advancedSettings = {
-      maxVisibleSongs: this.config.maxVisibleSongs,
-      confirmDisruptive: this.config.confirmDisruptive,
-      showTooltips: this.config.showTooltips,
-    };
+    // Get all keys that are in mode presets (these will be replaced)
+    const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+    
+    // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+    const preservedFields = {};
+    for (const key in this.config) {
+      // Preserve: entity (handled separately), mode (handled separately), 
+      // and any field not in preset keys
+      if (key !== 'entity' &amp;&amp; key !== 'mode' &amp;&amp; !presetKeys.has(key)) {
+        preservedFields[key] = this.config[key];
+      }
+    }
     
     // Create new config: preset values override preset-related settings,
-    // but advanced settings are preserved
+    // but all non-preset fields are preserved
     const newConfig = {
+      ...preservedFields, // Preserve all fields not in mode-presets
       entity: this.config.entity,
       mode,
       ...modePreset, // Preset values (playlistDisplay, songsDisplay, etc.)
-      ...advancedSettings, // Preserve advanced settings
     };
     
     // Replace config entirely (don't merge with old preset-related properties)
@@ -2016,19 +2046,25 @@ class XScheduleCardEditor extends LitElement {
       const mode = 'simple';
       const modePreset = MODE_PRESETS[mode] <span class="branch-0 cbranch-no" title="branch not covered" >|| MODE_PRESETS.simple;</span>
       
-      // Preserve advanced settings from current config
-      const advancedSettings = {
-        maxVisibleSongs: this.config.maxVisibleSongs,
-        confirmDisruptive: this.config.confirmDisruptive,
-        showTooltips: this.config.showTooltips,
-      };
+      // Get all keys that are in mode presets (these will be replaced)
+      const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
       
-      // Create new config with preset values and preserved advanced settings
+      // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+      const preservedFields = {};
+      for (const key in this.config) {
+        // Preserve: entity (handled separately), mode (handled separately), 
+        // and any field not in preset keys
+        if (key !== 'entity' &amp;&amp; key !== 'mode' &amp;&amp; !presetKeys.has(key)) {
+          preservedFields[key] = this.config[key];
+        }
+      }
+      
+      // Create new config with preset values and preserved non-preset fields
       const newConfig = {
+        ...preservedFields, // Preserve all fields not in mode-presets
         entity: this.config.entity,
         mode,
         ...modePreset,
-        ...advancedSettings,
       };
       
       // Replace config entirely
@@ -2209,7 +2245,7 @@ customElements.define('xschedule-card-editor', XScheduleCardEditor);
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-04T19:06:56.469Z
+                at 2025-11-04T19:16:26.729Z
             </div>
         <script src="prettify.js"></script>
         <script>

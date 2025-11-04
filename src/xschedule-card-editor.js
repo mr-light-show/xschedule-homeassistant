@@ -443,20 +443,26 @@ class XScheduleCardEditor extends LitElement {
     // Get mode preset and create FRESH config with preset values
     const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
     
-    // Preserve advanced settings from current config
-    const advancedSettings = {
-      maxVisibleSongs: this.config.maxVisibleSongs,
-      confirmDisruptive: this.config.confirmDisruptive,
-      showTooltips: this.config.showTooltips,
-    };
+    // Get all keys that are in mode presets (these will be replaced)
+    const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+    
+    // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+    const preservedFields = {};
+    for (const key in this.config) {
+      // Preserve: entity (handled separately), mode (handled separately), 
+      // and any field not in preset keys
+      if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+        preservedFields[key] = this.config[key];
+      }
+    }
     
     // Create new config: preset values override preset-related settings,
-    // but advanced settings are preserved
+    // but all non-preset fields are preserved
     const newConfig = {
+      ...preservedFields, // Preserve all fields not in mode-presets
       entity: this.config.entity,
       mode,
       ...modePreset, // Preset values (playlistDisplay, songsDisplay, etc.)
-      ...advancedSettings, // Preserve advanced settings
     };
     
     // Replace config entirely (don't merge with old preset-related properties)
@@ -525,19 +531,25 @@ class XScheduleCardEditor extends LitElement {
       const mode = 'simple';
       const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
       
-      // Preserve advanced settings from current config
-      const advancedSettings = {
-        maxVisibleSongs: this.config.maxVisibleSongs,
-        confirmDisruptive: this.config.confirmDisruptive,
-        showTooltips: this.config.showTooltips,
-      };
+      // Get all keys that are in mode presets (these will be replaced)
+      const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
       
-      // Create new config with preset values and preserved advanced settings
+      // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+      const preservedFields = {};
+      for (const key in this.config) {
+        // Preserve: entity (handled separately), mode (handled separately), 
+        // and any field not in preset keys
+        if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+          preservedFields[key] = this.config[key];
+        }
+      }
+      
+      // Create new config with preset values and preserved non-preset fields
       const newConfig = {
+        ...preservedFields, // Preserve all fields not in mode-presets
         entity: this.config.entity,
         mode,
         ...modePreset,
-        ...advancedSettings,
       };
       
       // Replace config entirely

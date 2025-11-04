@@ -200,6 +200,7 @@ describe('XScheduleCardEditor', () => {
 
       // Start with minimal mode
       const config1 = {
+        type: 'custom:xschedule-card', // Include type property
         entity: 'media_player.xschedule',
         mode: 'minimal',
         maxVisibleSongs: 20, // Advanced setting
@@ -213,6 +214,7 @@ describe('XScheduleCardEditor', () => {
       expect(element.config.playlistDisplay).to.equal('hidden');
       expect(element.config.maxVisibleSongs).to.equal(20);
       expect(element.config.confirmDisruptive).to.equal(false);
+      expect(element.config.type).to.equal('custom:xschedule-card');
 
       // Simulate mode change to jukebox
       const modeSelect = element.shadowRoot.querySelector('select#mode');
@@ -229,6 +231,9 @@ describe('XScheduleCardEditor', () => {
       // Advanced settings should be preserved
       expect(element.config.maxVisibleSongs).to.equal(20);
       expect(element.config.confirmDisruptive).to.equal(false);
+      
+      // Type property should be preserved
+      expect(element.config.type).to.equal('custom:xschedule-card');
     });
 
     it('preserves advanced settings when resetting to defaults', async () => {
@@ -238,6 +243,7 @@ describe('XScheduleCardEditor', () => {
 
       // Set up config with advanced settings
       const config = {
+        type: 'custom:xschedule-card', // Include type property
         entity: 'media_player.xschedule',
         mode: 'dj',
         maxVisibleSongs: 15,
@@ -259,12 +265,15 @@ describe('XScheduleCardEditor', () => {
 
         // Should reset to simple mode preset
         expect(element.config.mode).to.equal('simple');
-      expect(element.config.playlistDisplay).to.equal('collapsed'); // From simple preset
-      
+        expect(element.config.playlistDisplay).to.equal('collapsed'); // From simple preset
+        
         // Advanced settings should be preserved
         expect(element.config.maxVisibleSongs).to.equal(15);
         expect(element.config.confirmDisruptive).to.equal(true);
         expect(element.config.showTooltips).to.equal(false);
+        
+        // Type property should be preserved
+        expect(element.config.type).to.equal('custom:xschedule-card');
       } finally {
         // Restore original confirm
         window.confirm = originalConfirm;
