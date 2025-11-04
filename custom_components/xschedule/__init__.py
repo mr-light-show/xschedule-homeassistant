@@ -225,14 +225,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Copy cards to www and get timestamps for cache busting
     timestamps = await _copy_cards_to_www(hass)
 
-    # Delay resource registration until Home Assistant is fully started
-    # This ensures Lovelace resources are loaded before we try to register
-    async def register_resources_when_ready(event):
-        """Register resources after Home Assistant has started."""
-        _LOGGER.debug("Home Assistant started, registering frontend resources")
+    # Try to register resources immediately if Home Assistant has already started
+    # This fixes the issue where adding the integration to a running HA instance
+    # required two reboots because the homeassistant_started event had already fired
+    lovelace_config = hass.data.get("lovelace")
+    if lovelace_config and hasattr(lovelace_config, "resources"):
+        # HA has already started, register immediately
+        _LOGGER.info("Home Assistant already started, registering resources immediately")
         await _register_frontend_resources(hass, timestamps)
-
-    hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
+    else:
+        # HA hasn't started yet, wait for the event
+        _LOGGER.debug("Home Assistant not fully started, will register resources after startup")
+        async def register_resources_when_ready(event):
+            """Register resources after Home Assistant has started."""
+            _LOGGER.debug("Home Assistant started, registering frontend resources")
+            await _register_frontend_resources(hass, timestamps)
+        
+        hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
