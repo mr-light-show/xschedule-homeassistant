@@ -210,6 +210,39 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         _LOGGER.error("Error registering frontend resources: %s", err, exc_info=True)
 
 
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Set up the xSchedule integration domain (called even without config entry).
+    
+    This function is called when Home Assistant discovers the integration domain,
+    even before a config entry exists. This allows Lovelace cards to be registered
+    immediately after HACS installation and restart, without requiring the user
+    to manually add the integration first.
+    """
+    _LOGGER.debug("Setting up xSchedule integration domain")
+    
+    # Copy cards to www directory
+    timestamps = await _copy_cards_to_www(hass)
+    
+    # Try to register resources immediately if Home Assistant has started
+    lovelace_config = hass.data.get("lovelace")
+    if lovelace_config and hasattr(lovelace_config, "resources"):
+        _LOGGER.info("Home Assistant already started, registering resources from domain setup")
+        await _register_frontend_resources(hass, timestamps)
+    else:
+        # Wait for startup event
+        _LOGGER.debug("Home Assistant not fully started, will register resources after startup")
+        async def register_resources_when_ready(event):
+            """Register resources after Home Assistant has started."""
+            _LOGGER.debug("Home Assistant started, registering frontend resources from domain setup")
+            await _register_frontend_resources(hass, timestamps)
+        
+        hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
+    
+    # Return True to indicate setup succeeded
+    # This doesn't prevent async_setup_entry from also running
+    return True
+
+
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
