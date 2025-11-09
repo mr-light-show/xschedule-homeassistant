@@ -19,6 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "xschedule"
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
+# Flag to track if frontend resources have been registered
+# Prevents double registration from both async_setup and async_setup_entry
+_RESOURCES_REGISTERED = False
+
 # Service schemas
 SERVICE_PLAY_SONG = "play_song"
 SERVICE_ADD_TO_QUEUE = "add_to_queue"
@@ -118,7 +122,14 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
 
     Uses file modification timestamps as cache busters to avoid browser cache issues.
     """
+    global _RESOURCES_REGISTERED
+    
     try:
+        # Check if already registered to prevent double registration
+        if _RESOURCES_REGISTERED:
+            _LOGGER.debug("Frontend resources already registered, skipping")
+            return
+        
         # Get the lovelace configuration
         lovelace_config = hass.data.get("lovelace")
         if not lovelace_config:
@@ -204,6 +215,8 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 except Exception as add_err:
                     _LOGGER.error("Failed to register resource %s: %s", card["url"], add_err)
 
+        # Mark as registered to prevent double registration
+        _RESOURCES_REGISTERED = True
         _LOGGER.info("Frontend resource registration completed")
 
     except Exception as err:
@@ -405,6 +418,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    global _RESOURCES_REGISTERED
+    
     _LOGGER.debug("Unloading xSchedule integration")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -420,5 +435,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_SCHEDULES)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_STEPS)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLISTS_WITH_METADATA)
+        
+        # Reset the flag to allow re-registration if integration is reloaded
+        _RESOURCES_REGISTERED = False
+        _LOGGER.debug("Reset frontend resources registration flag")
 
     return unload_ok
