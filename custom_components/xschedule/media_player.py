@@ -87,6 +87,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
