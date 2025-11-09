@@ -767,7 +767,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 # Use WebSocket for async command
                 if self._websocket and self._websocket.connected:
                     await self._websocket.send_command(
-                        "Play playlist starting at step", f"{playlist},{song}"
+                        "Play playlist step", f"{playlist},{song}"
                     )
                 else:
                     # Fallback to REST API
