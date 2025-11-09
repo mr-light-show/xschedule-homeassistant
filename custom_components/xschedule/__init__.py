@@ -146,14 +146,18 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
 
         resources = lovelace_config.resources
         _LOGGER.info("Lovelace resources object found: %s", type(resources))
+        _LOGGER.info("Lovelace config mode: %s", lovelace_config.get("mode", "unknown") if isinstance(lovelace_config, dict) else "storage")
 
         if not hasattr(resources, "async_items"):
-            _LOGGER.warning("Resources does not have async_items method")
+            _LOGGER.warning("Resources does not have async_items method - might be YAML mode")
             return
 
         if not hasattr(resources, "async_create_item"):
-            _LOGGER.warning("Resources does not have async_create_item method")
+            _LOGGER.warning("Resources does not have async_create_item method - might be YAML mode")
             return
+        
+        _LOGGER.info("Resource collection type: %s", type(resources))
+        _LOGGER.info("Resource collection ID: %s", getattr(resources, 'collection_id', 'unknown'))
 
         # Get existing resources once (async_items() is not actually async, it returns a list)
         if callable(resources.async_items):
@@ -161,7 +165,8 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         else:
             existing = []
 
-        _LOGGER.debug("Found %d existing resources total", len(existing))
+        _LOGGER.info("Found %d existing resources total", len(existing))
+        _LOGGER.info("Existing resources: %s", [r.get("url", "") for r in existing])
 
         for card in cards:
             # Check if already registered (check base URL without timestamp)
@@ -174,27 +179,32 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 existing_url = existing_resource.get("url", "")
                 existing_base = existing_url.split("?")[0]
 
+                _LOGGER.debug("Checking existing resource: %s (base: %s) against our card: %s (base: %s)", 
+                             existing_url, existing_base, card["url"], base_url)
+
                 if existing_base == base_url:
                     # Check if this is exactly the same URL (including timestamp)
                     if existing_url == card["url"]:
                         # Already registered with correct timestamp
-                        _LOGGER.debug("Resource already registered: %s", card["url"])
+                        _LOGGER.info("Resource already registered: %s", card["url"])
                         already_registered = True
                     else:
                         # Old entry with different timestamp - mark for deletion
-                        _LOGGER.debug("Marking for deletion (timestamp mismatch): %s", existing_url)
+                        _LOGGER.warning("Marking xSchedule resource for deletion (timestamp mismatch): %s", existing_url)
                         resources_to_delete.append(existing_resource)
 
             # Delete old entries BEFORE adding new one
             if resources_to_delete and hasattr(resources, "async_delete_item"):
+                _LOGGER.info("Deleting %d old xSchedule resources", len(resources_to_delete))
                 for old_resource in resources_to_delete:
                     resource_id = old_resource.get("id")
                     old_url = old_resource.get("url", "")
                     try:
+                        _LOGGER.warning("DELETING resource ID=%s URL=%s", resource_id, old_url)
                         await resources.async_delete_item(resource_id)
-                        _LOGGER.info("Removed old resource: %s", old_url)
+                        _LOGGER.info("Successfully removed old xSchedule resource: %s", old_url)
                     except Exception as del_err:
-                        _LOGGER.warning("Failed to delete old resource %s: %s", old_url, del_err)
+                        _LOGGER.error("Failed to delete old resource %s: %s", old_url, del_err)
 
             # Add the resource if not already registered
             if not already_registered:
@@ -210,37 +220,8 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         _LOGGER.error("Error registering frontend resources: %s", err, exc_info=True)
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up the xSchedule integration domain (called even without config entry).
-    
-    This function is called when Home Assistant discovers the integration domain,
-    even before a config entry exists. This allows Lovelace cards to be registered
-    immediately after HACS installation and restart, without requiring the user
-    to manually add the integration first.
-    """
-    _LOGGER.debug("Setting up xSchedule integration domain")
-    
-    # Copy cards to www directory
-    timestamps = await _copy_cards_to_www(hass)
-    
-    # Try to register resources immediately if Home Assistant has started
-    lovelace_config = hass.data.get("lovelace")
-    if lovelace_config and hasattr(lovelace_config, "resources"):
-        _LOGGER.info("Home Assistant already started, registering resources from domain setup")
-        await _register_frontend_resources(hass, timestamps)
-    else:
-        # Wait for startup event
-        _LOGGER.debug("Home Assistant not fully started, will register resources after startup")
-        async def register_resources_when_ready(event):
-            """Register resources after Home Assistant has started."""
-            _LOGGER.debug("Home Assistant started, registering frontend resources from domain setup")
-            await _register_frontend_resources(hass, timestamps)
-        
-        hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
-    
-    # Return True to indicate setup succeeded
-    # This doesn't prevent async_setup_entry from also running
-    return True
+# Removed async_setup() - it was registering resources too early (before other integrations)
+# and causing other HACS cards to be removed. Only async_setup_entry() should register resources.
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -258,23 +239,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Copy cards to www and get timestamps for cache busting
     timestamps = await _copy_cards_to_www(hass)
 
-    # Try to register resources immediately if Home Assistant has already started
-    # This fixes the issue where adding the integration to a running HA instance
-    # required two reboots because the homeassistant_started event had already fired
-    lovelace_config = hass.data.get("lovelace")
-    if lovelace_config and hasattr(lovelace_config, "resources"):
-        # HA has already started, register immediately
-        _LOGGER.info("Home Assistant already started, registering resources immediately")
+    # Delay resource registration until Home Assistant is fully started
+    # This ensures Lovelace resources are loaded before we try to register
+    async def register_resources_when_ready(event):
+        """Register resources after Home Assistant has started."""
+        _LOGGER.debug("Home Assistant started, registering frontend resources")
         await _register_frontend_resources(hass, timestamps)
-    else:
-        # HA hasn't started yet, wait for the event
-        _LOGGER.debug("Home Assistant not fully started, will register resources after startup")
-        async def register_resources_when_ready(event):
-            """Register resources after Home Assistant has started."""
-            _LOGGER.debug("Home Assistant started, registering frontend resources")
-            await _register_frontend_resources(hass, timestamps)
-        
-        hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
+
+    hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -11,6 +11,7 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 ### Integration
 - **Full Media Player Support**: Control xSchedule as a native Home Assistant media player
 - **Real-time Updates**: WebSocket connection for live status updates (no polling!)
+- **Media Browser Support**: Navigate playlists and songs using HA's built-in media browser
 - **Playlist Management**: Browse and play playlists and individual steps/songs
 - **Queue Support**: Add songs to play queue with duplicate prevention
 - **Volume Control**: Adjust volume and mute/unmute
@@ -191,6 +192,26 @@ type: custom:xschedule-card
 entity: media_player.xschedule
 mode: minimal
 ```
+
+### Media Browser Support
+
+xSchedule now supports Home Assistant's native media browser, allowing you to browse and play playlists and songs through the standard HA interface.
+
+**To use the media browser:**
+
+1. Open any media player card (standard HA media card works!)
+2. Click the **"Browse Media"** button
+3. Navigate through your playlists
+4. Click a playlist to see all songs
+5. Click a song to play it, or click the playlist name to play the whole playlist
+
+**Benefits:**
+- Works with **any** Home Assistant media player card
+- No need for custom cards if you prefer the native experience
+- Hierarchical browsing: Playlists → Songs
+- Potential for voice assistant integration
+
+**Note:** The media browser works **alongside** the custom xSchedule cards. Use whichever interface you prefer - they complement each other!
 
 #### Custom Mode
 **Best for:** Power users who want complete control
