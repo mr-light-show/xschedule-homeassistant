@@ -19,10 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "xschedule"
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
-# Flag to track if frontend resources have been registered
-# Prevents double registration from both async_setup and async_setup_entry
-_RESOURCES_REGISTERED = False
-
 # Service schemas
 SERVICE_PLAY_SONG = "play_song"
 SERVICE_ADD_TO_QUEUE = "add_to_queue"
@@ -122,14 +118,7 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
 
     Uses file modification timestamps as cache busters to avoid browser cache issues.
     """
-    global _RESOURCES_REGISTERED
-    
     try:
-        # Check if already registered to prevent double registration
-        if _RESOURCES_REGISTERED:
-            _LOGGER.debug("Frontend resources already registered, skipping")
-            return
-        
         # Get the lovelace configuration
         lovelace_config = hass.data.get("lovelace")
         if not lovelace_config:
@@ -157,14 +146,18 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
 
         resources = lovelace_config.resources
         _LOGGER.info("Lovelace resources object found: %s", type(resources))
+        _LOGGER.info("Lovelace config mode: %s", lovelace_config.get("mode", "unknown") if isinstance(lovelace_config, dict) else "storage")
 
         if not hasattr(resources, "async_items"):
-            _LOGGER.warning("Resources does not have async_items method")
+            _LOGGER.warning("Resources does not have async_items method - might be YAML mode")
             return
 
         if not hasattr(resources, "async_create_item"):
-            _LOGGER.warning("Resources does not have async_create_item method")
+            _LOGGER.warning("Resources does not have async_create_item method - might be YAML mode")
             return
+        
+        _LOGGER.info("Resource collection type: %s", type(resources))
+        _LOGGER.info("Resource collection ID: %s", getattr(resources, 'collection_id', 'unknown'))
 
         # Get existing resources once (async_items() is not actually async, it returns a list)
         if callable(resources.async_items):
@@ -221,45 +214,14 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 except Exception as add_err:
                     _LOGGER.error("Failed to register resource %s: %s", card["url"], add_err)
 
-        # Mark as registered to prevent double registration
-        _RESOURCES_REGISTERED = True
         _LOGGER.info("Frontend resource registration completed")
 
     except Exception as err:
         _LOGGER.error("Error registering frontend resources: %s", err, exc_info=True)
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up the xSchedule integration domain (called even without config entry).
-    
-    This function is called when Home Assistant discovers the integration domain,
-    even before a config entry exists. This allows Lovelace cards to be registered
-    immediately after HACS installation and restart, without requiring the user
-    to manually add the integration first.
-    """
-    _LOGGER.debug("Setting up xSchedule integration domain")
-    
-    # Copy cards to www directory
-    timestamps = await _copy_cards_to_www(hass)
-    
-    # Try to register resources immediately if Home Assistant has started
-    lovelace_config = hass.data.get("lovelace")
-    if lovelace_config and hasattr(lovelace_config, "resources"):
-        _LOGGER.info("Home Assistant already started, registering resources from domain setup")
-        await _register_frontend_resources(hass, timestamps)
-    else:
-        # Wait for startup event
-        _LOGGER.debug("Home Assistant not fully started, will register resources after startup")
-        async def register_resources_when_ready(event):
-            """Register resources after Home Assistant has started."""
-            _LOGGER.debug("Home Assistant started, registering frontend resources from domain setup")
-            await _register_frontend_resources(hass, timestamps)
-        
-        hass.bus.async_listen_once("homeassistant_started", register_resources_when_ready)
-    
-    # Return True to indicate setup succeeded
-    # This doesn't prevent async_setup_entry from also running
-    return True
+# Removed async_setup() - it was registering resources too early (before other integrations)
+# and causing other HACS cards to be removed. Only async_setup_entry() should register resources.
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -424,8 +386,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    global _RESOURCES_REGISTERED
-    
     _LOGGER.debug("Unloading xSchedule integration")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -441,9 +401,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_SCHEDULES)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_STEPS)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLISTS_WITH_METADATA)
-        
-        # Reset the flag to allow re-registration if integration is reloaded
-        _RESOURCES_REGISTERED = False
-        _LOGGER.debug("Reset frontend resources registration flag")
 
     return unload_ok
