@@ -756,7 +756,8 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         **kwargs: Any
     ) -> None:
         """Play media from media browser."""
-        _LOGGER.debug("Play media called: type=%s, id=%s", media_type, media_id)
+        _LOGGER.info("Play media called: type=%s, id=%s, kwargs=%s", media_type, media_id, kwargs)
+        _LOGGER.info("WebSocket connected: %s", self._websocket and self._websocket.connected if self._websocket else False)
 
         # Parse media_id
         if "|||" in media_id:
@@ -766,14 +767,18 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             try:
                 # Use WebSocket for async command
                 if self._websocket and self._websocket.connected:
-                    await self._websocket.send_command(
+                    _LOGGER.info("Sending WebSocket command: Play playlist step with params: %s,%s", playlist, song)
+                    result = await self._websocket.send_command(
                         "Play playlist step", f"{playlist},{song}"
                     )
+                    _LOGGER.info("WebSocket command result: %s", result)
                 else:
                     # Fallback to REST API
-                    await self._api_client.play_playlist_step(playlist, song)
+                    _LOGGER.info("Using REST API fallback: play_playlist_step(%s, %s)", playlist, song)
+                    result = await self._api_client.play_playlist_step(playlist, song)
+                    _LOGGER.info("REST API result: %s", result)
 
-                _LOGGER.info("Playing song %s from playlist %s", song, playlist)
+                _LOGGER.info("Successfully played song %s from playlist %s", song, playlist)
 
                 # Invalidate cache
                 self._api_client.invalidate_cache(playlist)
@@ -794,11 +799,15 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
             try:
                 if self._websocket and self._websocket.connected:
-                    await self._websocket.send_command("Play specified playlist", playlist)
+                    _LOGGER.info("Sending WebSocket command: Play specified playlist with params: %s", playlist)
+                    result = await self._websocket.send_command("Play specified playlist", playlist)
+                    _LOGGER.info("WebSocket command result: %s", result)
                 else:
-                    await self._api_client.play_playlist(playlist)
+                    _LOGGER.info("Using REST API fallback: play_playlist(%s)", playlist)
+                    result = await self._api_client.play_playlist(playlist)
+                    _LOGGER.info("REST API result: %s", result)
 
-                _LOGGER.info("Playing playlist %s", playlist)
+                _LOGGER.info("Successfully played playlist %s", playlist)
 
                 self._hass.bus.fire(
                     EVENT_PLAYLIST_CHANGED,
