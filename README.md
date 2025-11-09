@@ -213,6 +213,40 @@ xSchedule now supports Home Assistant's native media browser, allowing you to br
 
 **Note:** The media browser works **alongside** the custom xSchedule cards. Use whichever interface you prefer - they complement each other!
 
+### Universal Media Player Compatibility
+
+The xSchedule cards now work with **ANY** Home Assistant media player, not just xSchedule! Use the beautiful xSchedule UI with Spotify, Sonos, or any other media player in your system.
+
+**How it works:**
+
+- **Automatic Detection**: The cards automatically detect whether you're using an xSchedule player or another media player
+- **Standard Commands**: All playback commands use Home Assistant's standard `media_player.play_media` service
+- **xSchedule Features**: Advanced features (queue management, schedule info) only appear when using an xSchedule player
+- **Graceful Degradation**: Cards hide unsupported features for non-xSchedule players
+
+**Entity Selection:**
+
+When configuring a card, you can now select any media player entity. xSchedule players are sorted to the top for convenience, but all media players are available.
+
+**Feature Availability:**
+
+| Feature | xSchedule Player | Other Players |
+|---------|------------------|---------------|
+| Playlist Selection | ✅ Yes | ✅ Yes (via source_list) |
+| Song Playback | ✅ Yes | ✅ Yes (if supported) |
+| Queue Management | ✅ Yes | ❌ xSchedule only |
+| Schedule Information | ✅ Yes | ❌ xSchedule only |
+| Volume Control | ✅ Yes | ✅ Yes (if supported) |
+| Playback Controls | ✅ Yes | ✅ Yes |
+| Media Browser | ✅ Yes | ✅ Yes (if supported) |
+
+**Use Cases:**
+
+- Use xSchedule cards with Spotify for a consistent UI across all your media players
+- Manage multiple different media player types with the same beautiful interface
+- Test card layouts before your xSchedule system is set up
+- Enjoy the xSchedule UI design with any media player integration
+
 #### Custom Mode
 **Best for:** Power users who want complete control
 
