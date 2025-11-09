@@ -336,7 +336,7 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
           font-size: 0.95em;
         }
       }
-    `}}customElements.define("xschedule-playlist-browser-editor",class extends ot{static get properties(){return{hass:{type:Object},config:{type:Object}}}setConfig(t){this.config=t}_valueChanged(t){if(!this.config||!this.hass)return;const e=t.target,s="checkbox"===e.type?e.checked:e.value;if(this.config[e.configValue]===s)return;const i={...this.config,[e.configValue]:s},n=new CustomEvent("config-changed",{detail:{config:i},bubbles:!0,composed:!0});this.dispatchEvent(n)}render(){if(!this.hass||!this.config)return L``;const t=Object.keys(this.hass.states).filter(t=>t.startsWith("media_player.")&&(void 0!==this.hass.states[t].attributes.playlist_songs||t.includes("xschedule"))).sort();return L`
+    `}}customElements.define("xschedule-playlist-browser-editor",class extends ot{static get properties(){return{hass:{type:Object},config:{type:Object}}}setConfig(t){this.config=t}_valueChanged(t){if(!this.config||!this.hass)return;const e=t.target,s="checkbox"===e.type?e.checked:e.value;if(this.config[e.configValue]===s)return;const i={...this.config,[e.configValue]:s},n=new CustomEvent("config-changed",{detail:{config:i},bubbles:!0,composed:!0});this.dispatchEvent(n)}render(){if(!this.hass||!this.config)return L``;const t=Object.keys(this.hass.states).filter(t=>t.startsWith("media_player.")).sort((t,e)=>{const s=t.includes("xschedule")||void 0!==this.hass.states[t].attributes.playlist_songs,i=e.includes("xschedule")||void 0!==this.hass.states[e].attributes.playlist_songs;if(s&&!i)return-1;if(!s&&i)return 1;const n=this.hass.states[t].attributes.friendly_name||t,o=this.hass.states[e].attributes.friendly_name||e;return n.localeCompare(o)});return L`
       <div class="card-config">
         <div class="form-group">
           <label for="entity">Entity (Required)</label>
@@ -346,7 +346,7 @@ const x=globalThis,A=x.trustedTypes,S=A?A.createPolicy("lit-html",{createHTML:t=
             .value=${this.config.entity||""}
             @change=${this._valueChanged}
           >
-            <option value="">Select an xSchedule entity...</option>
+            <option value="">Select a media player...</option>
             ${t.map(t=>L`
               <option value="${t}" ?selected=${this.config.entity===t}>
                 ${this.hass.states[t].attributes.friendly_name||t}

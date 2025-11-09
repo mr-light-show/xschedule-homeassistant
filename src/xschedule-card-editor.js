@@ -421,12 +421,20 @@ class XScheduleCardEditor extends LitElement {
 
   _getMediaPlayerEntities() {
     if (!this.hass) return [];
+    // Show all media player entities, not just xSchedule
     return Object.values(this.hass.states).filter(
-      (entity) =>
-        entity.entity_id.startsWith('media_player.') &&
-        (entity.attributes.playlist_songs !== undefined ||
-         entity.entity_id.includes('xschedule'))
-    );
+      (entity) => entity.entity_id.startsWith('media_player.')
+    ).sort((a, b) => {
+      // Sort xSchedule players to the top for convenience
+      const aIsXSchedule = a.entity_id.includes('xschedule') || a.attributes.playlist_songs !== undefined;
+      const bIsXSchedule = b.entity_id.includes('xschedule') || b.attributes.playlist_songs !== undefined;
+      if (aIsXSchedule && !bIsXSchedule) return -1;
+      if (!aIsXSchedule && bIsXSchedule) return 1;
+      // Otherwise sort alphabetically
+      const aName = a.attributes.friendly_name || a.entity_id;
+      const bName = b.attributes.friendly_name || b.entity_id;
+      return aName.localeCompare(bName);
+    });
   }
 
   _getModeDescription(mode) {

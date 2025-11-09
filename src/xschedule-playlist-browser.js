@@ -910,14 +910,22 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
       return html``;
     }
 
-    // Get all xSchedule media_player entities
+    // Get all media_player entities (not just xSchedule)
     const entities = Object.keys(this.hass.states)
-      .filter(entityId =>
-        entityId.startsWith('media_player.') &&
-        (this.hass.states[entityId].attributes.playlist_songs !== undefined ||
-         entityId.includes('xschedule'))
-      )
-      .sort();
+      .filter(entityId => entityId.startsWith('media_player.'))
+      .sort((a, b) => {
+        // Sort xSchedule players to the top for convenience
+        const aIsXSchedule = a.includes('xschedule') || 
+                            this.hass.states[a].attributes.playlist_songs !== undefined;
+        const bIsXSchedule = b.includes('xschedule') || 
+                            this.hass.states[b].attributes.playlist_songs !== undefined;
+        if (aIsXSchedule && !bIsXSchedule) return -1;
+        if (!aIsXSchedule && bIsXSchedule) return 1;
+        // Otherwise sort alphabetically
+        const aName = this.hass.states[a].attributes.friendly_name || a;
+        const bName = this.hass.states[b].attributes.friendly_name || b;
+        return aName.localeCompare(bName);
+      });
 
     return html`
       <div class="card-config">
@@ -929,7 +937,7 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
             .value=${this.config.entity || ''}
             @change=${this._valueChanged}
           >
-            <option value="">Select an xSchedule entity...</option>
+            <option value="">Select a media player...</option>
             ${entities.map(entityId => html`
               <option value="${entityId}" ?selected=${this.config.entity === entityId}>
                 ${this.hass.states[entityId].attributes.friendly_name || entityId}
