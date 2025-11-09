@@ -7,6 +7,7 @@ from typing import Any
 from datetime import datetime
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -86,6 +87,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     def __init__(
@@ -656,6 +658,155 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
     def _is_in_queue(self, song_name: str) -> bool:
         """Check if a song is already in the queue."""
         return any(step.get("name") == song_name for step in self._queued_steps)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        _LOGGER.debug(
+            "Browse media called: type=%s, id=%s", media_content_type, media_content_id
+        )
+
+        # Root level: Show all playlists
+        if media_content_type is None:
+            return await self._async_build_playlists_browser()
+
+        # Drill down: Show songs in selected playlist
+        if media_content_type == "playlist":
+            return await self._async_build_playlist_songs_browser(media_content_id)
+
+        # Fallback
+        raise ValueError(f"Unsupported media type: {media_content_type}")
+
+    async def _async_build_playlists_browser(self) -> BrowseMedia:
+        """Build root level showing all playlists."""
+        children = []
+
+        for playlist_name in self._playlists:
+            children.append(
+                BrowseMedia(
+                    can_expand=True,
+                    can_play=True,  # Can play entire playlist
+                    children_media_class=MediaType.MUSIC,
+                    media_class=MediaType.PLAYLIST,
+                    media_content_id=playlist_name,
+                    media_content_type="playlist",
+                    title=playlist_name,
+                    thumbnail=None,
+                )
+            )
+
+        return BrowseMedia(
+            can_expand=True,
+            can_play=False,
+            children_media_class=MediaType.PLAYLIST,
+            media_class="directory",
+            media_content_id="root",
+            media_content_type="playlists",
+            title="xSchedule Playlists",
+            thumbnail=None,
+            children=children,
+        )
+
+    async def _async_build_playlist_songs_browser(
+        self, playlist_name: str
+    ) -> BrowseMedia:
+        """Build songs list for a specific playlist."""
+        # Fetch playlist steps via API
+        try:
+            steps_data = await self._api_client.get_playlist_steps(playlist_name)
+        except Exception as err:
+            _LOGGER.error("Error fetching playlist steps for %s: %s", playlist_name, err)
+            steps_data = []
+
+        children = []
+        for step in steps_data:
+            step_name = step.get("name", "Unknown")
+
+            children.append(
+                BrowseMedia(
+                    can_expand=False,
+                    can_play=True,
+                    media_class=MediaType.MUSIC,
+                    media_content_id=f"{playlist_name}|||{step_name}",  # delimiter
+                    media_content_type=MediaType.MUSIC,
+                    title=step_name,
+                    thumbnail=None,
+                )
+            )
+
+        return BrowseMedia(
+            can_expand=True,
+            can_play=True,  # Can play whole playlist
+            children_media_class=MediaType.MUSIC,
+            media_class=MediaType.PLAYLIST,
+            media_content_id=playlist_name,
+            media_content_type="playlist",
+            title=playlist_name,
+            thumbnail=None,
+            children=children,
+        )
+
+    async def async_play_media(
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        **kwargs: Any
+    ) -> None:
+        """Play media from media browser."""
+        _LOGGER.debug("Play media called: type=%s, id=%s", media_type, media_id)
+
+        # Parse media_id
+        if "|||" in media_id:
+            # Playing specific song: "playlist|||song"
+            playlist, song = media_id.split("|||", 1)
+
+            try:
+                # Use WebSocket for async command
+                if self._websocket and self._websocket.connected:
+                    await self._websocket.send_command(
+                        "Play playlist starting at step", f"{playlist},{song}"
+                    )
+                else:
+                    # Fallback to REST API
+                    await self._api_client.play_playlist_step(playlist, song)
+
+                _LOGGER.info("Playing song %s from playlist %s", song, playlist)
+
+                # Invalidate cache
+                self._api_client.invalidate_cache(playlist)
+                self._hass.bus.fire(
+                    EVENT_PLAY,
+                    {
+                        "entity_id": self.entity_id,
+                        "playlist": playlist,
+                        "song": song,
+                    },
+                )
+
+            except XScheduleAPIError as err:
+                _LOGGER.error("Error playing media: %s", err)
+        else:
+            # Playing entire playlist
+            playlist = media_id
+
+            try:
+                if self._websocket and self._websocket.connected:
+                    await self._websocket.send_command("Play specified playlist", playlist)
+                else:
+                    await self._api_client.play_playlist(playlist)
+
+                _LOGGER.info("Playing playlist %s", playlist)
+
+                self._hass.bus.fire(
+                    EVENT_PLAYLIST_CHANGED,
+                    {"entity_id": self.entity_id, "playlist": playlist},
+                )
+
+            except XScheduleAPIError as err:
+                _LOGGER.error("Error playing playlist: %s", err)
 
     async def async_get_playlist_schedules(self, playlist: str, force_refresh: bool = False) -> list[dict[str, Any]]:
         """Get schedule information for a playlist."""
