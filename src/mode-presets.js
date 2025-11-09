@@ -20,6 +20,7 @@ export const MODE_PRESETS = {
     showAddToQueueButton: true,
     showDuration: true,
     compactMode: false,
+    autoHideSongsWhenEmpty: true,
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -36,6 +37,7 @@ export const MODE_PRESETS = {
     showAddToQueueButton: true,
     showDuration: true,
     compactMode: false,
+    autoHideSongsWhenEmpty: false,
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -52,6 +54,7 @@ export const MODE_PRESETS = {
     showAddToQueueButton: true,
     showDuration: true,
     compactMode: false,
+    autoHideSongsWhenEmpty: false,
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -68,6 +71,7 @@ export const MODE_PRESETS = {
     showAddToQueueButton: true,
     showDuration: true,
     compactMode: false,
+    autoHideSongsWhenEmpty: true,
   },
   custom: {
     // Custom mode uses user-provided settings

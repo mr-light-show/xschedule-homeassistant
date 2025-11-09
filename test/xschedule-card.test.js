@@ -226,6 +226,101 @@ describe('XScheduleCard', () => {
 
       expect(element._entity.state).to.equal('idle');
     });
+
+    it('shows song list when autoHideSongsWhenEmpty is false', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          playlist: 'Test Playlist',
+          playlist_songs: [{ name: 'Song 1', duration: 180 }],
+        }
+      );
+
+      const config = createMockCardConfig({
+        mode: 'custom',
+        songsDisplay: 'expanded',
+        autoHideSongsWhenEmpty: false,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      await element.updateComplete;
+      const songsSection = element.shadowRoot.querySelector('.songs-section');
+      expect(songsSection).to.exist;
+    });
+
+    it('hides song list when autoHideSongsWhenEmpty is true and 0 songs', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          playlist: 'Test Playlist',
+          playlist_songs: [],
+        }
+      );
+
+      const config = createMockCardConfig({
+        mode: 'custom',
+        songsDisplay: 'expanded',
+        autoHideSongsWhenEmpty: true,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      await element.updateComplete;
+      const songsSection = element.shadowRoot.querySelector('.songs-section');
+      expect(songsSection).to.not.exist;
+    });
+
+    it('hides song list when autoHideSongsWhenEmpty is true and 1 song', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          playlist: 'Test Playlist',
+          playlist_songs: [{ name: 'Song 1', duration: 180 }],
+        }
+      );
+
+      const config = createMockCardConfig({
+        mode: 'custom',
+        songsDisplay: 'expanded',
+        autoHideSongsWhenEmpty: true,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      await element.updateComplete;
+      const songsSection = element.shadowRoot.querySelector('.songs-section');
+      expect(songsSection).to.not.exist;
+    });
+
+    it('shows song list when autoHideSongsWhenEmpty is true and 2+ songs', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          playlist: 'Test Playlist',
+          playlist_songs: [
+            { name: 'Song 1', duration: 180 },
+            { name: 'Song 2', duration: 240 },
+          ],
+        }
+      );
+
+      const config = createMockCardConfig({
+        mode: 'custom',
+        songsDisplay: 'expanded',
+        autoHideSongsWhenEmpty: true,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      await element.updateComplete;
+      const songsSection = element.shadowRoot.querySelector('.songs-section');
+      expect(songsSection).to.exist;
+    });
   });
 
   describe('Render Optimization', () => {

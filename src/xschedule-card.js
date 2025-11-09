@@ -494,8 +494,14 @@ class XScheduleCard extends LitElement {
     const displayMode = this.config.songsDisplay;
     if (displayMode === 'hidden') return '';
 
-    const isCollapsed = displayMode === 'collapsed' && !this._songsExpanded;
     const songCount = this._songs.length;
+
+    // Auto-hide if enabled and 0 or 1 songs
+    if (this.config.autoHideSongsWhenEmpty && songCount <= 1) {
+      return '';
+    }
+
+    const isCollapsed = displayMode === 'collapsed' && !this._songsExpanded;
     const currentSong = this._entity.attributes.song;
 
     return html`
@@ -1326,7 +1332,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.4.1-pre2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.4.1-pre4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

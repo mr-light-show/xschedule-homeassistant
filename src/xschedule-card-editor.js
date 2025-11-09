@@ -196,6 +196,18 @@ class XScheduleCardEditor extends LitElement {
           </select>
         </div>
 
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.config.autoHideSongsWhenEmpty || false}
+              @change=${(e) => this._checkboxChanged('autoHideSongsWhenEmpty', e)}
+            />
+            Auto-hide song list when empty or single song
+          </label>
+          <div class="hint">Hides the song list when there are 0 or 1 songs</div>
+        </div>
+
         <div class="form-group">
           <label for="queueDisplay">Queue Display</label>
           <select
