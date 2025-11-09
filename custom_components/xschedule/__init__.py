@@ -172,7 +172,8 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
         else:
             existing = []
 
-        _LOGGER.debug("Found %d existing resources total", len(existing))
+        _LOGGER.info("Found %d existing resources total", len(existing))
+        _LOGGER.info("Existing resources: %s", [r.get("url", "") for r in existing])
 
         for card in cards:
             # Check if already registered (check base URL without timestamp)
@@ -185,27 +186,32 @@ async def _register_frontend_resources(hass: HomeAssistant, timestamps: dict[str
                 existing_url = existing_resource.get("url", "")
                 existing_base = existing_url.split("?")[0]
 
+                _LOGGER.debug("Checking existing resource: %s (base: %s) against our card: %s (base: %s)", 
+                             existing_url, existing_base, card["url"], base_url)
+
                 if existing_base == base_url:
                     # Check if this is exactly the same URL (including timestamp)
                     if existing_url == card["url"]:
                         # Already registered with correct timestamp
-                        _LOGGER.debug("Resource already registered: %s", card["url"])
+                        _LOGGER.info("Resource already registered: %s", card["url"])
                         already_registered = True
                     else:
                         # Old entry with different timestamp - mark for deletion
-                        _LOGGER.debug("Marking for deletion (timestamp mismatch): %s", existing_url)
+                        _LOGGER.warning("Marking xSchedule resource for deletion (timestamp mismatch): %s", existing_url)
                         resources_to_delete.append(existing_resource)
 
             # Delete old entries BEFORE adding new one
             if resources_to_delete and hasattr(resources, "async_delete_item"):
+                _LOGGER.info("Deleting %d old xSchedule resources", len(resources_to_delete))
                 for old_resource in resources_to_delete:
                     resource_id = old_resource.get("id")
                     old_url = old_resource.get("url", "")
                     try:
+                        _LOGGER.warning("DELETING resource ID=%s URL=%s", resource_id, old_url)
                         await resources.async_delete_item(resource_id)
-                        _LOGGER.info("Removed old resource: %s", old_url)
+                        _LOGGER.info("Successfully removed old xSchedule resource: %s", old_url)
                     except Exception as del_err:
-                        _LOGGER.warning("Failed to delete old resource %s: %s", old_url, del_err)
+                        _LOGGER.error("Failed to delete old resource %s: %s", old_url, del_err)
 
             # Add the resource if not already registered
             if not already_registered:
