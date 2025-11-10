@@ -144,6 +144,21 @@ class XSchedulePlaylistBrowser extends LitElement {
     return super.shouldUpdate(changedProperties);
   }
 
+  // Feature detection helpers
+  _isXSchedulePlayer() {
+    if (!this._entity) return false;
+    // Detect xSchedule player by checking for xSchedule-specific attributes
+    return (
+      this._entity.attributes.integration === 'xschedule' ||
+      this._entity.attributes.playlist_songs !== undefined ||
+      this._entity.attributes.queue !== undefined
+    );
+  }
+
+  _supportsQueue() {
+    return this._isXSchedulePlayer();
+  }
+
   async _fetchScheduleInfo(forceRefresh = false) {
     // Don't fetch if already in progress
     if (this._loading) return;
@@ -579,10 +594,10 @@ class XSchedulePlaylistBrowser extends LitElement {
             ${song.duration ? html`<span class="song-duration-compact">${this._formatDuration(song.duration / 1000)}</span>` : ''}
             <button
               class="add-queue-btn-compact"
-              @click=${(e) => this._addSongToQueue(e, playlistName, song.name)}
-              title="Add to queue"
+              @click=${(e) => this._handleSongAction(e, playlistName, song.name)}
+              title=${this._supportsQueue() ? 'Add to queue' : 'Play song'}
             >
-              <ha-icon icon="mdi:playlist-plus"></ha-icon>
+              <ha-icon icon=${this._supportsQueue() ? 'mdi:playlist-plus' : 'mdi:play-outline'}></ha-icon>
             </button>
           </div>
         `)}
@@ -590,17 +605,27 @@ class XSchedulePlaylistBrowser extends LitElement {
     `;
   }
 
-  async _addSongToQueue(e, playlistName, songName) {
+  async _handleSongAction(e, playlistName, songName) {
     e.stopPropagation(); // Prevent playlist toggle
 
     try {
-      await this._hass.callService('xschedule', 'add_to_queue', {
-        entity_id: this.config.entity,
-        playlist: playlistName,
-        song: songName,
-      });
+      if (this._supportsQueue()) {
+        // xSchedule player - add to queue
+        await this._hass.callService('xschedule', 'add_to_queue', {
+          entity_id: this.config.entity,
+          playlist: playlistName,
+          song: songName,
+        });
+      } else {
+        // Generic player - play the song directly
+        await this._hass.callService('media_player', 'play_media', {
+          entity_id: this.config.entity,
+          media_content_type: 'music',
+          media_content_id: `${playlistName}|||${songName}`,
+        });
+      }
     } catch (err) {
-      console.error('Failed to add to queue:', err);
+      console.error('Failed to handle song action:', err);
     }
   }
 
@@ -616,9 +641,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     try {
-      await this._hass.callService('media_player', 'select_source', {
+      // Use standard media_player.play_media command
+      await this._hass.callService('media_player', 'play_media', {
         entity_id: this.config.entity,
-        source: playlistName,
+        media_content_type: 'playlist',
+        media_content_id: playlistName,
       });
     } catch (err) {
       console.error('Failed to play playlist:', err);
