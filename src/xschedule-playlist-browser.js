@@ -592,41 +592,10 @@ class XSchedulePlaylistBrowser extends LitElement {
           <div class="song-item-compact">
             <span class="song-name-compact">${song.name}</span>
             ${song.duration ? html`<span class="song-duration-compact">${this._formatDuration(song.duration / 1000)}</span>` : ''}
-            <button
-              class="add-queue-btn-compact"
-              @click=${(e) => this._handleSongAction(e, playlistName, song.name)}
-              title=${this._supportsQueue() ? 'Add to queue' : 'Play song'}
-            >
-              <ha-icon icon=${this._supportsQueue() ? 'mdi:playlist-plus' : 'mdi:play-outline'}></ha-icon>
-            </button>
           </div>
         `)}
       </div>
     `;
-  }
-
-  async _handleSongAction(e, playlistName, songName) {
-    e.stopPropagation(); // Prevent playlist toggle
-
-    try {
-      if (this._supportsQueue()) {
-        // xSchedule player - add to queue
-        await this._hass.callService('xschedule', 'add_to_queue', {
-          entity_id: this.config.entity,
-          playlist: playlistName,
-          song: songName,
-        });
-      } else {
-        // Generic player - play the song directly
-        await this._hass.callService('media_player', 'play_media', {
-          entity_id: this.config.entity,
-          media_content_type: 'music',
-          media_content_id: `${playlistName}|||${songName}`,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to handle song action:', err);
-    }
   }
 
   async _playPlaylist(e, playlistName) {
@@ -1076,7 +1045,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.1-pre2  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.1-pre4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

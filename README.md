@@ -338,10 +338,32 @@ For Custom mode, use the built-in visual editor instead of editing YAML:
 
 ### Smart Queue Management
 
-The card includes intelligent duplicate prevention:
-- Checks entire queue (not just last song)
-- Shows "Already in queue" message
-- Prevents accidental duplicates
+The card uses intelligent command selection for optimal playback:
+
+**Scenario 1: No Playlist Playing**
+- Plays the selected song immediately
+- Uses `media_player.play_media` for instant playback
+- Perfect for starting playback from idle
+
+**Scenario 2: Same Playlist (Within-Playlist Selection)**
+- Uses `Jump to specified step in current playlist at the end of current step` command
+- Provides smooth transition after current song ends
+- No interruption, no queue needed
+- Automatically falls back to queue if jump fails
+
+**Scenario 3: Different Playlist (Cross-Playlist Selection)**
+- Adds song to persistent queue
+- Queue plays automatically when current playlist ends
+- Includes duplicate prevention:
+  - Checks entire queue (not just last song)
+  - Shows "Already in queue" message
+  - Prevents accidental duplicates
+
+**Why This Design?**
+- **Smoother Transitions**: Within-playlist jumps don't require queue system
+- **Cross-Playlist Support**: Queue enables mixing songs from different playlists
+- **Intelligent Fallback**: Automatically uses the best method for each scenario
+- **User-Friendly**: You don't need to think about it - just click to add!
 
 ### Real-Time Updates
 

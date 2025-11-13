@@ -345,6 +345,15 @@ class XScheduleAPIClient:
         self.invalidate_cache()
         return result
 
+    async def jump_to_step_at_end(self, step_name: str) -> dict[str, Any]:
+        """Jump to specified step in current playlist at end of current step."""
+        result = await self.command(
+            "Jump to specified step in current playlist at the end of current step",
+            step_name
+        )
+        self.invalidate_cache()
+        return result
+
     # Validation and testing
 
     async def validate_connection(self) -> bool:

@@ -741,7 +741,46 @@ class XScheduleCard extends LitElement {
       return;
     }
 
-    const playlist = this._entity.attributes.playlist;
+    const currentPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
+    const songPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
+    
+    // Scenario 1: No playlist playing - play immediately
+    if (!currentPlaylist) {
+      try {
+        await this._hass.callService('media_player', 'play_media', {
+          entity_id: this.config.entity,
+          media_content_type: 'music',
+          media_content_id: `${songPlaylist}|||${songName}`,
+        });
+        this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
+      } catch (err) {
+        this._showToast('error', 'mdi:alert-circle', 'Failed to play song');
+        console.error('Error playing song:', err);
+      }
+      return;
+    }
+    
+    // Scenario 2: Same playlist - use jump command for smoother transition
+    if (currentPlaylist === songPlaylist) {
+      try {
+        await this._hass.callService('xschedule', 'jump_to_step', {
+          entity_id: this.config.entity,
+          step: songName,
+        });
+        this._showToast('success', 'mdi:skip-next', `Will play next: ${songName}`);
+      } catch (err) {
+        console.error('Jump failed, falling back to queue:', err);
+        // Fallback to queue if jump fails
+        await this._addToQueueFallback(songName, songPlaylist);
+      }
+      return;
+    }
+    
+    // Scenario 3: Different playlist - use queue
+    await this._addToQueueFallback(songName, songPlaylist);
+  }
+
+  async _addToQueueFallback(songName, playlist) {
     if (!playlist) {
       this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
       return;
@@ -754,13 +793,12 @@ class XScheduleCard extends LitElement {
     }
 
     try {
-      // Use xSchedule-specific service for queue management
       await this._hass.callService('xschedule', 'add_to_queue', {
         entity_id: this.config.entity,
         playlist,
         song: songName,
       });
-      this._showToast('success', 'mdi:check-circle', 'Added to queue');
+      this._showToast('success', 'mdi:playlist-plus', `Added to queue: ${songName}`);
     } catch (err) {
       this._showToast('error', 'mdi:alert-circle', 'Failed to add to queue');
       console.error('Error adding to queue:', err);
@@ -1366,7 +1404,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
