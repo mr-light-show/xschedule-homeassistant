@@ -823,14 +823,12 @@ class XScheduleCard extends LitElement {
   _toggleSongs() {
     if (this.config.songsDisplay === 'collapsed') {
       this._songsExpanded = !this._songsExpanded;
-      this.requestUpdate();
     }
   }
 
   _toggleQueue() {
     if (this.config.queueDisplay === 'collapsed') {
       this._queueExpanded = !this._queueExpanded;
-      this.requestUpdate();
     }
   }
 
@@ -873,7 +871,6 @@ class XScheduleCard extends LitElement {
 
   _closeContextMenu() {
     this._contextMenu = null;
-    this.requestUpdate();
   }
 
   _showSongInfo(songName) {
@@ -902,11 +899,9 @@ class XScheduleCard extends LitElement {
 
   _showToast(type, icon, message) {
     this._toast = { type, icon, message };
-    this.requestUpdate();
 
     setTimeout(() => {
       this._toast = null;
-      this.requestUpdate();
     }, 2000);
   }
 
