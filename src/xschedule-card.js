@@ -768,7 +768,7 @@ class XScheduleCard extends LitElement {
         step: songName,
       });
       console.log('Jump command sent successfully');
-      this._showToast('success', 'mdi:skip-next', `Will play next: ${songName}`);
+      this._showToast('success', 'mdi:skip-next', `${songName} will play next`);
     } catch (err) {
       console.error('Jump to step failed:', err);
       this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message || err}`);
