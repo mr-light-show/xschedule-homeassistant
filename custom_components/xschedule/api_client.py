@@ -149,7 +149,14 @@ class XScheduleAPIClient:
             params["Parameters"] = quote(parameters, safe='')
 
         _LOGGER.debug("Executing command: %s with params: %s", command_name, parameters)
-        return await self._request(API_COMMAND, params)
+        result = await self._request(API_COMMAND, params)
+        _LOGGER.debug("Command response: %s", result)
+        
+        # Check if command failed
+        if isinstance(result, dict) and result.get("result") == "failed":
+            _LOGGER.warning("Command '%s' failed: %s", command_name, result.get("message", "Unknown error"))
+        
+        return result
 
     # Status and information queries
 

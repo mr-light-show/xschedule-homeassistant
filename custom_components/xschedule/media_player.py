@@ -667,9 +667,20 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # Use REST API for now - WebSocket format needs investigation
             # WebSocket was returning: {'result': 'failed', 'reference': '', 'message': 'Empty request.'}
             _LOGGER.debug("Sending via REST API: step='%s'", step)
-            await self._api_client.jump_to_step_at_end(step)
-
-            _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
+            result = await self._api_client.jump_to_step_at_end(step)
+            
+            # Check if command succeeded
+            if isinstance(result, dict):
+                if result.get("result") == "ok":
+                    _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
+                elif result.get("result") == "failed":
+                    error_msg = result.get("message", "Unknown error")
+                    _LOGGER.error("Jump to step '%s' failed: %s", step, error_msg)
+                    raise XScheduleAPIError(f"Jump failed: {error_msg}")
+                else:
+                    _LOGGER.warning("Jump to step '%s' returned unexpected response: %s", step, result)
+            else:
+                _LOGGER.info("Jump to step '%s' sent (response: %s)", step, result)
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error jumping to step '%s': %s", step, err)
