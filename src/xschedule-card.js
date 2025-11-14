@@ -742,7 +742,6 @@ class XScheduleCard extends LitElement {
     }
 
     const currentPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
-    const songPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
     
     // Scenario 1: No playlist playing - play immediately
     if (!currentPlaylist) {
@@ -750,7 +749,7 @@ class XScheduleCard extends LitElement {
         await this._hass.callService('media_player', 'play_media', {
           entity_id: this.config.entity,
           media_content_type: 'music',
-          media_content_id: `${songPlaylist}|||${songName}`,
+          media_content_id: `${currentPlaylist}|||${songName}`,
         });
         this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
       } catch (err) {
@@ -760,48 +759,18 @@ class XScheduleCard extends LitElement {
       return;
     }
     
-    // Scenario 2: Same playlist - use jump command for smoother transition
-    if (currentPlaylist === songPlaylist) {
-      try {
-        await this._hass.callService('xschedule', 'jump_to_step', {
-          entity_id: this.config.entity,
-          step: songName,
-        });
-        this._showToast('success', 'mdi:skip-next', `Will play next: ${songName}`);
-      } catch (err) {
-        console.error('Jump failed, falling back to queue:', err);
-        // Fallback to queue if jump fails
-        await this._addToQueueFallback(songName, songPlaylist);
-      }
-      return;
-    }
-    
-    // Scenario 3: Different playlist - use queue
-    await this._addToQueueFallback(songName, songPlaylist);
-  }
-
-  async _addToQueueFallback(songName, playlist) {
-    if (!playlist) {
-      this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
-      return;
-    }
-
-    // Check if already in queue
-    if (this._queue.some((item) => item.name === songName)) {
-      this._showToast('info', 'mdi:information', 'Already in queue');
-      return;
-    }
-
+    // Scenario 2: Songs from _songs array are ALWAYS from current playlist
+    // Use jump command for smoother transition
     try {
-      await this._hass.callService('xschedule', 'add_to_queue', {
+      console.log(`Jumping to step: "${songName}" in playlist: "${currentPlaylist}"`);
+      await this._hass.callService('xschedule', 'jump_to_step', {
         entity_id: this.config.entity,
-        playlist,
-        song: songName,
+        step: songName,
       });
-      this._showToast('success', 'mdi:playlist-plus', `Added to queue: ${songName}`);
+      this._showToast('success', 'mdi:skip-next', `Will play next: ${songName}`);
     } catch (err) {
-      this._showToast('error', 'mdi:alert-circle', 'Failed to add to queue');
-      console.error('Error adding to queue:', err);
+      console.error('Jump to step failed:', err);
+      this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message}`);
     }
   }
 
@@ -1399,7 +1368,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre5  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre6  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

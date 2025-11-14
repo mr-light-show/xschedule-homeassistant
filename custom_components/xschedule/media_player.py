@@ -659,18 +659,22 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
     async def async_jump_to_step(self, step: str) -> None:
         """Jump to specified step in current playlist at end of current step."""
         try:
+            _LOGGER.debug("Jump to step called: step='%s'", step)
             if self._websocket and self._websocket.connected:
+                _LOGGER.debug("Sending via WebSocket: 'Jump to specified step in current playlist at the end of current step' with step='%s'", step)
                 await self._websocket.send_command(
                     "Jump to specified step in current playlist at the end of current step",
                     step
                 )
             else:
+                _LOGGER.debug("Sending via REST API: step='%s'", step)
                 await self._api_client.jump_to_step_at_end(step)
 
-            _LOGGER.info("Jumping to step '%s' at end of current step", step)
+            _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
 
         except XScheduleAPIError as err:
-            _LOGGER.error("Error jumping to step: %s", err)
+            _LOGGER.error("Error jumping to step '%s': %s", step, err)
+            raise
 
     def _is_in_queue(self, song_name: str) -> bool:
         """Check if a song is already in the queue."""
