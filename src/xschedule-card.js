@@ -45,7 +45,6 @@ class XScheduleCard extends LitElement {
     this._previousPlaylists = null;
     this._previousSongs = null;
     this._previousQueue = null;
-    this._previousMediaPositionUpdatedAt = null;
   }
 
   setConfig(config) {
@@ -82,6 +81,20 @@ class XScheduleCard extends LitElement {
     if (progressFill && this._entity) {
       const percentage = this._calculateProgress();
       progressFill.style.width = `${percentage}%`;
+      
+      // Also update time display
+      const duration = this._entity.attributes.media_duration;
+      const position = this._entity.attributes.media_position;
+      if (duration && position !== undefined) {
+        const updatedAt = this._entity.attributes.media_position_updated_at;
+        if (updatedAt && this._entity.state === 'playing') {
+          const lastUpdate = new Date(updatedAt);
+          const now = new Date();
+          const elapsed = (now - lastUpdate) / 1000;
+          const currentPosition = Math.min(duration, position + elapsed);
+          this._updateTimeDisplay(currentPosition, duration);
+        }
+      }
     }
   }
 
@@ -113,43 +126,50 @@ class XScheduleCard extends LitElement {
   }
 
   set hass(hass) {
+    const oldEntity = this._entity;
     this._hass = hass;
 
     // Get entity
     const entityId = this.config.entity;
-    this._entity = hass.states[entityId];
+    const newEntity = hass.states[entityId];
+    this._entity = newEntity;
 
-    if (this._entity) {
-      // Extract playlists from source_list and sort alphabetically
-      this._playlists = (this._entity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
+    if (newEntity) {
+      // Update dependent properties
+      this._updateDependentProperties(oldEntity, newEntity);
+      
+      // Trigger update check (shouldUpdate will determine if re-render is needed)
+      this.requestUpdate();
+    }
+  }
 
-      const currentPlaylist = this._entity.attributes.playlist;
-      const playlistSongs = this._entity.attributes.playlist_songs || [];
-      const isIdle = this._entity.state === 'idle' ||
-                     this._entity.state === 'off' ||
-                     this._entity.state === 'unavailable' ||
-                     this._entity.state === 'unknown';
+  _updateDependentProperties(oldEntity, newEntity) {
+    // Extract playlists from source_list and sort alphabetically
+    this._playlists = (newEntity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
 
-      // Clear cached songs when player is idle and no current playlist
-      // This ensures song list disappears when playback fully stops
-      if (isIdle && !currentPlaylist) {
-        this._lastPlaylistSongs = [];
-      }
-      // Remember the last playlist and its songs when not playing from queue
-      else if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
-        this._lastPlaylist = currentPlaylist;
-        this._lastPlaylistSongs = playlistSongs;
-      }
+    const currentPlaylist = newEntity.attributes.playlist;
+    const playlistSongs = newEntity.attributes.playlist_songs || [];
+    const isIdle = newEntity.state === 'idle' ||
+                   newEntity.state === 'off' ||
+                   newEntity.state === 'unavailable' ||
+                   newEntity.state === 'unknown';
 
-      // Extract songs - use current playlist songs if available, otherwise use last known playlist songs
-      this._songs = playlistSongs.length > 0 ? playlistSongs : this._lastPlaylistSongs;
-
-      // Extract internal queue (managed by integration)
-      this._queue = this._entity.attributes.internal_queue || [];
+    // Clear cached songs when player is idle and no current playlist
+    // This ensures song list disappears when playback fully stops
+    if (isIdle && !currentPlaylist) {
+      this._lastPlaylistSongs = [];
+    }
+    // Remember the last playlist and its songs when not playing from queue
+    else if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
+      this._lastPlaylist = currentPlaylist;
+      this._lastPlaylistSongs = playlistSongs;
     }
 
-    // Trigger update check
-    this.requestUpdate();
+    // Extract songs - use current playlist songs if available, otherwise use last known playlist songs
+    this._songs = playlistSongs.length > 0 ? playlistSongs : this._lastPlaylistSongs;
+
+    // Extract internal queue (managed by integration)
+    this._queue = newEntity.attributes.internal_queue || [];
   }
 
   shouldUpdate(changedProperties) {
@@ -170,7 +190,9 @@ class XScheduleCard extends LitElement {
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
       const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
       const queueChanged = JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue;
-      const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
+      
+      // Note: Removed mediaPositionUpdatedAtChanged - progress bar updates are handled by
+      // the _updateProgressBar() interval, so we don't need to re-render the entire card
 
       // Update tracking variables
       this._previousState = this._entity.state;
@@ -179,11 +201,10 @@ class XScheduleCard extends LitElement {
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
       this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
       this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
-      this._previousMediaPositionUpdatedAt = this._entity.attributes.media_position_updated_at;
 
-      // Allow first render, or only if something meaningful changed
+      // Allow first render, or only if something meaningful changed (not just position)
       return isFirstRender || stateChanged || titleChanged || playlistChanged ||
-             playlistsChanged || songsChanged || queueChanged || mediaPositionUpdatedAtChanged;
+             playlistsChanged || songsChanged || queueChanged;
     }
 
     return super.shouldUpdate(changedProperties);
@@ -782,7 +803,28 @@ class XScheduleCard extends LitElement {
     const duration = this._entity.attributes.media_duration || 0;
     const position = duration * percent;
 
+    // Optimistic UI update - update progress bar immediately
+    const progressFill = progressBar.querySelector('.progress-fill');
+    if (progressFill) {
+      progressFill.style.width = `${percent * 100}%`;
+    }
+
+    // Update time display immediately
+    this._updateTimeDisplay(position, duration);
+
+    // Send service call (HA state update will come later)
     this._callService('media_seek', { seek_position: position });
+  }
+
+  _updateTimeDisplay(position, duration) {
+    const timeDisplay = this.shadowRoot?.querySelector('.time-display');
+    if (timeDisplay && position !== undefined && duration !== undefined) {
+      const spans = timeDisplay.querySelectorAll('span');
+      if (spans.length >= 2) {
+        spans[0].textContent = this._formatTime(position);
+        spans[1].textContent = this._formatTime(duration);
+      }
+    }
   }
 
   _handleVolumeChange(e) {
