@@ -3,68 +3,499 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,i=Symbol(),s=new WeakMap;let o=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==i)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const i=this.t;if(e&&void 0===t){const e=void 0!==i&&1===i.length;e&&(t=s.get(i)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&s.set(i,t))}return t}toString(){return this.cssText}};const n=(t,...e)=>{const s=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new o(s,t,i)},a=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,i))(e)})(t):t,{is:r,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:u}=Object,p=globalThis,g=p.trustedTypes,m=g?g.emptyScript:"",_=p.reactiveElementPolyfillSupport,y=(t,e)=>t,f={toAttribute(t,e){switch(e){case Boolean:t=t?m:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},b=(t,e)=>!r(t,e),v={attribute:!0,type:String,converter:f,reflect:!1,useDefault:!1,hasChanged:b};
+const t$1=globalThis,e$2=t$1.ShadowRoot&&(void 0===t$1.ShadyCSS||t$1.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s$2=Symbol(),o$3=new WeakMap;let n$2 = class n{constructor(t,e,o){if(this._$cssResult$=true,o!==s$2)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e;}get styleSheet(){let t=this.o;const s=this.t;if(e$2&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=o$3.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&o$3.set(s,t));}return t}toString(){return this.cssText}};const r$2=t=>new n$2("string"==typeof t?t:t+"",void 0,s$2),i$3=(t,...e)=>{const o=1===t.length?t[0]:e.reduce(((e,s,o)=>e+(t=>{if(true===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[o+1]),t[0]);return new n$2(o,t,s$2)},S$1=(s,o)=>{if(e$2)s.adoptedStyleSheets=o.map((t=>t instanceof CSSStyleSheet?t:t.styleSheet));else for(const e of o){const o=document.createElement("style"),n=t$1.litNonce;void 0!==n&&o.setAttribute("nonce",n),o.textContent=e.cssText,s.appendChild(o);}},c$2=e$2?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return r$2(e)})(t):t;
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */Symbol.metadata??=Symbol("metadata"),p.litPropertyMetadata??=new WeakMap;let $=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=v){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&l(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:o}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const n=s?.call(this);o?.call(this,e),this.requestUpdate(t,n,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??v}static _$Ei(){if(this.hasOwnProperty(y("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(y("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(y("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(a(t))}else void 0!==t&&e.push(a(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const i=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((i,s)=>{if(e)i.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of s){const s=document.createElement("style"),o=t.litNonce;void 0!==o&&s.setAttribute("nonce",o),s.textContent=e.cssText,i.appendChild(s)}})(i,this.constructor.elementStyles),i}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const o=(void 0!==i.converter?.toAttribute?i.converter:f).toAttribute(e,i.type);this._$Em=t,null==o?this.removeAttribute(s):this.setAttribute(s,o),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),o="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:f;this._$Em=s;const n=o.fromAttribute(e,t.type);this[s]=n??this._$Ej?.get(s)??n,this._$Em=null}}requestUpdate(t,e,i){if(void 0!==t){const s=this.constructor,o=this[t];if(i??=s.getPropertyOptions(t),!((i.hasChanged??b)(o,e)||i.useDefault&&i.reflect&&o===this._$Ej?.get(t)&&!this.hasAttribute(s._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:o},n){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,n??e??this[t]),!0!==o||void 0!==n)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};$.elementStyles=[],$.shadowRootOptions={mode:"open"},$[y("elementProperties")]=new Map,$[y("finalized")]=new Map,_?.({ReactiveElement:$}),(p.reactiveElementVersions??=[]).push("2.1.1");
+ */const{is:i$2,defineProperty:e$1,getOwnPropertyDescriptor:h$1,getOwnPropertyNames:r$1,getOwnPropertySymbols:o$2,getPrototypeOf:n$1}=Object,a$1=globalThis,c$1=a$1.trustedTypes,l$1=c$1?c$1.emptyScript:"",p$1=a$1.reactiveElementPolyfillSupport,d$1=(t,s)=>t,u$1={toAttribute(t,s){switch(s){case Boolean:t=t?l$1:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t);}return t},fromAttribute(t,s){let i=t;switch(s){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t);}catch(t){i=null;}}return i}},f$1=(t,s)=>!i$2(t,s),b={attribute:true,type:String,converter:u$1,reflect:false,useDefault:false,hasChanged:f$1};Symbol.metadata??=Symbol("metadata"),a$1.litPropertyMetadata??=new WeakMap;let y$1 = class y extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t);}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,s=b){if(s.state&&(s.attribute=false),this._$Ei(),this.prototype.hasOwnProperty(t)&&((s=Object.create(s)).wrapped=true),this.elementProperties.set(t,s),!s.noAccessor){const i=Symbol(),h=this.getPropertyDescriptor(t,i,s);void 0!==h&&e$1(this.prototype,t,h);}}static getPropertyDescriptor(t,s,i){const{get:e,set:r}=h$1(this.prototype,t)??{get(){return this[s]},set(t){this[s]=t;}};return {get:e,set(s){const h=e?.call(this);r?.call(this,s),this.requestUpdate(t,h,i);},configurable:true,enumerable:true}}static getPropertyOptions(t){return this.elementProperties.get(t)??b}static _$Ei(){if(this.hasOwnProperty(d$1("elementProperties")))return;const t=n$1(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties);}static finalize(){if(this.hasOwnProperty(d$1("finalized")))return;if(this.finalized=true,this._$Ei(),this.hasOwnProperty(d$1("properties"))){const t=this.properties,s=[...r$1(t),...o$2(t)];for(const i of s)this.createProperty(i,t[i]);}const t=this[Symbol.metadata];if(null!==t){const s=litPropertyMetadata.get(t);if(void 0!==s)for(const[t,i]of s)this.elementProperties.set(t,i);}this._$Eh=new Map;for(const[t,s]of this.elementProperties){const i=this._$Eu(t,s);void 0!==i&&this._$Eh.set(i,t);}this.elementStyles=this.finalizeStyles(this.styles);}static finalizeStyles(s){const i=[];if(Array.isArray(s)){const e=new Set(s.flat(1/0).reverse());for(const s of e)i.unshift(c$2(s));}else void 0!==s&&i.push(c$2(s));return i}static _$Eu(t,s){const i=s.attribute;return  false===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=false,this.hasUpdated=false,this._$Em=null,this._$Ev();}_$Ev(){this._$ES=new Promise((t=>this.enableUpdating=t)),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach((t=>t(this)));}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.();}removeController(t){this._$EO?.delete(t);}_$E_(){const t=new Map,s=this.constructor.elementProperties;for(const i of s.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t);}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return S$1(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(true),this._$EO?.forEach((t=>t.hostConnected?.()));}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach((t=>t.hostDisconnected?.()));}attributeChangedCallback(t,s,i){this._$AK(t,i);}_$ET(t,s){const i=this.constructor.elementProperties.get(t),e=this.constructor._$Eu(t,i);if(void 0!==e&&true===i.reflect){const h=(void 0!==i.converter?.toAttribute?i.converter:u$1).toAttribute(s,i.type);this._$Em=t,null==h?this.removeAttribute(e):this.setAttribute(e,h),this._$Em=null;}}_$AK(t,s){const i=this.constructor,e=i._$Eh.get(t);if(void 0!==e&&this._$Em!==e){const t=i.getPropertyOptions(e),h="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:u$1;this._$Em=e;const r=h.fromAttribute(s,t.type);this[e]=r??this._$Ej?.get(e)??r,this._$Em=null;}}requestUpdate(t,s,i){if(void 0!==t){const e=this.constructor,h=this[t];if(i??=e.getPropertyOptions(t),!((i.hasChanged??f$1)(h,s)||i.useDefault&&i.reflect&&h===this._$Ej?.get(t)&&!this.hasAttribute(e._$Eu(t,i))))return;this.C(t,s,i);} false===this.isUpdatePending&&(this._$ES=this._$EP());}C(t,s,{useDefault:i,reflect:e,wrapped:h},r){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,r??s??this[t]),true!==h||void 0!==r)||(this._$AL.has(t)||(this.hasUpdated||i||(s=void 0),this._$AL.set(t,s)),true===e&&this._$Em!==t&&(this._$Eq??=new Set).add(t));}async _$EP(){this.isUpdatePending=true;try{await this._$ES;}catch(t){Promise.reject(t);}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,s]of this._$Ep)this[t]=s;this._$Ep=void 0;}const t=this.constructor.elementProperties;if(t.size>0)for(const[s,i]of t){const{wrapped:t}=i,e=this[s];true!==t||this._$AL.has(s)||void 0===e||this.C(s,void 0,i,e);}}let t=false;const s=this._$AL;try{t=this.shouldUpdate(s),t?(this.willUpdate(s),this._$EO?.forEach((t=>t.hostUpdate?.())),this.update(s)):this._$EM();}catch(s){throw t=false,this._$EM(),s}t&&this._$AE(s);}willUpdate(t){}_$AE(t){this._$EO?.forEach((t=>t.hostUpdated?.())),this.hasUpdated||(this.hasUpdated=true,this.firstUpdated(t)),this.updated(t);}_$EM(){this._$AL=new Map,this.isUpdatePending=false;}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return  true}update(t){this._$Eq&&=this._$Eq.forEach((t=>this._$ET(t,this[t]))),this._$EM();}updated(t){}firstUpdated(t){}};y$1.elementStyles=[],y$1.shadowRootOptions={mode:"open"},y$1[d$1("elementProperties")]=new Map,y$1[d$1("finalized")]=new Map,p$1?.({ReactiveElement:y$1}),(a$1.reactiveElementVersions??=[]).push("2.1.1");
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,P="?"+A,C=`<${P}>`,E=document,T=()=>E.createComment(""),q=t=>null===t||"object"!=typeof t&&"function"!=typeof t,D=Array.isArray,M="[ \t\n\f\r]",N=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,z=/-->/g,O=/>/g,U=RegExp(`>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),B=/'/g,H=/"/g,Q=/^(?:script|style|textarea|title)$/i,R=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),j=Symbol.for("lit-noChange"),I=Symbol.for("lit-nothing"),L=new WeakMap,V=E.createTreeWalker(E,129);function W(t,e){if(!D(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const J=(t,e)=>{const i=t.length-1,s=[];let o,n=2===e?"<svg>":3===e?"<math>":"",a=N;for(let e=0;e<i;e++){const i=t[e];let r,l,c=-1,h=0;for(;h<i.length&&(a.lastIndex=h,l=a.exec(i),null!==l);)h=a.lastIndex,a===N?"!--"===l[1]?a=z:void 0!==l[1]?a=O:void 0!==l[2]?(Q.test(l[2])&&(o=RegExp("</"+l[2],"g")),a=U):void 0!==l[3]&&(a=U):a===U?">"===l[0]?(a=o??N,c=-1):void 0===l[1]?c=-2:(c=a.lastIndex-l[2].length,r=l[1],a=void 0===l[3]?U:'"'===l[3]?H:B):a===H||a===B?a=U:a===z||a===O?a=N:(a=U,o=void 0);const d=a===U&&t[e+1].startsWith("/>")?" ":"";n+=a===N?i+C:c>=0?(s.push(r),i.slice(0,c)+S+i.slice(c)+A+d):i+A+(-2===c?e:d)}return[W(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class X{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,n=0;const a=t.length-1,r=this.parts,[l,c]=J(t,e);if(this.el=X.createElement(l,i),V.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=V.nextNode())&&r.length<a;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=c[n++],i=s.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?Z:"?"===a[1]?tt:"@"===a[1]?et:K}),s.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),s.removeAttribute(t));if(Q.test(s.tagName)){const t=s.textContent.split(A),e=t.length-1;if(e>0){s.textContent=w?w.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],T()),V.nextNode(),r.push({type:2,index:++o});s.append(t[e],T())}}}else if(8===s.nodeType)if(s.data===P)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=E.createElement("template");return i.innerHTML=t,i}}function F(t,e,i=t,s){if(e===j)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const n=q(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=F(t,o._$AS(t,e.values),o,s)),e}class Y{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??E).importNode(e,!0);V.currentNode=s;let o=V.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new G(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new it(o,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(o=V.nextNode(),n++)}return V.currentNode=E,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class G{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=I,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=F(this,t,e),q(t)?t===I||null==t||""===t?(this._$AH!==I&&this._$AR(),this._$AH=I):t!==this._$AH&&t!==j&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>D(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==I&&q(this._$AH)?this._$AA.nextSibling.data=t:this.T(E.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=X.createElement(W(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new Y(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=L.get(t.strings);return void 0===e&&L.set(t.strings,e=new X(t)),e}k(t){D(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new G(this.O(T()),this.O(T()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class K{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=I,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=I}_$AI(t,e=this,i,s){const o=this.strings;let n=!1;if(void 0===o)t=F(this,t,e,0),n=!q(t)||t!==this._$AH&&t!==j,n&&(this._$AH=t);else{const s=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=F(this,s[i+a],e,a),r===j&&(r=this._$AH[a]),n||=!q(r)||r!==this._$AH[a],r===I?t=I:t!==I&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}n&&!s&&this.j(t)}j(t){t===I?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Z extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===I?void 0:t}}class tt extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==I)}}class et extends K{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=F(this,t,e,0)??I)===j)return;const i=this._$AH,s=t===I&&i!==I||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==I&&(i===I||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class it{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){F(this,t)}}const st=x.litHtmlPolyfillSupport;st?.(X,G),(x.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
+const t=globalThis,i$1=t.trustedTypes,s$1=i$1?i$1.createPolicy("lit-html",{createHTML:t=>t}):void 0,e="$lit$",h=`lit$${Math.random().toFixed(9).slice(2)}$`,o$1="?"+h,n=`<${o$1}>`,r=document,l=()=>r.createComment(""),c=t=>null===t||"object"!=typeof t&&"function"!=typeof t,a=Array.isArray,u=t=>a(t)||"function"==typeof t?.[Symbol.iterator],d="[ \t\n\f\r]",f=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,v=/-->/g,_=/>/g,m=RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),p=/'/g,g=/"/g,$=/^(?:script|style|textarea|title)$/i,y=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),x=y(1),T=Symbol.for("lit-noChange"),E=Symbol.for("lit-nothing"),A=new WeakMap,C=r.createTreeWalker(r,129);function P(t,i){if(!a(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==s$1?s$1.createHTML(i):i}const V=(t,i)=>{const s=t.length-1,o=[];let r,l=2===i?"<svg>":3===i?"<math>":"",c=f;for(let i=0;i<s;i++){const s=t[i];let a,u,d=-1,y=0;for(;y<s.length&&(c.lastIndex=y,u=c.exec(s),null!==u);)y=c.lastIndex,c===f?"!--"===u[1]?c=v:void 0!==u[1]?c=_:void 0!==u[2]?($.test(u[2])&&(r=RegExp("</"+u[2],"g")),c=m):void 0!==u[3]&&(c=m):c===m?">"===u[0]?(c=r??f,d=-1):void 0===u[1]?d=-2:(d=c.lastIndex-u[2].length,a=u[1],c=void 0===u[3]?m:'"'===u[3]?g:p):c===g||c===p?c=m:c===v||c===_?c=f:(c=m,r=void 0);const x=c===m&&t[i+1].startsWith("/>")?" ":"";l+=c===f?s+n:d>=0?(o.push(a),s.slice(0,d)+e+s.slice(d)+h+x):s+h+(-2===d?i:x);}return [P(t,l+(t[s]||"<?>")+(2===i?"</svg>":3===i?"</math>":"")),o]};class N{constructor({strings:t,_$litType$:s},n){let r;this.parts=[];let c=0,a=0;const u=t.length-1,d=this.parts,[f,v]=V(t,s);if(this.el=N.createElement(f,n),C.currentNode=this.el.content,2===s||3===s){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes);}for(;null!==(r=C.nextNode())&&d.length<u;){if(1===r.nodeType){if(r.hasAttributes())for(const t of r.getAttributeNames())if(t.endsWith(e)){const i=v[a++],s=r.getAttribute(t).split(h),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:c,name:e[2],strings:s,ctor:"."===e[1]?H:"?"===e[1]?I:"@"===e[1]?L:k}),r.removeAttribute(t);}else t.startsWith(h)&&(d.push({type:6,index:c}),r.removeAttribute(t));if($.test(r.tagName)){const t=r.textContent.split(h),s=t.length-1;if(s>0){r.textContent=i$1?i$1.emptyScript:"";for(let i=0;i<s;i++)r.append(t[i],l()),C.nextNode(),d.push({type:2,index:++c});r.append(t[s],l());}}}else if(8===r.nodeType)if(r.data===o$1)d.push({type:2,index:c});else {let t=-1;for(;-1!==(t=r.data.indexOf(h,t+1));)d.push({type:7,index:c}),t+=h.length-1;}c++;}}static createElement(t,i){const s=r.createElement("template");return s.innerHTML=t,s}}function S(t,i,s=t,e){if(i===T)return i;let h=void 0!==e?s._$Co?.[e]:s._$Cl;const o=c(i)?void 0:i._$litDirective$;return h?.constructor!==o&&(h?._$AO?.(false),void 0===o?h=void 0:(h=new o(t),h._$AT(t,s,e)),void 0!==e?(s._$Co??=[])[e]=h:s._$Cl=h),void 0!==h&&(i=S(t,h._$AS(t,i.values),h,e)),i}class M{constructor(t,i){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=i;}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:i},parts:s}=this._$AD,e=(t?.creationScope??r).importNode(i,true);C.currentNode=e;let h=C.nextNode(),o=0,n=0,l=s[0];for(;void 0!==l;){if(o===l.index){let i;2===l.type?i=new R(h,h.nextSibling,this,t):1===l.type?i=new l.ctor(h,l.name,l.strings,this,t):6===l.type&&(i=new z(h,this,t)),this._$AV.push(i),l=s[++n];}o!==l?.index&&(h=C.nextNode(),o++);}return C.currentNode=r,e}p(t){let i=0;for(const s of this._$AV) void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++;}}class R{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,i,s,e){this.type=2,this._$AH=E,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cv=e?.isConnected??true;}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t?.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=S(this,t,i),c(t)?t===E||null==t||""===t?(this._$AH!==E&&this._$AR(),this._$AH=E):t!==this._$AH&&t!==T&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):u(t)?this.k(t):this._(t);}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t));}_(t){this._$AH!==E&&c(this._$AH)?this._$AA.nextSibling.data=t:this.T(r.createTextNode(t)),this._$AH=t;}$(t){const{values:i,_$litType$:s}=t,e="number"==typeof s?this._$AC(t):(void 0===s.el&&(s.el=N.createElement(P(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===e)this._$AH.p(i);else {const t=new M(e,this),s=t.u(this.options);t.p(i),this.T(s),this._$AH=t;}}_$AC(t){let i=A.get(t.strings);return void 0===i&&A.set(t.strings,i=new N(t)),i}k(t){a(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const h of t)e===i.length?i.push(s=new R(this.O(l()),this.O(l()),this,this.options)):s=i[e],s._$AI(h),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e);}_$AR(t=this._$AA.nextSibling,i){for(this._$AP?.(false,true,i);t!==this._$AB;){const i=t.nextSibling;t.remove(),t=i;}}setConnected(t){ void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t));}}class k{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,i,s,e,h){this.type=1,this._$AH=E,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=h,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=E;}_$AI(t,i=this,s,e){const h=this.strings;let o=false;if(void 0===h)t=S(this,t,i,0),o=!c(t)||t!==this._$AH&&t!==T,o&&(this._$AH=t);else {const e=t;let n,r;for(t=h[0],n=0;n<h.length-1;n++)r=S(this,e[s+n],i,n),r===T&&(r=this._$AH[n]),o||=!c(r)||r!==this._$AH[n],r===E?t=E:t!==E&&(t+=(r??"")+h[n+1]),this._$AH[n]=r;}o&&!e&&this.j(t);}j(t){t===E?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"");}}class H extends k{constructor(){super(...arguments),this.type=3;}j(t){this.element[this.name]=t===E?void 0:t;}}class I extends k{constructor(){super(...arguments),this.type=4;}j(t){this.element.toggleAttribute(this.name,!!t&&t!==E);}}class L extends k{constructor(t,i,s,e,h){super(t,i,s,e,h),this.type=5;}_$AI(t,i=this){if((t=S(this,t,i,0)??E)===T)return;const s=this._$AH,e=t===E&&s!==E||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,h=t!==E&&(s===E||e);e&&this.element.removeEventListener(this.name,this,s),h&&this.element.addEventListener(this.name,this,t),this._$AH=t;}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t);}}class z{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s;}get _$AU(){return this._$AM._$AU}_$AI(t){S(this,t);}}const j=t.litHtmlPolyfillSupport;j?.(N,R),(t.litHtmlVersions??=[]).push("3.3.1");const B=(t,i,s)=>{const e=s?.renderBefore??i;let h=e._$litPart$;if(void 0===h){const t=s?.renderBefore??null;e._$litPart$=h=new R(i.insertBefore(l(),t),t,void 0,s??{});}return h._$AI(t),h};
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */class nt extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new G(e.insertBefore(T(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return j}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const rt={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},custom:{}};class lt extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_entity:{type:Object},_playlists:{type:Array},_songs:{type:Array},_queue:{type:Array},_songsExpanded:{type:Boolean},_queueExpanded:{type:Boolean},_toast:{type:Object},_contextMenu:{type:Object}}}constructor(){super(),this._playlists=[],this._songs=[],this._queue=[],this._songsExpanded=!1,this._queueExpanded=!1,this._toast=null,this._contextMenu=null,this._longPressTimer=null,this._progressInterval=null,this._lastPlaylist=null,this._lastPlaylistSongs=[],this._previousState=null,this._previousTitle=null,this._previousPlaylist=null,this._previousPlaylists=null,this._previousSongs=null,this._previousQueue=null,this._previousMediaPositionUpdatedAt=null}setConfig(t){if(!t.entity)throw new Error("You need to define an entity");const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}connectedCallback(){super.connectedCallback(),this._progressInterval=setInterval(()=>{"playing"===this._entity?.state&&this._updateProgressBar()},1e3)}_updateProgressBar(){const t=this.shadowRoot?.querySelector(".progress-fill");if(t&&this._entity){const e=this._calculateProgress();t.style.width=`${e}%`}}_calculateProgress(){if(!this._entity?.attributes)return 0;const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position,i=this._entity.attributes.media_position_updated_at;if(!t||!e||!i)return 0;const s=new Date(i),o=e+(new Date-s)/1e3;return Math.min(100,o/t*100)}disconnectedCallback(){super.disconnectedCallback(),this._progressInterval&&(clearInterval(this._progressInterval),this._progressInterval=null)}set hass(t){this._hass=t;const e=this.config.entity;if(this._entity=t.states[e],this._entity){this._playlists=(this._entity.attributes.source_list||[]).sort((t,e)=>t.localeCompare(e));const t=this._entity.attributes.playlist,e=this._entity.attributes.playlist_songs||[];("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state)&&!t?this._lastPlaylistSongs=[]:t&&"Queue"!==t&&e.length>0&&(this._lastPlaylist=t,this._lastPlaylistSongs=e),this._songs=e.length>0?e:this._lastPlaylistSongs,this._queue=this._entity.attributes.internal_queue||[]}this.requestUpdate()}shouldUpdate(t){if(t.has("config"))return!0;if(this._entity){const t=null===this._previousState,e=this._entity.state!==this._previousState,i=this._entity.attributes.media_title!==this._previousTitle,s=this._entity.attributes.playlist!==this._previousPlaylist,o=JSON.stringify(this._entity.attributes.source_list)!==this._previousPlaylists,n=JSON.stringify(this._entity.attributes.playlist_songs)!==this._previousSongs,a=JSON.stringify(this._entity.attributes.internal_queue)!==this._previousQueue,r=this._entity.attributes.media_position_updated_at!==this._previousMediaPositionUpdatedAt;return this._previousState=this._entity.state,this._previousTitle=this._entity.attributes.media_title,this._previousPlaylist=this._entity.attributes.playlist,this._previousPlaylists=JSON.stringify(this._entity.attributes.source_list),this._previousSongs=JSON.stringify(this._entity.attributes.playlist_songs),this._previousQueue=JSON.stringify(this._entity.attributes.internal_queue),this._previousMediaPositionUpdatedAt=this._entity.attributes.media_position_updated_at,t||e||i||s||o||n||a||r}return super.shouldUpdate(t)}render(){return this.config?this._entity?(this._entity.state,this._entity.state,this._entity.state,R`
-      <ha-card>
-        <div class="card-content ${this.config.compactMode?"compact":""}">
-          ${this.config.showEntityName?this._renderEntityName():""}
-          ${this._renderNowPlaying()}
-          ${this._renderProgressBar()}
-          ${this._renderPlaybackControls()}
-          ${this.config.showVolumeControl?this._renderVolumeControl():""}
-          ${this._renderPlaylistSelector()}
-          ${this._supportsQueue()?this._renderQueue():""}
-          ${this._renderSongs()}
-        </div>
-        ${this._toast?this._renderToast():""}
-        ${this._contextMenu?this._renderContextMenu():""}
-      </ha-card>
-    `):R`
+ */const s=globalThis;class i extends y$1{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0;}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const r=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=B(r,this.renderRoot,this.renderOptions);}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(true);}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(false);}render(){return T}}i._$litElement$=true,i["finalized"]=true,s.litElementHydrateSupport?.({LitElement:i});const o=s.litElementPolyfillSupport;o?.({LitElement:i});(s.litElementVersions??=[]).push("4.2.1");
+
+/**
+ * Mode Presets for xSchedule Card
+ * 
+ * Shared configuration presets for different card display modes
+ */
+
+const MODE_PRESETS = {
+  simple: {
+    playlistDisplay: 'collapsed',
+    songsDisplay: 'hidden',
+    queueDisplay: 'hidden',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: true,
+  },
+  dj: {
+    playlistDisplay: 'expanded',
+    songsDisplay: 'expanded',
+    queueDisplay: 'expanded',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    showSongActions: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: false,
+  },
+  jukebox: {
+    playlistDisplay: 'collapsed',
+    songsDisplay: 'expanded',
+    queueDisplay: 'expanded',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    showSongActions: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: false,
+  },
+  minimal: {
+    playlistDisplay: 'hidden',
+    songsDisplay: 'hidden',
+    queueDisplay: 'hidden',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: true,
+  },
+  custom: {
+    // Custom mode uses user-provided settings
+  },
+};
+
+/**
+ * xSchedule Media Player Card for Home Assistant
+ *
+ * A custom Lovelace card for controlling xSchedule lighting sequencer
+ */
+
+
+class XScheduleCard extends i {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      config: { type: Object },
+      _entity: { type: Object },
+      _playlists: { type: Array },
+      _songs: { type: Array },
+      _queue: { type: Array },
+      _songsExpanded: { type: Boolean },
+      _queueExpanded: { type: Boolean },
+      _toast: { type: Object },
+      _contextMenu: { type: Object },
+    };
+  }
+
+  constructor() {
+    super();
+    this._playlists = [];
+    this._songs = [];
+    this._queue = [];
+    this._songsExpanded = false;
+    this._queueExpanded = false;
+    this._toast = null;
+    this._contextMenu = null;
+    this._longPressTimer = null;
+    this._progressInterval = null;
+    this._lastPlaylist = null;
+    this._lastPlaylistSongs = [];
+    this._forceExpandPlaylists = false;
+
+    // Track previous values for render optimization
+    this._previousState = null;
+    this._previousTitle = null;
+    this._previousPlaylist = null;
+    this._previousPlaylists = null;
+    this._previousSongs = null;
+    this._previousQueue = null;
+    this._previousMediaPositionUpdatedAt = null;
+  }
+
+  setConfig(config) {
+    if (!config.entity) {
+      throw new Error('You need to define an entity');
+    }
+
+    const mode = config.mode || 'simple';
+    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+
+    // Merge mode preset with custom config
+    this.config = {
+      entity: config.entity,
+      mode,
+      ...modePreset,
+      ...config, // User config overrides preset
+    };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Start progress bar update interval (every second)
+    // Only update the progress bar DOM element directly, not the entire component
+    this._progressInterval = setInterval(() => {
+      if (this._entity?.state === 'playing') {
+        this._updateProgressBar();
+      }
+    }, 1000);
+  }
+
+  _updateProgressBar() {
+    // Update progress bar directly without triggering full re-render
+    const progressFill = this.shadowRoot?.querySelector('.progress-fill');
+    if (progressFill && this._entity) {
+      const percentage = this._calculateProgress();
+      progressFill.style.width = `${percentage}%`;
+    }
+  }
+
+  _calculateProgress() {
+    if (!this._entity?.attributes) return 0;
+
+    const duration = this._entity.attributes.media_duration;
+    const position = this._entity.attributes.media_position;
+    const updatedAt = this._entity.attributes.media_position_updated_at;
+
+    if (!duration || !position || !updatedAt) return 0;
+
+    // Calculate current position based on when it was last updated
+    const lastUpdate = new Date(updatedAt);
+    const now = new Date();
+    const elapsed = (now - lastUpdate) / 1000;
+    const currentPosition = position + elapsed;
+
+    return Math.min(100, (currentPosition / duration) * 100);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Clean up interval
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+      this._progressInterval = null;
+    }
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+
+    // Get entity
+    const entityId = this.config.entity;
+    this._entity = hass.states[entityId];
+
+    if (this._entity) {
+      // Extract playlists from source_list and sort alphabetically
+      this._playlists = (this._entity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
+
+      const currentPlaylist = this._entity.attributes.playlist;
+      const playlistSongs = this._entity.attributes.playlist_songs || [];
+      const isIdle = this._entity.state === 'idle' ||
+                     this._entity.state === 'off' ||
+                     this._entity.state === 'unavailable' ||
+                     this._entity.state === 'unknown';
+
+      // Clear cached songs when player is idle and no current playlist
+      // This ensures song list disappears when playback fully stops
+      if (isIdle && !currentPlaylist) {
+        this._lastPlaylistSongs = [];
+      }
+      // Remember the last playlist and its songs when not playing from queue
+      else if (currentPlaylist && currentPlaylist !== 'Queue' && playlistSongs.length > 0) {
+        this._lastPlaylist = currentPlaylist;
+        this._lastPlaylistSongs = playlistSongs;
+      }
+
+      // Extract songs - use current playlist songs if available, otherwise use last known playlist songs
+      this._songs = playlistSongs.length > 0 ? playlistSongs : this._lastPlaylistSongs;
+
+      // Extract internal queue (managed by integration)
+      this._queue = this._entity.attributes.internal_queue || [];
+    }
+
+    // Trigger update check
+    this.requestUpdate();
+  }
+
+  shouldUpdate(changedProperties) {
+    // Always update if config changed (mode or display settings)
+    // This ensures all mode preset values are reflected when switching modes
+    if (changedProperties.has('config')) {
+      return true;
+    }
+
+    // If entity exists, check if meaningful data changed
+    if (this._entity) {
+      // Check if this is the first time we have entity data
+      const isFirstRender = this._previousState === null;
+
+      const stateChanged = this._entity.state !== this._previousState;
+      const titleChanged = this._entity.attributes.media_title !== this._previousTitle;
+      const playlistChanged = this._entity.attributes.playlist !== this._previousPlaylist;
+      const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
+      const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
+      const queueChanged = JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue;
+      const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
+
+      // Update tracking variables
+      this._previousState = this._entity.state;
+      this._previousTitle = this._entity.attributes.media_title;
+      this._previousPlaylist = this._entity.attributes.playlist;
+      this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+      this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
+      this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
+      this._previousMediaPositionUpdatedAt = this._entity.attributes.media_position_updated_at;
+
+      // Allow first render, or only if something meaningful changed
+      return isFirstRender || stateChanged || titleChanged || playlistChanged ||
+             playlistsChanged || songsChanged || queueChanged || mediaPositionUpdatedAtChanged;
+    }
+
+    return super.shouldUpdate(changedProperties);
+  }
+
+  render() {
+    if (!this.config) {
+      return x``;
+    }
+
+    if (!this._entity) {
+      return x`
         <ha-card>
           <div class="card-content error">
             <ha-icon icon="mdi:alert-circle"></ha-icon>
             <p>Entity ${this.config.entity} not found</p>
           </div>
         </ha-card>
-      `:R``}_renderEntityName(){const t=this._entity.attributes.friendly_name||this._entity.entity_id;return R`
+      `;
+    }
+
+    return x`
+      <ha-card>
+        <div class="card-content ${this.config.compactMode ? 'compact' : ''}">
+          ${this.config.showEntityName ? this._renderEntityName() : ''}
+          ${this._renderNowPlaying()}
+          
+          ${this.config.compactMode
+            ? this._renderCompactControlsAndProgress()
+            : x`
+                ${this._renderProgressBar()}
+                ${this._renderPlaybackControls()}
+              `
+          }
+          
+          ${this.config.showVolumeControl ? this._renderVolumeControl() : ''}
+          ${this._renderPlaylistSelector()}
+          ${this._supportsQueue() ? this._renderQueue() : ''}
+          ${this._renderSongs()}
+        </div>
+        ${this._toast ? this._renderToast() : ''}
+        ${this._contextMenu ? this._renderContextMenu() : ''}
+      </ha-card>
+    `;
+  }
+
+  _renderEntityName() {
+    const friendlyName = this._entity.attributes.friendly_name || this._entity.entity_id;
+
+    return x`
       <div class="entity-name">
         <ha-icon icon="mdi:lightbulb-group"></ha-icon>
-        <span>${t}</span>
+        <span>${friendlyName}</span>
       </div>
-    `}_renderNowPlaying(){const t=this._entity.attributes.playlist,e=this._entity.attributes.song,i=t&&""!==t&&"No playlist"!==t,s=e&&""!==e&&"No song"!==e;return"idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||!i&&!s||0===this._queue.length&&0===this._songs.length?"":R`
+    `;
+  }
+
+  _renderNowPlaying() {
+    // Get attributes without fallback text
+    const playlist = this._entity.attributes.playlist;
+    const song = this._entity.attributes.song;
+
+    // Check validity - hide "No playlist" and "No song" placeholders
+    const hasValidPlaylist = playlist && playlist !== '' && playlist !== 'No playlist';
+    const hasValidSong = song && song !== '' && song !== 'No song';
+
+    // Check if player is idle
+    const isIdle = this._entity.state === 'idle' ||
+                   this._entity.state === 'off' ||
+                   this._entity.state === 'unavailable' ||
+                   this._entity.state === 'unknown';
+
+    // Hide entire section if idle OR (no valid content AND queue/songs are empty)
+    if (isIdle || (!hasValidPlaylist && !hasValidSong) ||
+        (this._queue.length === 0 && this._songs.length === 0)) {
+      return '';
+    }
+
+    return x`
       <div class="now-playing">
-        ${this.config.showPlaylistName&&i?R`<div class="playlist-name">${t}</div>`:""}
-        ${s?R`<div class="song-name">${e}</div>`:""}
+        ${this.config.showPlaylistName && hasValidPlaylist ?
+          x`<div class="playlist-name">${playlist}</div>` : ''}
+        ${hasValidSong ? x`<div class="song-name">${song}</div>` : ''}
       </div>
-    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";if("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||0===this._queue.length&&0===this._songs.length)return"";const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position;if(!t||t<=0)return"";const i=this._calculateProgress();let s=e||0;if("playing"===this._entity.state){const e=this._entity.attributes.media_position_updated_at;if(e){const i=new Date(e),o=(new Date-i)/1e3;s=Math.min(t,s+o)}}return R`
+    `;
+  }
+
+  _renderProgressBar() {
+    if (!this.config.showProgressBar) return '';
+
+    // Don't show progress bar if player is idle or no content available
+    const isIdle = this._entity.state === 'idle' ||
+                   this._entity.state === 'off' ||
+                   this._entity.state === 'unavailable' ||
+                   this._entity.state === 'unknown';
+
+    // Hide if idle or both queue and songs are empty
+    if (isIdle || (this._queue.length === 0 && this._songs.length === 0)) {
+      return '';
+    }
+
+    const duration = this._entity.attributes.media_duration;
+    const basePosition = this._entity.attributes.media_position;
+
+    // Don't show progress bar if we don't have valid duration data
+    if (!duration || duration <= 0) return '';
+
+    // Use shared calculation method
+    const progress = this._calculateProgress();
+
+    // Calculate position for time display
+    let position = basePosition || 0;
+    if (this._entity.state === 'playing') {
+      const updatedAt = this._entity.attributes.media_position_updated_at;
+      if (updatedAt) {
+        const lastUpdate = new Date(updatedAt);
+        const now = new Date();
+        const elapsed = (now - lastUpdate) / 1000;
+        position = Math.min(duration, position + elapsed);
+      }
+    }
+
+    return x`
       <div class="progress-container">
         <div
-          class="progress-bar ${this.config.enableSeek?"seekable":""}"
-          @click=${this.config.enableSeek?this._handleSeek:null}
+          class="progress-bar ${this.config.enableSeek ? 'seekable' : ''}"
+          @click=${this.config.enableSeek ? this._handleSeek : null}
         >
-          <div class="progress-fill" style="width: ${i}%"></div>
+          <div class="progress-fill" style="width: ${progress}%"></div>
         </div>
         <div class="time-display">
-          <span>${this._formatTime(s)}</span>
-          <span>${this._formatTime(t)}</span>
+          <span>${this._formatTime(position)}</span>
+          <span>${this._formatTime(duration)}</span>
         </div>
       </div>
-    `}_renderPlaybackControls(){if(!this.config.showPlaybackControls)return"";const t="playing"===this._entity.state;return this._entity.state,R`
+    `;
+  }
+
+  _renderCompactControlsAndProgress() {
+    const progressBar = this._renderProgressBar();
+    const controls = this._renderPlaybackControls();
+    
+    // If either is empty, render them separately (fallback)
+    if (!progressBar || !controls) {
+      return x`
+        ${controls}
+        ${progressBar}
+      `;
+    }
+    
+    // Both exist: render in compact horizontal layout
+    return x`
+      <div class="compact-controls-progress">
+        <div class="compact-controls">
+          ${controls}
+        </div>
+        <div class="compact-progress">
+          ${progressBar}
+        </div>
+      </div>
+    `;
+  }
+
+  _isIdle() {
+    return this._entity.state === 'idle' ||
+           this._entity.state === 'off' ||
+           this._entity.state === 'unavailable' ||
+           this._entity.state === 'unknown';
+  }
+
+  _hasActivePlaylist() {
+    const playlist = this._entity.attributes.playlist;
+    return playlist && playlist !== '' && playlist !== 'No playlist';
+  }
+
+  _renderPlaybackControls() {
+    if (!this.config.showPlaybackControls) return '';
+    
+    const isIdle = this._isIdle();
+    const hasActivePlaylist = this._hasActivePlaylist();
+    
+    // Idle state logic
+    if (isIdle || !hasActivePlaylist) {
+      const playlistHidden = this.config.playlistDisplay === 'hidden';
+      
+      // Only show play button if playlists are hidden
+      if (playlistHidden) {
+        return x`
+          <div class="playback-controls">
+            <ha-icon-button
+              @click=${this._handleIdlePlay}
+              class="play-pause"
+              title="Play"
+            >
+              <ha-icon icon="mdi:play"></ha-icon>
+            </ha-icon-button>
+          </div>
+        `;
+      }
+      
+      // Otherwise hide all controls
+      return '';
+    }
+    
+    // Normal playback controls when active
+    const isPlaying = this._entity.state === 'playing';
+
+    return x`
       <div class="playback-controls">
         <ha-icon-button
           @click=${this._handlePrevious}
@@ -74,11 +505,11 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         </ha-icon-button>
 
         <ha-icon-button
-          @click=${t?this._handlePause:this._handlePlay}
+          @click=${isPlaying ? this._handlePause : this._handlePlay}
           class="play-pause"
-          title=${t?"Pause":"Play"}
+          title=${isPlaying ? 'Pause' : 'Play'}
         >
-          <ha-icon icon=${t?"mdi:pause":"mdi:play"}></ha-icon>
+          <ha-icon icon=${isPlaying ? 'mdi:pause' : 'mdi:play'}></ha-icon>
         </ha-icon-button>
 
         <ha-icon-button
@@ -95,174 +526,293 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <ha-icon icon="mdi:skip-next"></ha-icon>
         </ha-icon-button>
       </div>
-    `}_renderVolumeControl(){const t=this._entity.attributes.volume_level||0,e=this._entity.attributes.is_volume_muted||!1;return R`
+    `;
+  }
+
+  _renderVolumeControl() {
+    const volumeLevel = this._entity.attributes.volume_level || 0;
+    const isMuted = this._entity.attributes.is_volume_muted || false;
+
+    return x`
       <div class="volume-control">
         <ha-icon-button
           @click=${this._handleMuteToggle}
-          title=${e?"Unmute":"Mute"}
+          title=${isMuted ? 'Unmute' : 'Mute'}
         >
-          <ha-icon icon=${e?"mdi:volume-off":"mdi:volume-high"}></ha-icon>
+          <ha-icon icon=${isMuted ? 'mdi:volume-off' : 'mdi:volume-high'}></ha-icon>
         </ha-icon-button>
         <input
           type="range"
           min="0"
           max="100"
-          .value=${100*t}
+          .value=${volumeLevel * 100}
           @input=${this._handleVolumeChange}
           class="volume-slider"
         />
       </div>
-    `}_renderPlaylistSelector(){const t=this.config.playlistDisplay;if("hidden"===t)return"";const e=this._entity.attributes.playlist;return"collapsed"===t?R`
+    `;
+  }
+
+  _renderPlaylistSelector() {
+    const displayMode = this.config.playlistDisplay;
+    const isIdle = this._isIdle();
+    const hasActivePlaylist = this._hasActivePlaylist();
+    
+    // Auto mode: show playlists when idle without active playlist
+    if (displayMode === 'auto' && isIdle && !hasActivePlaylist) {
+      this._forceExpandPlaylists = true;
+    }
+    
+    // Force expand takes precedence
+    if (this._forceExpandPlaylists) {
+      return this._renderExpandedPlaylists();
+    }
+    
+    if (displayMode === 'hidden') return '';
+
+    const currentPlaylist = this._entity.attributes.playlist;
+
+    if (displayMode === 'collapsed') {
+      return x`
         <div class="section playlist-section">
           <select
             @change=${this._handlePlaylistChange}
-            .value=${e||""}
+            .value=${currentPlaylist || ''}
             class="playlist-select"
           >
             <option value="">Select playlist...</option>
-            ${this._playlists.map(t=>R`
-                <option value=${t} ?selected=${t===e}>
-                  ${t}
+            ${this._playlists.map(
+              (playlist) => x`
+                <option value=${playlist} ?selected=${playlist === currentPlaylist}>
+                  ${playlist}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
-      `:R`
+      `;
+    }
+
+    // Expanded mode
+    return this._renderExpandedPlaylists();
+  }
+
+  _renderExpandedPlaylists() {
+    const currentPlaylist = this._entity.attributes.playlist;
+    
+    return x`
       <div class="section playlist-section">
         <h3>
           <ha-icon icon="mdi:playlist-music"></ha-icon>
           Playlists
         </h3>
         <div class="playlist-list">
-          ${this._playlists.map(t=>R`
+          ${this._playlists.map(
+            (playlist) => x`
               <div
-                class="playlist-item ${t===e?"active":""}"
-                @click=${()=>this._selectPlaylist(t)}
+                class="playlist-item ${playlist === currentPlaylist ? 'active' : ''}"
+                @click=${() => this._selectPlaylist(playlist)}
               >
-                <ha-icon icon=${t===e?"mdi:play-circle":"mdi:playlist-music"}></ha-icon>
-                <span>${t}</span>
+                <ha-icon icon=${playlist === currentPlaylist ? 'mdi:play-circle' : 'mdi:playlist-music'}></ha-icon>
+                <span>${playlist}</span>
               </div>
-            `)}
+            `
+          )}
         </div>
       </div>
-    `}_renderQueue(){const t=this.config.queueDisplay,e=this._queue.length;if(0===e)return"";if("auto"===t&&0===e)return"";if("hidden"===t)return"";const i="collapsed"===t&&!this._queueExpanded;return R`
+    `;
+  }
+
+  _renderQueue() {
+    const displayMode = this.config.queueDisplay;
+    const queueCount = this._queue.length;
+
+    // Hide completely if queue is empty
+    if (queueCount === 0) {
+      return '';
+    }
+
+    // Auto mode: hidden if empty, expanded if has items
+    if (displayMode === 'auto' && queueCount === 0) {
+      return '';
+    }
+    if (displayMode === 'hidden') {
+      return '';
+    }
+
+    const isCollapsed = displayMode === 'collapsed' && !this._queueExpanded;
+
+    return x`
       <div class="section queue-section">
         <div class="section-header">
           <div @click=${this._toggleQueue} style="display: flex; align-items: center; flex: 1; cursor: pointer;">
             <h3>
               <ha-icon icon="mdi:format-list-numbered"></ha-icon>
               Queue
-              ${e>0?R`<span class="badge">${e}</span>`:""}
+              ${queueCount > 0 ? x`<span class="badge">${queueCount}</span>` : ''}
             </h3>
-            ${"collapsed"===t?R`<ha-icon icon=${this._queueExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
+            ${displayMode === 'collapsed'
+              ? x`<ha-icon icon=${this._queueExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>`
+              : ''}
           </div>
-          ${e>0?R`
+          ${queueCount > 0 
+            ? x`
                 <button 
                   class="queue-header-delete"
-                  @click=${t=>{t.stopPropagation(),this._handleClearQueue()}}
+                  @click=${(e) => {
+                    e.stopPropagation();
+                    this._handleClearQueue();
+                  }}
                   title="Clear entire queue"
                 >
                   <ha-icon icon="mdi:close"></ha-icon>
                 </button>
-              `:""}
+              `
+            : ''}
         </div>
 
-        ${i?"":R`
+        ${!isCollapsed
+          ? x`
               <div class="queue-list">
-                ${this._queue.map((t,e)=>R`
+                ${this._queue.map(
+                  (item, index) => x`
                     <div 
                       class="queue-item"
                       draggable="true"
-                      data-id="${t.id}"
-                      @dragstart=${e=>this._handleDragStart(e,t.id)}
+                      data-id="${item.id}"
+                      @dragstart=${(e) => this._handleDragStart(e, item.id)}
                       @dragover=${this._handleDragOver}
-                      @drop=${t=>this._handleDrop(t,e)}
+                      @drop=${(e) => this._handleDrop(e, index)}
                     >
                       <div class="queue-drag-handle">
                         <ha-icon icon="mdi:drag"></ha-icon>
                       </div>
-                      <span class="queue-number">${e+1}</span>
+                      <span class="queue-number">${index + 1}</span>
                       <div class="queue-info">
-                        <span class="queue-name">${t.name}</span>
-                        ${t.priority>1?R`<span class="queue-priority-badge">×${t.priority}</span>`:""}
-                        ${t.duration?R`<span class="queue-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
+                        <span class="queue-name">${item.name}</span>
+                        ${item.priority > 1 
+                          ? x`<span class="queue-priority-badge">×${item.priority}</span>`
+                          : ''}
+                        ${item.duration ? x`<span class="queue-duration">${this._formatTime(item.duration / 1000)}</span>` : ''}
                       </div>
                       <button 
                         class="queue-item-delete"
-                        @click=${e=>{e.stopPropagation(),this._removeFromQueue(t.id)}}
+                        @click=${(e) => {
+                          e.stopPropagation();
+                          this._removeFromQueue(item.id);
+                        }}
                         title="Remove from queue"
                       >
                         <ha-icon icon="mdi:close"></ha-icon>
                       </button>
                     </div>
-                  `)}
+                  `
+                )}
               </div>
-            `}
+            `
+          : ''}
       </div>
-    `}_renderSongs(){const t=this.config.songsDisplay;if("hidden"===t)return"";const e=this._songs.length;if(this.config.autoHideSongsWhenEmpty&&e<=1)return"";const i="collapsed"===t&&!this._songsExpanded,s=this._entity.attributes.song;return R`
+    `;
+  }
+
+  _renderSongs() {
+    const displayMode = this.config.songsDisplay;
+    if (displayMode === 'hidden') return '';
+
+    const songCount = this._songs.length;
+
+    // Auto-hide if enabled and 0 or 1 songs
+    if (this.config.autoHideSongsWhenEmpty && songCount <= 1) {
+      return '';
+    }
+
+    const isCollapsed = displayMode === 'collapsed' && !this._songsExpanded;
+    const currentSong = this._entity.attributes.song;
+
+    return x`
       <div class="section songs-section">
         <div class="section-header" @click=${this._toggleSongs}>
           <h3>
             <ha-icon icon="mdi:music"></ha-icon>
             Songs
-            ${e>0?R`<span class="badge">${e}</span>`:""}
+            ${songCount > 0 ? x`<span class="badge">${songCount}</span>` : ''}
           </h3>
-          ${"collapsed"===t?R`<ha-icon icon=${this._songsExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
+          ${displayMode === 'collapsed'
+            ? x`<ha-icon icon=${this._songsExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>`
+            : ''}
         </div>
 
-        ${i?"":R`
+        ${!isCollapsed
+          ? x`
               <div class="song-list">
-                ${this._songs.map(t=>R`
+                ${this._songs.map(
+                  (song) => x`
                     <div
-                      class="song-item ${t.name===s?"current":""}"
-                      @touchstart=${e=>this._handleLongPressStart(e,t.name)}
+                      class="song-item ${song.name === currentSong ? 'current' : ''}"
+                      @touchstart=${(e) => this._handleLongPressStart(e, song.name)}
                       @touchend=${this._handleLongPressEnd}
                       @touchmove=${this._handleLongPressEnd}
-                      @mousedown=${e=>this._handleLongPressStart(e,t.name)}
+                      @mousedown=${(e) => this._handleLongPressStart(e, song.name)}
                       @mouseup=${this._handleLongPressEnd}
                       @mouseleave=${this._handleLongPressEnd}
                     >
-                      ${t.name===s?R`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>`:""}
-                      <span class="song-name">${t.name}</span>
-                      ${!1!==this.config.showDuration&&t.duration?R`<span class="song-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
-                      ${!1!==this.config.showSongActions?R`
+                      ${song.name === currentSong ? x`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>` : ''}
+                      <span class="song-name">${song.name}</span>
+                      ${this.config.showDuration !== false && song.duration ? x`<span class="song-duration">${this._formatTime(song.duration / 1000)}</span>` : ''}
+                      ${this.config.showSongActions !== false
+                        ? x`
                             <div class="song-actions">
-                              ${!1!==this.config.showPlayButton?R`
+                              ${this.config.showPlayButton !== false
+                                ? x`
                                     <button
-                                      @click=${()=>this._playSong(t.name)}
+                                      @click=${() => this._playSong(song.name)}
                                       class="action-btn-compact"
                                       title="Play Now"
                                     >
                                       <ha-icon icon="mdi:play-outline"></ha-icon>
                                     </button>
-                                  `:""}
-                              ${!1!==this.config.showAddToQueueButton&&this._supportsQueue()?R`
+                                  `
+                                : ''}
+                              ${this.config.showAddToQueueButton !== false && this._supportsQueue()
+                                ? x`
                                     <button
-                                      @click=${()=>this._addToQueue(t.name)}
+                                      @click=${() => this._addToQueue(song.name)}
                                       class="action-btn-compact"
                                       title="Add to Queue"
                                     >
                                       <ha-icon icon="mdi:playlist-plus"></ha-icon>
                                     </button>
-                                  `:""}
+                                  `
+                                : ''}
                             </div>
-                          `:""}
+                          `
+                        : ''}
                     </div>
-                  `)}
+                  `
+                )}
               </div>
-            `}
+            `
+          : ''}
       </div>
-    `}_renderToast(){return R`
+    `;
+  }
+
+  _renderToast() {
+    return x`
       <div class="toast ${this._toast.type}">
         <ha-icon icon=${this._toast.icon}></ha-icon>
         <span>${this._toast.message}</span>
       </div>
-    `}_renderContextMenu(){return R`
+    `;
+  }
+
+  _renderContextMenu() {
+    return x`
       <div class="context-menu-overlay" @click=${this._closeContextMenu}>
         <div
           class="context-menu"
           style="top: ${this._contextMenu.y}px; left: ${this._contextMenu.x}px"
-          @click=${t=>t.stopPropagation()}
+          @click=${(e) => e.stopPropagation()}
         >
           <div class="context-menu-header">
             <ha-icon icon="mdi:music"></ha-icon>
@@ -270,30 +820,372 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </div>
           <button
             class="context-menu-item"
-            @click=${()=>{this._playSong(this._contextMenu.songName),this._closeContextMenu()}}
+            @click=${() => {
+              this._playSong(this._contextMenu.songName);
+              this._closeContextMenu();
+            }}
           >
             <ha-icon icon="mdi:play-outline"></ha-icon>
             <span>Play Now</span>
           </button>
-          ${this._supportsQueue()?R`
+          ${this._supportsQueue()
+            ? x`
                 <button
                   class="context-menu-item"
-                  @click=${()=>{this._addToQueue(this._contextMenu.songName),this._closeContextMenu()}}
+                  @click=${() => {
+                    this._addToQueue(this._contextMenu.songName);
+                    this._closeContextMenu();
+                  }}
                 >
                   <ha-icon icon="mdi:playlist-plus"></ha-icon>
                   <span>Add to Queue</span>
                 </button>
-              `:""}
+              `
+            : ''}
           <button
             class="context-menu-item"
-            @click=${()=>{this._showSongInfo(this._contextMenu.songName),this._closeContextMenu()}}
+            @click=${() => {
+              this._showSongInfo(this._contextMenu.songName);
+              this._closeContextMenu();
+            }}
           >
             <ha-icon icon="mdi:information"></ha-icon>
             <span>Song Info</span>
           </button>
         </div>
       </div>
-    `}_handlePlay(){this._callService("media_play")}_handlePause(){this._callService("media_pause")}_handleStop(){this._callService("media_stop")}_handleNext(){this._callService("media_next_track")}_handlePrevious(){this._callService("media_previous_track")}_handleSeek(t){const e=t.currentTarget.getBoundingClientRect(),i=(t.clientX-e.left)/e.width,s=(this._entity.attributes.media_duration||0)*i;this._callService("media_seek",{seek_position:s})}_handleVolumeChange(t){const e=parseInt(t.target.value)/100;this._callService("volume_set",{volume_level:e})}_handleMuteToggle(){const t=this._entity.attributes.is_volume_muted||!1;this._callService("volume_mute",{is_volume_muted:!t})}_handlePlaylistChange(t){const e=t.target.value;e&&this._selectPlaylist(e)}_isXSchedulePlayer(){return!!this._entity&&("xschedule"===this._entity.attributes.integration||void 0!==this._entity.attributes.playlist_songs||void 0!==this._entity.attributes.queue)}_supportsQueue(){return this._isXSchedulePlayer()}_selectPlaylist(t){this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"playlist",media_content_id:t}),this._showToast("success","mdi:check-circle",`Playing: ${t}`)}async _playSong(t){const e=this._entity.attributes.playlist||this._entity.attributes.source;if(e){if(!1===this.config.confirmDisruptive||"playing"!==this._entity.state||confirm("Replace current song?"))try{await this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"music",media_content_id:`${e}|||${t}`}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song"),console.error("Error playing song:",t)}}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _addToQueue(t){if(this._supportsQueue())try{const e=this._queue.find(e=>e.name===t),i=void 0!==e;if(await this._hass.callService("xschedule","add_to_internal_queue",{entity_id:[this.config.entity],song:t}),i){const i=e.priority+1;this._showToast("success","mdi:arrow-up-bold",`${t} will play sooner (priority ×${i})`)}else this._showToast("success","mdi:playlist-plus",`${t} added to queue`)}catch(t){console.error("Add to queue failed:",t),this._showToast("error","mdi:alert-circle",`Failed: ${t.message||t}`)}else this._showToast("error","mdi:alert-circle","Queue not supported by this player")}async _handleClearQueue(){if(confirm("Clear entire queue?"))try{await this._hass.callService("xschedule","clear_internal_queue",{entity_id:[this.config.entity]}),this._showToast("success","mdi:check-circle","Queue cleared")}catch(t){this._showToast("error","mdi:alert-circle","Failed to clear queue")}}async _removeFromQueue(t){try{await this._hass.callService("xschedule","remove_from_internal_queue",{entity_id:[this.config.entity],queue_item_id:t}),this._showToast("success","mdi:check-circle","Removed from queue")}catch(t){this._showToast("error","mdi:alert-circle","Failed to remove from queue"),console.error("Error removing from queue:",t)}}async _reorderQueue(t){try{await this._hass.callService("xschedule","reorder_internal_queue",{entity_id:[this.config.entity],queue_item_ids:t})}catch(t){this._showToast("error","mdi:alert-circle","Failed to reorder queue"),console.error("Error reordering queue:",t)}}_handleDragStart(t,e){t.dataTransfer.effectAllowed="move",t.dataTransfer.setData("text/plain",e),this._draggedItemId=e,t.target.classList.add("dragging")}_handleDragOver(t){t.preventDefault(),t.dataTransfer.dropEffect="move"}_handleDrop(t,e){t.preventDefault();this.shadowRoot.querySelectorAll(".queue-item").forEach(t=>t.classList.remove("dragging"));const i=t.dataTransfer.getData("text/plain");if(!i)return;const s=this._queue||[],o=s.findIndex(t=>t.id===i);if(-1===o||o===e)return;const n=[...s],[a]=n.splice(o,1);n.splice(e,0,a),this._reorderQueue(n.map(t=>t.id))}_toggleSongs(){"collapsed"===this.config.songsDisplay&&(this._songsExpanded=!this._songsExpanded)}_toggleQueue(){"collapsed"===this.config.queueDisplay&&(this._queueExpanded=!this._queueExpanded)}_handleLongPressStart(t,e){this._longPressTimer&&clearTimeout(this._longPressTimer),this._longPressTimer=setTimeout(()=>{t.preventDefault();const i=t.touches?t.touches[0].clientX:t.clientX,s=t.touches?t.touches[0].clientY:t.clientY;this._contextMenu={songName:e,x:Math.min(i,window.innerWidth-220),y:Math.min(s,window.innerHeight-200)},this.requestUpdate(),navigator.vibrate&&navigator.vibrate(50)},500)}_handleLongPressEnd(){this._longPressTimer&&(clearTimeout(this._longPressTimer),this._longPressTimer=null)}_closeContextMenu(){this._contextMenu=null}_showSongInfo(t){const e=this._songs.find(e=>e.name===t);if(e){const i=e.duration?this._formatTime(e.duration/1e3):"Unknown";this._showToast("info","mdi:information",`${t} - Duration: ${i}`)}}_callService(t,e={}){this._hass.callService("media_player",t,{entity_id:this.config.entity,...e})}_formatTime(t){if(!t||t<0)return"0:00";return`${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2,"0")}`}_showToast(t,e,i){this._toast={type:t,icon:e,message:i},setTimeout(()=>{this._toast=null},2e3)}getCardSize(){return 3}static get styles(){return n`
+    `;
+  }
+
+  // Event handlers
+
+  _handlePlay() {
+    this._callService('media_play');
+  }
+
+  _handlePause() {
+    this._callService('media_pause');
+  }
+
+  _handleStop() {
+    this._callService('media_stop');
+  }
+
+  _handleNext() {
+    this._callService('media_next_track');
+  }
+
+  _handlePrevious() {
+    this._callService('media_previous_track');
+  }
+
+  _handleSeek(e) {
+    const progressBar = e.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const duration = this._entity.attributes.media_duration || 0;
+    const position = duration * percent;
+
+    this._callService('media_seek', { seek_position: position });
+  }
+
+  _handleVolumeChange(e) {
+    const volume = parseInt(e.target.value) / 100;
+    this._callService('volume_set', { volume_level: volume });
+  }
+
+  _handleMuteToggle() {
+    const isMuted = this._entity.attributes.is_volume_muted || false;
+    this._callService('volume_mute', { is_volume_muted: !isMuted });
+  }
+
+  _handlePlaylistChange(e) {
+    const playlist = e.target.value;
+    if (playlist) {
+      this._selectPlaylist(playlist);
+    }
+  }
+
+  // Feature detection helpers
+  _isXSchedulePlayer() {
+    if (!this._entity) return false;
+    // Detect xSchedule player by checking for xSchedule-specific attributes
+    return (
+      this._entity.attributes.integration === 'xschedule' ||
+      this._entity.attributes.playlist_songs !== undefined ||
+      this._entity.attributes.queue !== undefined
+    );
+  }
+
+  _supportsQueue() {
+    return this._isXSchedulePlayer();
+  }
+
+  _selectPlaylist(playlist) {
+    // Use standard media_player.play_media command
+    this._hass.callService('media_player', 'play_media', {
+      entity_id: this.config.entity,
+      media_content_type: 'playlist',
+      media_content_id: playlist,
+    });
+    
+    // Auto-collapse after selection
+    if (this._forceExpandPlaylists) {
+      this._forceExpandPlaylists = false;
+      this.requestUpdate();
+    }
+    
+    this._showToast('success', 'mdi:check-circle', `Playing: ${playlist}`);
+  }
+
+  async _handleIdlePlay() {
+    const playlists = this._entity.attributes.source_list || [];
+    
+    if (playlists.length === 0) {
+      this._showToast('error', 'mdi:alert-circle', 'No playlists available');
+      return;
+    }
+    
+    // Single playlist: play it immediately
+    if (playlists.length === 1) {
+      await this._selectPlaylist(playlists[0]);
+      return;
+    }
+    
+    // Multiple playlists: force expand playlist section
+    this._forceExpandPlaylists = true;
+    this.requestUpdate();
+    this._showToast('info', 'mdi:playlist-music', 'Select a playlist to play');
+  }
+
+  async _playSong(songName) {
+    const playlist = this._entity.attributes.playlist || this._entity.attributes.source;
+    if (!playlist) {
+      this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
+      return;
+    }
+
+    // Confirm if something is playing and confirmDisruptive is enabled
+    if (this.config.confirmDisruptive !== false && this._entity.state === 'playing') {
+      if (!confirm('Replace current song?')) {
+        return;
+      }
+    }
+
+    try {
+      // Use standard media_player.play_media command with |||  delimiter
+      await this._hass.callService('media_player', 'play_media', {
+        entity_id: this.config.entity,
+        media_content_type: 'music',
+        media_content_id: `${playlist}|||${songName}`,
+      });
+      this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to play song');
+      console.error('Error playing song:', err);
+    }
+  }
+
+  async _addToQueue(songName) {
+    // Queue functionality is xSchedule-specific
+    if (!this._supportsQueue()) {
+      this._showToast('error', 'mdi:alert-circle', 'Queue not supported by this player');
+      return;
+    }
+
+    try {
+      // Check if song is already in queue to show appropriate message
+      const existingItem = this._queue.find(item => item.name === songName);
+      const willBumpPriority = existingItem !== undefined;
+      
+      await this._hass.callService('xschedule', 'add_to_internal_queue', {
+        entity_id: [this.config.entity],
+        song: songName,
+      });
+      
+      if (willBumpPriority) {
+        const newPriority = existingItem.priority + 1;
+        this._showToast('success', 'mdi:arrow-up-bold', `${songName} will play sooner (priority ×${newPriority})`);
+      } else {
+        this._showToast('success', 'mdi:playlist-plus', `${songName} added to queue`);
+      }
+    } catch (err) {
+      console.error('Add to queue failed:', err);
+      this._showToast('error', 'mdi:alert-circle', `Failed: ${err.message || err}`);
+    }
+  }
+
+  async _handleClearQueue() {
+    if (!confirm('Clear entire queue?')) {
+      return;
+    }
+
+    try {
+      await this._hass.callService('xschedule', 'clear_internal_queue', {
+        entity_id: [this.config.entity],
+      });
+      this._showToast('success', 'mdi:check-circle', 'Queue cleared');
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to clear queue');
+    }
+  }
+
+  async _removeFromQueue(queueItemId) {
+    try {
+      await this._hass.callService('xschedule', 'remove_from_internal_queue', {
+        entity_id: [this.config.entity],
+        queue_item_id: queueItemId,
+      });
+      this._showToast('success', 'mdi:check-circle', 'Removed from queue');
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to remove from queue');
+      console.error('Error removing from queue:', err);
+    }
+  }
+
+  async _reorderQueue(queueItemIds) {
+    try {
+      await this._hass.callService('xschedule', 'reorder_internal_queue', {
+        entity_id: [this.config.entity],
+        queue_item_ids: queueItemIds,
+      });
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to reorder queue');
+      console.error('Error reordering queue:', err);
+    }
+  }
+
+  _handleDragStart(e, itemId) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
+    this._draggedItemId = itemId;
+    e.target.classList.add('dragging');
+  }
+
+  _handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  _handleDrop(e, targetIndex) {
+    e.preventDefault();
+    
+    // Remove dragging class from all items
+    const items = this.shadowRoot.querySelectorAll('.queue-item');
+    items.forEach(item => item.classList.remove('dragging'));
+    
+    const draggedId = e.dataTransfer.getData('text/plain');
+    
+    if (!draggedId) return;
+    
+    // Get current queue
+    const queue = this._queue || [];
+    const draggedIndex = queue.findIndex(item => item.id === draggedId);
+    
+    if (draggedIndex === -1 || draggedIndex === targetIndex) {
+      return;
+    }
+    
+    // Reorder IDs
+    const newOrder = [...queue];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+    
+    // Send reorder command
+    this._reorderQueue(newOrder.map(item => item.id));
+  }
+
+  _toggleSongs() {
+    if (this.config.songsDisplay === 'collapsed') {
+      this._songsExpanded = !this._songsExpanded;
+    }
+  }
+
+  _toggleQueue() {
+    if (this.config.queueDisplay === 'collapsed') {
+      this._queueExpanded = !this._queueExpanded;
+    }
+  }
+
+  _handleLongPressStart(e, songName) {
+    // Clear any existing timer
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+    }
+
+    // Start long press timer (500ms)
+    this._longPressTimer = setTimeout(() => {
+      // Prevent default click behavior
+      e.preventDefault();
+
+      // Get touch/mouse position
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+      // Show context menu
+      this._contextMenu = {
+        songName,
+        x: Math.min(x, window.innerWidth - 220), // Keep menu on screen
+        y: Math.min(y, window.innerHeight - 200),
+      };
+      this.requestUpdate();
+
+      // Haptic feedback on mobile
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 500);
+  }
+
+  _handleLongPressEnd() {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
+
+  _closeContextMenu() {
+    this._contextMenu = null;
+  }
+
+  _showSongInfo(songName) {
+    const song = this._songs.find((s) => s.name === songName);
+    if (song) {
+      const duration = song.duration ? this._formatTime(song.duration / 1000) : 'Unknown';
+      this._showToast('info', 'mdi:information', `${songName} - Duration: ${duration}`);
+    }
+  }
+
+  // Utility methods
+
+  _callService(service, data = {}) {
+    this._hass.callService('media_player', service, {
+      entity_id: this.config.entity,
+      ...data,
+    });
+  }
+
+  _formatTime(seconds) {
+    if (!seconds || seconds < 0) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  _showToast(type, icon, message) {
+    this._toast = { type, icon, message };
+
+    setTimeout(() => {
+      this._toast = null;
+    }, 2000);
+  }
+
+  getCardSize() {
+    return 3;
+  }
+
+  static get styles() {
+    return i$3`
       :host {
         display: block;
       }
@@ -334,6 +1226,33 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
 
       .card-content.compact .badge {
         font-size: 0.75em; /* Badges slightly smaller */
+      }
+
+      /* Compact mode: controls and progress on same line */
+      .compact-controls-progress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .compact-controls {
+        flex-shrink: 0; /* Don't shrink controls */
+      }
+
+      .compact-progress {
+        flex: 1; /* Fill remaining space */
+        min-width: 0; /* Allow flexbox to shrink if needed */
+      }
+
+      /* Adjust progress bar styling in compact mode */
+      .compact-controls-progress .progress-container {
+        /* Ensure progress bar uses full width */
+        width: 100%;
+      }
+
+      /* Ensure controls don't have extra spacing in compact layout */
+      .compact-controls .playback-controls {
+        margin: 0;
       }
 
       .error {
@@ -416,14 +1335,19 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         gap: 4px;
       }
 
+      /* Left-justify when only play button is shown (idle state) */
+      .playback-controls:has(ha-icon-button:only-child) {
+        justify-content: flex-start;
+      }
+
       .playback-controls ha-icon-button {
-        --mdc-icon-button-size: 40px;
-        --mdc-icon-size: 28px;
+        --mdc-icon-button-size: 34px;
+        --mdc-icon-size: 24px;
       }
 
       .playback-controls .play-pause {
-        --mdc-icon-button-size: 56px;
-        --mdc-icon-size: 40px;
+        --mdc-icon-button-size: 48px;
+        --mdc-icon-size: 34px;
       }
 
       .volume-control {
@@ -852,22 +1776,124 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           min-width: 180px;
         }
       }
-    `}}customElements.define("xschedule-card",lt),console.info("%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre3  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-card",name:"xSchedule Media Player",description:"A custom card for controlling xSchedule lighting sequencer",preview:!0}),lt.getConfigElement=async()=>(await Promise.resolve().then(function(){return ut}),document.createElement("xschedule-card-editor")),lt.getStubConfig=()=>({entity:"",mode:"simple"});const ct=[{value:"simple",label:"Simple (Default)"},{value:"dj",label:"DJ Mode"},{value:"jukebox",label:"Jukebox Mode"},{value:"minimal",label:"Minimal"},{value:"custom",label:"Custom"}],ht=[{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}],dt=[{value:"auto",label:"Auto (show when has items)"},{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}];customElements.define("xschedule-card-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_currentTab:{type:String}}}constructor(){super(),this._currentTab="general"}setConfig(t){if(!t)return void(this.config=t);const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}render(){if(!this.config)return R``;const t="custom"===this.config.mode;return R`
+    `;
+  }
+}
+
+customElements.define('xschedule-card', XScheduleCard);
+
+// Log card info to console
+console.info(
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre6  ',
+  'color: orange; font-weight: bold; background: black',
+  'color: white; font-weight: bold; background: dimgray'
+);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: 'xschedule-card',
+  name: 'xSchedule Media Player',
+  description: 'A custom card for controlling xSchedule lighting sequencer',
+  preview: true,
+});
+
+// Register card editor
+XScheduleCard.getConfigElement = async () => {
+  await Promise.resolve().then(function () { return xscheduleCardEditor; });
+  return document.createElement('xschedule-card-editor');
+};
+
+// Stub for card picker
+XScheduleCard.getStubConfig = () => ({
+  entity: '',
+  mode: 'simple',
+});
+
+/**
+ * xSchedule Card Editor
+ *
+ * Configuration UI for xSchedule media player card
+ */
+
+
+const MODE_OPTIONS = [
+  { value: 'simple', label: 'Simple (Default)' },
+  { value: 'dj', label: 'DJ Mode' },
+  { value: 'jukebox', label: 'Jukebox Mode' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'custom', label: 'Custom' },
+];
+
+const DISPLAY_MODE_OPTIONS = [
+  { value: 'expanded', label: 'Expanded' },
+  { value: 'collapsed', label: 'Collapsed' },
+  { value: 'hidden', label: 'Hidden' },
+];
+
+const QUEUE_DISPLAY_OPTIONS = [
+  { value: 'auto', label: 'Auto (show when has items)' },
+  { value: 'expanded', label: 'Expanded' },
+  { value: 'collapsed', label: 'Collapsed' },
+  { value: 'hidden', label: 'Hidden' },
+];
+
+class XScheduleCardEditor extends i {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      config: { type: Object },
+      _currentTab: { type: String },
+    };
+  }
+
+  constructor() {
+    super();
+    this._currentTab = 'general';
+  }
+
+  setConfig(config) {
+    if (!config) {
+      this.config = config;
+      return;
+    }
+    
+    const mode = config.mode || 'simple';
+    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+    
+    // Merge mode preset with config (same logic as card)
+    this.config = {
+      entity: config.entity,
+      mode,
+      ...modePreset,
+      ...config, // User config overrides preset
+    };
+  }
+
+  render() {
+    if (!this.config) {
+      return x``;
+    }
+
+    const isCustomMode = this.config.mode === 'custom';
+
+    return x`
       <div class="card-config">
         <!-- General Settings -->
         <div class="form-group">
           <label for="entity">Entity (required)</label>
           <select
             id="entity"
-            .value=${this.config.entity||""}
+            .value=${this.config.entity || ''}
             @change=${this._entityChanged}
           >
             <option value="">Select entity...</option>
-            ${this._getMediaPlayerEntities().map(t=>R`
-                <option value=${t.entity_id} ?selected=${t.entity_id===this.config.entity}>
-                  ${t.attributes.friendly_name||t.entity_id}
+            ${this._getMediaPlayerEntities().map(
+              (entity) => x`
+                <option value=${entity.entity_id} ?selected=${entity.entity_id === this.config.entity}>
+                  ${entity.attributes.friendly_name || entity.entity_id}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -875,55 +1901,59 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="mode">Card Mode</label>
           <select
             id="mode"
-            .value=${this.config.mode||"simple"}
+            .value=${this.config.mode || 'simple'}
             @change=${this._modeChanged}
           >
-            ${ct.map(t=>R`
-                <option value=${t.value} ?selected=${this.config.mode===t.value}>
-                  ${t.label}
+            ${MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${this.config.mode === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
           <div class="hint">
-            ${this._getModeDescription(this.config.mode||"simple")}
+            ${this._getModeDescription(this.config.mode || 'simple')}
           </div>
         </div>
 
-        ${t?R`
+        ${isCustomMode
+          ? x`
               <!-- Tabs for Custom Mode -->
               <div class="tabs">
                 <button
-                  class="tab ${"general"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("general")}
+                  class="tab ${this._currentTab === 'general' ? 'active' : ''}"
+                  @click=${() => this._selectTab('general')}
                 >
                   General
                 </button>
                 <button
-                  class="tab ${"appearance"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("appearance")}
+                  class="tab ${this._currentTab === 'appearance' ? 'active' : ''}"
+                  @click=${() => this._selectTab('appearance')}
                 >
                   Appearance
                 </button>
                 <button
-                  class="tab ${"controls"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("controls")}
+                  class="tab ${this._currentTab === 'controls' ? 'active' : ''}"
+                  @click=${() => this._selectTab('controls')}
                 >
                   Controls
                 </button>
                 <button
-                  class="tab ${"advanced"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("advanced")}
+                  class="tab ${this._currentTab === 'advanced' ? 'active' : ''}"
+                  @click=${() => this._selectTab('advanced')}
                 >
                   Advanced
                 </button>
               </div>
 
               <!-- Tab Content -->
-              ${"general"===this._currentTab?this._renderGeneralTab():""}
-              ${"appearance"===this._currentTab?this._renderAppearanceTab():""}
-              ${"controls"===this._currentTab?this._renderControlsTab():""}
-              ${"advanced"===this._currentTab?this._renderAdvancedTab():""}
-            `:R`
+              ${this._currentTab === 'general' ? this._renderGeneralTab() : ''}
+              ${this._currentTab === 'appearance' ? this._renderAppearanceTab() : ''}
+              ${this._currentTab === 'controls' ? this._renderControlsTab() : ''}
+              ${this._currentTab === 'advanced' ? this._renderAdvancedTab() : ''}
+            `
+          : x`
               <div class="preset-info">
                 <ha-icon icon="mdi:information"></ha-icon>
                 <p>
@@ -933,7 +1963,11 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
               </div>
             `}
       </div>
-    `}_renderGeneralTab(){return R`
+    `;
+  }
+
+  _renderGeneralTab() {
+    return x`
       <div class="tab-content">
         <h3>Display Options</h3>
 
@@ -941,14 +1975,16 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="playlistDisplay">Playlist Display</label>
           <select
             id="playlistDisplay"
-            .value=${this.config.playlistDisplay||"collapsed"}
+            .value=${this.config.playlistDisplay || 'collapsed'}
             @change=${this._valueChanged}
           >
-            ${ht.map(t=>R`
-                <option value=${t.value} ?selected=${(this.config.playlistDisplay||"collapsed")===t.value}>
-                  ${t.label}
+            ${DISPLAY_MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.playlistDisplay || 'collapsed') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -956,14 +1992,16 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="songsDisplay">Songs Display</label>
           <select
             id="songsDisplay"
-            .value=${this.config.songsDisplay||"collapsed"}
+            .value=${this.config.songsDisplay || 'collapsed'}
             @change=${this._valueChanged}
           >
-            ${ht.map(t=>R`
-                <option value=${t.value} ?selected=${(this.config.songsDisplay||"collapsed")===t.value}>
-                  ${t.label}
+            ${DISPLAY_MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.songsDisplay || 'collapsed') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -971,8 +2009,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.autoHideSongsWhenEmpty||!1}
-              @change=${t=>this._checkboxChanged("autoHideSongsWhenEmpty",t)}
+              .checked=${this.config.autoHideSongsWhenEmpty || false}
+              @change=${(e) => this._checkboxChanged('autoHideSongsWhenEmpty', e)}
             />
             Auto-hide song list when empty or single song
           </label>
@@ -983,18 +2021,24 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="queueDisplay">Queue Display</label>
           <select
             id="queueDisplay"
-            .value=${this.config.queueDisplay||"auto"}
+            .value=${this.config.queueDisplay || 'auto'}
             @change=${this._valueChanged}
           >
-            ${dt.map(t=>R`
-                <option value=${t.value} ?selected=${(this.config.queueDisplay||"auto")===t.value}>
-                  ${t.label}
+            ${QUEUE_DISPLAY_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.queueDisplay || 'auto') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
       </div>
-    `}_renderAppearanceTab(){return R`
+    `;
+  }
+
+  _renderAppearanceTab() {
+    return x`
       <div class="tab-content">
         <h3>Visual Options</h3>
 
@@ -1002,8 +2046,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showEntityName||!1}
-              @change=${t=>this._checkboxChanged("showEntityName",t)}
+              .checked=${this.config.showEntityName || false}
+              @change=${(e) => this._checkboxChanged('showEntityName', e)}
             />
             Show entity name header
           </label>
@@ -1013,8 +2057,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showPlaylistName||!1}
-              @change=${t=>this._checkboxChanged("showPlaylistName",t)}
+              .checked=${this.config.showPlaylistName || false}
+              @change=${(e) => this._checkboxChanged('showPlaylistName', e)}
             />
             Show playlist name
           </label>
@@ -1024,8 +2068,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showProgressBar}
-              @change=${t=>this._checkboxChanged("showProgressBar",t)}
+              .checked=${this.config.showProgressBar !== false}
+              @change=${(e) => this._checkboxChanged('showProgressBar', e)}
             />
             Show progress bar
           </label>
@@ -1036,9 +2080,9 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             <input
               type="checkbox"
               id="songActionsParent"
-              .checked=${!1!==this.config.showSongActions}
+              .checked=${this.config.showSongActions !== false}
               .indeterminate=${this._getSongActionsIndeterminate()}
-              @change=${t=>this._songActionsParentChanged(t)}
+              @change=${(e) => this._songActionsParentChanged(e)}
             />
             Show song actions (enable both buttons below)
           </label>
@@ -1048,8 +2092,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label style="padding-left: 20px;">
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showPlayButton}
-              @change=${t=>this._songActionsChildChanged("showPlayButton",t)}
+              .checked=${this.config.showPlayButton !== false}
+              @change=${(e) => this._songActionsChildChanged('showPlayButton', e)}
             />
             Show "Play Now" button
           </label>
@@ -1059,8 +2103,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label style="padding-left: 20px;">
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showAddToQueueButton}
-              @change=${t=>this._songActionsChildChanged("showAddToQueueButton",t)}
+              .checked=${this.config.showAddToQueueButton !== false}
+              @change=${(e) => this._songActionsChildChanged('showAddToQueueButton', e)}
             />
             Show "Add to Queue" button
           </label>
@@ -1070,8 +2114,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showDuration}
-              @change=${t=>this._checkboxChanged("showDuration",t)}
+              .checked=${this.config.showDuration !== false}
+              @change=${(e) => this._checkboxChanged('showDuration', e)}
             />
             Show song duration
           </label>
@@ -1081,14 +2125,18 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.compactMode||!1}
-              @change=${t=>this._checkboxChanged("compactMode",t)}
+              .checked=${this.config.compactMode || false}
+              @change=${(e) => this._checkboxChanged('compactMode', e)}
             />
             Compact mode (reduced padding)
           </label>
         </div>
       </div>
-    `}_renderControlsTab(){return R`
+    `;
+  }
+
+  _renderControlsTab() {
+    return x`
       <div class="tab-content">
         <h3>Playback Controls</h3>
 
@@ -1096,8 +2144,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showPlaybackControls}
-              @change=${t=>this._checkboxChanged("showPlaybackControls",t)}
+              .checked=${this.config.showPlaybackControls !== false}
+              @change=${(e) => this._checkboxChanged('showPlaybackControls', e)}
             />
             Show playback controls
           </label>
@@ -1107,8 +2155,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showVolumeControl||!1}
-              @change=${t=>this._checkboxChanged("showVolumeControl",t)}
+              .checked=${this.config.showVolumeControl || false}
+              @change=${(e) => this._checkboxChanged('showVolumeControl', e)}
             />
             Show volume controls
           </label>
@@ -1118,15 +2166,19 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.enableSeek||!1}
-              @change=${t=>this._checkboxChanged("enableSeek",t)}
+              .checked=${this.config.enableSeek || false}
+              @change=${(e) => this._checkboxChanged('enableSeek', e)}
             />
             Enable seek on progress bar
           </label>
           <div class="hint">Allow clicking progress bar to seek to position</div>
         </div>
       </div>
-    `}_renderAdvancedTab(){return R`
+    `;
+  }
+
+  _renderAdvancedTab() {
+    return x`
       <div class="tab-content">
         <h3>Behavior</h3>
 
@@ -1137,7 +2189,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             id="maxVisibleSongs"
             min="1"
             max="50"
-            .value=${this.config.maxVisibleSongs||10}
+            .value=${this.config.maxVisibleSongs || 10}
             @change=${this._valueChanged}
           />
           <div class="hint">Number of songs to show before scrolling</div>
@@ -1147,8 +2199,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.confirmDisruptive}
-              @change=${t=>this._checkboxChanged("confirmDisruptive",t)}
+              .checked=${this.config.confirmDisruptive !== false}
+              @change=${(e) => this._checkboxChanged('confirmDisruptive', e)}
             />
             Confirm before disruptive actions
           </label>
@@ -1159,8 +2211,8 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showTooltips}
-              @change=${t=>this._checkboxChanged("showTooltips",t)}
+              .checked=${this.config.showTooltips !== false}
+              @change=${(e) => this._checkboxChanged('showTooltips', e)}
             />
             Show tooltips on hover
           </label>
@@ -1173,7 +2225,205 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </button>
         </div>
       </div>
-    `}_getMediaPlayerEntities(){return this.hass?Object.values(this.hass.states).filter(t=>t.entity_id.startsWith("media_player.")).sort((t,e)=>{const i=t.entity_id.includes("xschedule")||void 0!==t.attributes.playlist_songs,s=e.entity_id.includes("xschedule")||void 0!==e.attributes.playlist_songs;if(i&&!s)return-1;if(!i&&s)return 1;const o=t.attributes.friendly_name||t.entity_id,n=e.attributes.friendly_name||e.entity_id;return o.localeCompare(n)}):[]}_getModeDescription(t){return{simple:"Best for basic playback. Shows playlist selector and playback controls.",dj:"Best for live performance. Shows all playlists expanded, queue prominent, and song actions visible.",jukebox:"Best for party mode. Shows all songs expanded with prominent queue section.",minimal:"Best for small spaces. Shows only playback controls and now playing info.",custom:"Unlock all configuration options for complete customization."}[t]||""}_selectTab(t){this._currentTab=t,this.requestUpdate()}_entityChanged(t){this._updateConfig({entity:t.target.value})}_modeChanged(t){const e=t.target.value,i=new Set(Object.keys(rt.simple)),s={};for(const t of i)void 0!==this.config[t]&&(s[t]=this.config[t]);const o={};for(const t in this.config)"entity"===t||"mode"===t||i.has(t)||(o[t]=this.config[t]);let n;if("custom"===e)n=s;else{n=rt[e]||rt.simple}const a={...o,entity:this.config.entity,mode:e,...n};this.config=a;const r=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(r)}_valueChanged(t){const e=t.target.id,i=t.target.value;this._updateConfig({[e]:i})}_checkboxChanged(t,e){this._updateConfig({[t]:e.target.checked})}_songActionsParentChanged(t){const e=t.target.checked;this._updateConfig({showSongActions:e,showPlayButton:e,showAddToQueueButton:e})}_songActionsChildChanged(t,e){const i={[t]:e.target.checked},s="showPlayButton"===t?e.target.checked:!1!==this.config.showPlayButton,o="showAddToQueueButton"===t?e.target.checked:!1!==this.config.showAddToQueueButton;i.showSongActions=!(!s||!o)||!(!s&&!o),this._updateConfig(i)}_getSongActionsIndeterminate(){return!1!==this.config.showPlayButton!==(!1!==this.config.showAddToQueueButton)}_resetToDefaults(){if(confirm("Reset all settings to Simple mode defaults?")){const t="simple",e=rt[t]||rt.simple,i=new Set(Object.keys(rt.simple)),s={};for(const t in this.config)"entity"===t||"mode"===t||i.has(t)||(s[t]=this.config[t]);const o={...s,entity:this.config.entity,mode:t,...e};this.config=o;const n=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(n)}}_updateConfig(t){this.config={...this.config,...t};const e=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(e)}static get styles(){return n`
+    `;
+  }
+
+  _getMediaPlayerEntities() {
+    if (!this.hass) return [];
+    // Show all media player entities, not just xSchedule
+    return Object.values(this.hass.states).filter(
+      (entity) => entity.entity_id.startsWith('media_player.')
+    ).sort((a, b) => {
+      // Sort xSchedule players to the top for convenience
+      const aIsXSchedule = a.entity_id.includes('xschedule') || a.attributes.playlist_songs !== undefined;
+      const bIsXSchedule = b.entity_id.includes('xschedule') || b.attributes.playlist_songs !== undefined;
+      if (aIsXSchedule && !bIsXSchedule) return -1;
+      if (!aIsXSchedule && bIsXSchedule) return 1;
+      // Otherwise sort alphabetically
+      const aName = a.attributes.friendly_name || a.entity_id;
+      const bName = b.attributes.friendly_name || b.entity_id;
+      return aName.localeCompare(bName);
+    });
+  }
+
+  _getModeDescription(mode) {
+    const descriptions = {
+      simple: 'Best for basic playback. Shows playlist selector and playback controls.',
+      dj: 'Best for live performance. Shows all playlists expanded, queue prominent, and song actions visible.',
+      jukebox: 'Best for party mode. Shows all songs expanded with prominent queue section.',
+      minimal: 'Best for small spaces. Shows only playback controls and now playing info.',
+      custom: 'Unlock all configuration options for complete customization.',
+    };
+    return descriptions[mode] || '';
+  }
+
+  _selectTab(tab) {
+    this._currentTab = tab;
+    this.requestUpdate();
+  }
+
+  _entityChanged(e) {
+    this._updateConfig({ entity: e.target.value });
+  }
+
+  _modeChanged(e) {
+    const mode = e.target.value;
+    
+    // Get all keys that are in mode presets
+    const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+    
+    // Extract current preset-related values BEFORE clearing
+    // These will be preserved when switching to custom mode
+    const currentPresetValues = {};
+    for (const key of presetKeys) {
+      if (this.config[key] !== undefined) {
+        currentPresetValues[key] = this.config[key];
+      }
+    }
+    
+    // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+    const preservedFields = {};
+    for (const key in this.config) {
+      // Preserve: entity (handled separately), mode (handled separately), 
+      // and any field not in preset keys
+      if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+        preservedFields[key] = this.config[key];
+      }
+    }
+    
+    // Determine which preset values to use
+    let presetValuesToApply;
+    if (mode === 'custom') {
+      // Custom mode: preserve current preset values
+      presetValuesToApply = currentPresetValues;
+    } else {
+      // Preset mode: apply preset values
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      presetValuesToApply = modePreset;
+    }
+    
+    // Create new config: preset values override preset-related settings,
+    // but all non-preset fields are preserved
+    const newConfig = {
+      ...preservedFields, // Preserve all fields not in mode-presets
+      entity: this.config.entity,
+      mode,
+      ...presetValuesToApply, // Either current values (custom) or preset values
+    };
+    
+    // Replace config entirely (don't merge with old preset-related properties)
+    this.config = newConfig;
+    
+    // Dispatch event with fresh config
+    const event = new CustomEvent('config-changed', {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  _valueChanged(e) {
+    const key = e.target.id;
+    const value = e.target.value;
+    this._updateConfig({ [key]: value });
+  }
+
+  _checkboxChanged(key, e) {
+    this._updateConfig({ [key]: e.target.checked });
+  }
+
+  _songActionsParentChanged(e) {
+    // When parent checkbox changes, update both children
+    const checked = e.target.checked;
+    this._updateConfig({
+      showSongActions: checked,
+      showPlayButton: checked,
+      showAddToQueueButton: checked
+    });
+  }
+
+  _songActionsChildChanged(key, e) {
+    // Update the child checkbox
+    const updates = { [key]: e.target.checked };
+
+    // Update parent based on children states
+    const showPlayButton = key === 'showPlayButton' ? e.target.checked : (this.config.showPlayButton !== false);
+    const showAddToQueueButton = key === 'showAddToQueueButton' ? e.target.checked : (this.config.showAddToQueueButton !== false);
+
+    if (showPlayButton && showAddToQueueButton) {
+      // Both checked - parent should be checked
+      updates.showSongActions = true;
+    } else if (!showPlayButton && !showAddToQueueButton) {
+      // Both unchecked - parent should be unchecked
+      updates.showSongActions = false;
+    } else {
+      // Mixed state - keep parent checked but we'll show indeterminate
+      updates.showSongActions = true;
+    }
+
+    this._updateConfig(updates);
+  }
+
+  _getSongActionsIndeterminate() {
+    const showPlayButton = this.config.showPlayButton !== false;
+    const showAddToQueueButton = this.config.showAddToQueueButton !== false;
+    return showPlayButton !== showAddToQueueButton;
+  }
+
+  _resetToDefaults() {
+    if (confirm('Reset all settings to Simple mode defaults?')) {
+      // Use same logic as _modeChanged to properly reset to mode preset
+      const mode = 'simple';
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      
+      // Get all keys that are in mode presets (these will be replaced)
+      const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+      
+      // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+      const preservedFields = {};
+      for (const key in this.config) {
+        // Preserve: entity (handled separately), mode (handled separately), 
+        // and any field not in preset keys
+        if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+          preservedFields[key] = this.config[key];
+        }
+      }
+      
+      // Create new config with preset values and preserved non-preset fields
+      const newConfig = {
+        ...preservedFields, // Preserve all fields not in mode-presets
+        entity: this.config.entity,
+        mode,
+        ...modePreset,
+      };
+      
+      // Replace config entirely
+      this.config = newConfig;
+      
+      // Dispatch event with fresh config
+      const event = new CustomEvent('config-changed', {
+        detail: { config: this.config },
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
+    }
+  }
+
+  _updateConfig(updates) {
+    this.config = { ...this.config, ...updates };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  static get styles() {
+    return i$3`
       :host {
         display: block;
       }
@@ -1314,4 +2564,12 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
       .reset-button ha-icon {
         --mdc-icon-size: 20px;
       }
-    `}});var ut=Object.freeze({__proto__:null});
+    `;
+  }
+}
+
+customElements.define('xschedule-card-editor', XScheduleCardEditor);
+
+var xscheduleCardEditor = /*#__PURE__*/Object.freeze({
+  __proto__: null
+});

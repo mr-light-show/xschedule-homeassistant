@@ -3,38 +3,192 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s=Symbol(),i=new WeakMap;let o=class{constructor(t,e,i){if(this._$cssResult$=!0,i!==s)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const s=this.t;if(e&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=i.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&i.set(s,t))}return t}toString(){return this.cssText}};const n=(t,...e)=>{const i=1===t.length?t[0]:e.reduce((e,s,i)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[i+1],t[0]);return new o(i,t,s)},r=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,s))(e)})(t):t,{is:a,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:p}=Object,u=globalThis,g=u.trustedTypes,b=g?g.emptyScript:"",f=u.reactiveElementPolyfillSupport,m=(t,e)=>t,y={toAttribute(t,e){switch(e){case Boolean:t=t?b:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let s=t;switch(e){case Boolean:s=null!==t;break;case Number:s=null===t?null:Number(t);break;case Object:case Array:try{s=JSON.parse(t)}catch(t){s=null}}return s}},$=(t,e)=>!a(t,e),_={attribute:!0,type:String,converter:y,reflect:!1,useDefault:!1,hasChanged:$};
+const t$1=globalThis,e$2=t$1.ShadowRoot&&(void 0===t$1.ShadyCSS||t$1.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,s$2=Symbol(),o$3=new WeakMap;let n$2 = class n{constructor(t,e,o){if(this._$cssResult$=true,o!==s$2)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e;}get styleSheet(){let t=this.o;const s=this.t;if(e$2&&void 0===t){const e=void 0!==s&&1===s.length;e&&(t=o$3.get(s)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&o$3.set(s,t));}return t}toString(){return this.cssText}};const r$2=t=>new n$2("string"==typeof t?t:t+"",void 0,s$2),i$3=(t,...e)=>{const o=1===t.length?t[0]:e.reduce(((e,s,o)=>e+(t=>{if(true===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(s)+t[o+1]),t[0]);return new n$2(o,t,s$2)},S$1=(s,o)=>{if(e$2)s.adoptedStyleSheets=o.map((t=>t instanceof CSSStyleSheet?t:t.styleSheet));else for(const e of o){const o=document.createElement("style"),n=t$1.litNonce;void 0!==n&&o.setAttribute("nonce",n),o.textContent=e.cssText,s.appendChild(o);}},c$2=e$2?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return r$2(e)})(t):t;
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */Symbol.metadata??=Symbol("metadata"),u.litPropertyMetadata??=new WeakMap;let v=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=_){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const s=Symbol(),i=this.getPropertyDescriptor(t,s,e);void 0!==i&&l(this.prototype,t,i)}}static getPropertyDescriptor(t,e,s){const{get:i,set:o}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:i,set(e){const n=i?.call(this);o?.call(this,e),this.requestUpdate(t,n,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??_}static _$Ei(){if(this.hasOwnProperty(m("elementProperties")))return;const t=p(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(m("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(m("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const s of e)this.createProperty(s,t[s])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,s]of e)this.elementProperties.set(t,s)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const s=this._$Eu(t,e);void 0!==s&&this._$Eh.set(s,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const s=new Set(t.flat(1/0).reverse());for(const t of s)e.unshift(r(t))}else void 0!==t&&e.push(r(t));return e}static _$Eu(t,e){const s=e.attribute;return!1===s?void 0:"string"==typeof s?s:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const s of e.keys())this.hasOwnProperty(s)&&(t.set(s,this[s]),delete this[s]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const s=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((s,i)=>{if(e)s.adoptedStyleSheets=i.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of i){const i=document.createElement("style"),o=t.litNonce;void 0!==o&&i.setAttribute("nonce",o),i.textContent=e.cssText,s.appendChild(i)}})(s,this.constructor.elementStyles),s}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,s){this._$AK(t,s)}_$ET(t,e){const s=this.constructor.elementProperties.get(t),i=this.constructor._$Eu(t,s);if(void 0!==i&&!0===s.reflect){const o=(void 0!==s.converter?.toAttribute?s.converter:y).toAttribute(e,s.type);this._$Em=t,null==o?this.removeAttribute(i):this.setAttribute(i,o),this._$Em=null}}_$AK(t,e){const s=this.constructor,i=s._$Eh.get(t);if(void 0!==i&&this._$Em!==i){const t=s.getPropertyOptions(i),o="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:y;this._$Em=i;const n=o.fromAttribute(e,t.type);this[i]=n??this._$Ej?.get(i)??n,this._$Em=null}}requestUpdate(t,e,s){if(void 0!==t){const i=this.constructor,o=this[t];if(s??=i.getPropertyOptions(t),!((s.hasChanged??$)(o,e)||s.useDefault&&s.reflect&&o===this._$Ej?.get(t)&&!this.hasAttribute(i._$Eu(t,s))))return;this.C(t,e,s)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:s,reflect:i,wrapped:o},n){s&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,n??e??this[t]),!0!==o||void 0!==n)||(this._$AL.has(t)||(this.hasUpdated||s||(e=void 0),this._$AL.set(t,e)),!0===i&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,s]of t){const{wrapped:t}=s,i=this[e];!0!==t||this._$AL.has(e)||void 0===i||this.C(e,void 0,s,i)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};v.elementStyles=[],v.shadowRootOptions={mode:"open"},v[m("elementProperties")]=new Map,v[m("finalized")]=new Map,f?.({ReactiveElement:v}),(u.reactiveElementVersions??=[]).push("2.1.1");
+ */const{is:i$2,defineProperty:e$1,getOwnPropertyDescriptor:h$1,getOwnPropertyNames:r$1,getOwnPropertySymbols:o$2,getPrototypeOf:n$1}=Object,a$1=globalThis,c$1=a$1.trustedTypes,l$1=c$1?c$1.emptyScript:"",p$1=a$1.reactiveElementPolyfillSupport,d$1=(t,s)=>t,u$1={toAttribute(t,s){switch(s){case Boolean:t=t?l$1:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t);}return t},fromAttribute(t,s){let i=t;switch(s){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t);}catch(t){i=null;}}return i}},f$1=(t,s)=>!i$2(t,s),b={attribute:true,type:String,converter:u$1,reflect:false,useDefault:false,hasChanged:f$1};Symbol.metadata??=Symbol("metadata"),a$1.litPropertyMetadata??=new WeakMap;let y$1 = class y extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t);}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,s=b){if(s.state&&(s.attribute=false),this._$Ei(),this.prototype.hasOwnProperty(t)&&((s=Object.create(s)).wrapped=true),this.elementProperties.set(t,s),!s.noAccessor){const i=Symbol(),h=this.getPropertyDescriptor(t,i,s);void 0!==h&&e$1(this.prototype,t,h);}}static getPropertyDescriptor(t,s,i){const{get:e,set:r}=h$1(this.prototype,t)??{get(){return this[s]},set(t){this[s]=t;}};return {get:e,set(s){const h=e?.call(this);r?.call(this,s),this.requestUpdate(t,h,i);},configurable:true,enumerable:true}}static getPropertyOptions(t){return this.elementProperties.get(t)??b}static _$Ei(){if(this.hasOwnProperty(d$1("elementProperties")))return;const t=n$1(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties);}static finalize(){if(this.hasOwnProperty(d$1("finalized")))return;if(this.finalized=true,this._$Ei(),this.hasOwnProperty(d$1("properties"))){const t=this.properties,s=[...r$1(t),...o$2(t)];for(const i of s)this.createProperty(i,t[i]);}const t=this[Symbol.metadata];if(null!==t){const s=litPropertyMetadata.get(t);if(void 0!==s)for(const[t,i]of s)this.elementProperties.set(t,i);}this._$Eh=new Map;for(const[t,s]of this.elementProperties){const i=this._$Eu(t,s);void 0!==i&&this._$Eh.set(i,t);}this.elementStyles=this.finalizeStyles(this.styles);}static finalizeStyles(s){const i=[];if(Array.isArray(s)){const e=new Set(s.flat(1/0).reverse());for(const s of e)i.unshift(c$2(s));}else void 0!==s&&i.push(c$2(s));return i}static _$Eu(t,s){const i=s.attribute;return  false===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=false,this.hasUpdated=false,this._$Em=null,this._$Ev();}_$Ev(){this._$ES=new Promise((t=>this.enableUpdating=t)),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach((t=>t(this)));}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.();}removeController(t){this._$EO?.delete(t);}_$E_(){const t=new Map,s=this.constructor.elementProperties;for(const i of s.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t);}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return S$1(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(true),this._$EO?.forEach((t=>t.hostConnected?.()));}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach((t=>t.hostDisconnected?.()));}attributeChangedCallback(t,s,i){this._$AK(t,i);}_$ET(t,s){const i=this.constructor.elementProperties.get(t),e=this.constructor._$Eu(t,i);if(void 0!==e&&true===i.reflect){const h=(void 0!==i.converter?.toAttribute?i.converter:u$1).toAttribute(s,i.type);this._$Em=t,null==h?this.removeAttribute(e):this.setAttribute(e,h),this._$Em=null;}}_$AK(t,s){const i=this.constructor,e=i._$Eh.get(t);if(void 0!==e&&this._$Em!==e){const t=i.getPropertyOptions(e),h="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:u$1;this._$Em=e;const r=h.fromAttribute(s,t.type);this[e]=r??this._$Ej?.get(e)??r,this._$Em=null;}}requestUpdate(t,s,i){if(void 0!==t){const e=this.constructor,h=this[t];if(i??=e.getPropertyOptions(t),!((i.hasChanged??f$1)(h,s)||i.useDefault&&i.reflect&&h===this._$Ej?.get(t)&&!this.hasAttribute(e._$Eu(t,i))))return;this.C(t,s,i);} false===this.isUpdatePending&&(this._$ES=this._$EP());}C(t,s,{useDefault:i,reflect:e,wrapped:h},r){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,r??s??this[t]),true!==h||void 0!==r)||(this._$AL.has(t)||(this.hasUpdated||i||(s=void 0),this._$AL.set(t,s)),true===e&&this._$Em!==t&&(this._$Eq??=new Set).add(t));}async _$EP(){this.isUpdatePending=true;try{await this._$ES;}catch(t){Promise.reject(t);}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,s]of this._$Ep)this[t]=s;this._$Ep=void 0;}const t=this.constructor.elementProperties;if(t.size>0)for(const[s,i]of t){const{wrapped:t}=i,e=this[s];true!==t||this._$AL.has(s)||void 0===e||this.C(s,void 0,i,e);}}let t=false;const s=this._$AL;try{t=this.shouldUpdate(s),t?(this.willUpdate(s),this._$EO?.forEach((t=>t.hostUpdate?.())),this.update(s)):this._$EM();}catch(s){throw t=false,this._$EM(),s}t&&this._$AE(s);}willUpdate(t){}_$AE(t){this._$EO?.forEach((t=>t.hostUpdated?.())),this.hasUpdated||(this.hasUpdated=true,this.firstUpdated(t)),this.updated(t);}_$EM(){this._$AL=new Map,this.isUpdatePending=false;}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return  true}update(t){this._$Eq&&=this._$Eq.forEach((t=>this._$ET(t,this[t]))),this._$EM();}updated(t){}firstUpdated(t){}};y$1.elementStyles=[],y$1.shadowRootOptions={mode:"open"},y$1[d$1("elementProperties")]=new Map,y$1[d$1("finalized")]=new Map,p$1?.({ReactiveElement:y$1}),(a$1.reactiveElementVersions??=[]).push("2.1.1");
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",k=`lit$${Math.random().toFixed(9).slice(2)}$`,C="?"+k,E=`<${C}>`,P=document,T=()=>P.createComment(""),D=t=>null===t||"object"!=typeof t&&"function"!=typeof t,M=Array.isArray,N="[ \t\n\f\r]",H=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,O=/-->/g,U=/>/g,B=RegExp(`>|${N}(?:([^\\s"'>=/]+)(${N}*=${N}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),R=/'/g,j=/"/g,z=/^(?:script|style|textarea|title)$/i,q=(t=>(e,...s)=>({_$litType$:t,strings:e,values:s}))(1),V=Symbol.for("lit-noChange"),L=Symbol.for("lit-nothing"),W=new WeakMap,I=P.createTreeWalker(P,129);function Q(t,e){if(!M(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==x?x.createHTML(e):e}const G=(t,e)=>{const s=t.length-1,i=[];let o,n=2===e?"<svg>":3===e?"<math>":"",r=H;for(let e=0;e<s;e++){const s=t[e];let a,l,c=-1,h=0;for(;h<s.length&&(r.lastIndex=h,l=r.exec(s),null!==l);)h=r.lastIndex,r===H?"!--"===l[1]?r=O:void 0!==l[1]?r=U:void 0!==l[2]?(z.test(l[2])&&(o=RegExp("</"+l[2],"g")),r=B):void 0!==l[3]&&(r=B):r===B?">"===l[0]?(r=o??H,c=-1):void 0===l[1]?c=-2:(c=r.lastIndex-l[2].length,a=l[1],r=void 0===l[3]?B:'"'===l[3]?j:R):r===j||r===R?r=B:r===O||r===U?r=H:(r=B,o=void 0);const d=r===B&&t[e+1].startsWith("/>")?" ":"";n+=r===H?s+E:c>=0?(i.push(a),s.slice(0,c)+S+s.slice(c)+k+d):s+k+(-2===c?e:d)}return[Q(t,n+(t[s]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),i]};class J{constructor({strings:t,_$litType$:e},s){let i;this.parts=[];let o=0,n=0;const r=t.length-1,a=this.parts,[l,c]=G(t,e);if(this.el=J.createElement(l,s),I.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(i=I.nextNode())&&a.length<r;){if(1===i.nodeType){if(i.hasAttributes())for(const t of i.getAttributeNames())if(t.endsWith(S)){const e=c[n++],s=i.getAttribute(t).split(k),r=/([.?@])?(.*)/.exec(e);a.push({type:1,index:o,name:r[2],strings:s,ctor:"."===r[1]?Y:"?"===r[1]?tt:"@"===r[1]?et:X}),i.removeAttribute(t)}else t.startsWith(k)&&(a.push({type:6,index:o}),i.removeAttribute(t));if(z.test(i.tagName)){const t=i.textContent.split(k),e=t.length-1;if(e>0){i.textContent=w?w.emptyScript:"";for(let s=0;s<e;s++)i.append(t[s],T()),I.nextNode(),a.push({type:2,index:++o});i.append(t[e],T())}}}else if(8===i.nodeType)if(i.data===C)a.push({type:2,index:o});else{let t=-1;for(;-1!==(t=i.data.indexOf(k,t+1));)a.push({type:7,index:o}),t+=k.length-1}o++}}static createElement(t,e){const s=P.createElement("template");return s.innerHTML=t,s}}function K(t,e,s=t,i){if(e===V)return e;let o=void 0!==i?s._$Co?.[i]:s._$Cl;const n=D(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,s,i)),void 0!==i?(s._$Co??=[])[i]=o:s._$Cl=o),void 0!==o&&(e=K(t,o._$AS(t,e.values),o,i)),e}class Z{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:s}=this._$AD,i=(t?.creationScope??P).importNode(e,!0);I.currentNode=i;let o=I.nextNode(),n=0,r=0,a=s[0];for(;void 0!==a;){if(n===a.index){let e;2===a.type?e=new F(o,o.nextSibling,this,t):1===a.type?e=new a.ctor(o,a.name,a.strings,this,t):6===a.type&&(e=new st(o,this,t)),this._$AV.push(e),a=s[++r]}n!==a?.index&&(o=I.nextNode(),n++)}return I.currentNode=P,i}p(t){let e=0;for(const s of this._$AV)void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,e),e+=s.strings.length-2):s._$AI(t[e])),e++}}class F{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,s,i){this.type=2,this._$AH=L,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=s,this.options=i,this._$Cv=i?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=K(this,t,e),D(t)?t===L||null==t||""===t?(this._$AH!==L&&this._$AR(),this._$AH=L):t!==this._$AH&&t!==V&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>M(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==L&&D(this._$AH)?this._$AA.nextSibling.data=t:this.T(P.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:s}=t,i="number"==typeof s?this._$AC(t):(void 0===s.el&&(s.el=J.createElement(Q(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===i)this._$AH.p(e);else{const t=new Z(i,this),s=t.u(this.options);t.p(e),this.T(s),this._$AH=t}}_$AC(t){let e=W.get(t.strings);return void 0===e&&W.set(t.strings,e=new J(t)),e}k(t){M(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let s,i=0;for(const o of t)i===e.length?e.push(s=new F(this.O(T()),this.O(T()),this,this.options)):s=e[i],s._$AI(o),i++;i<e.length&&(this._$AR(s&&s._$AB.nextSibling,i),e.length=i)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class X{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,s,i,o){this.type=1,this._$AH=L,this._$AN=void 0,this.element=t,this.name=e,this._$AM=i,this.options=o,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=L}_$AI(t,e=this,s,i){const o=this.strings;let n=!1;if(void 0===o)t=K(this,t,e,0),n=!D(t)||t!==this._$AH&&t!==V,n&&(this._$AH=t);else{const i=t;let r,a;for(t=o[0],r=0;r<o.length-1;r++)a=K(this,i[s+r],e,r),a===V&&(a=this._$AH[r]),n||=!D(a)||a!==this._$AH[r],a===L?t=L:t!==L&&(t+=(a??"")+o[r+1]),this._$AH[r]=a}n&&!i&&this.j(t)}j(t){t===L?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Y extends X{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===L?void 0:t}}class tt extends X{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==L)}}class et extends X{constructor(t,e,s,i,o){super(t,e,s,i,o),this.type=5}_$AI(t,e=this){if((t=K(this,t,e,0)??L)===V)return;const s=this._$AH,i=t===L&&s!==L||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,o=t!==L&&(s===L||i);i&&this.element.removeEventListener(this.name,this,s),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class st{constructor(t,e,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){K(this,t)}}const it=A.litHtmlPolyfillSupport;it?.(J,F),(A.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
+const t=globalThis,i$1=t.trustedTypes,s$1=i$1?i$1.createPolicy("lit-html",{createHTML:t=>t}):void 0,e="$lit$",h=`lit$${Math.random().toFixed(9).slice(2)}$`,o$1="?"+h,n=`<${o$1}>`,r=document,l=()=>r.createComment(""),c=t=>null===t||"object"!=typeof t&&"function"!=typeof t,a=Array.isArray,u=t=>a(t)||"function"==typeof t?.[Symbol.iterator],d="[ \t\n\f\r]",f=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,v=/-->/g,_=/>/g,m=RegExp(`>|${d}(?:([^\\s"'>=/]+)(${d}*=${d}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),p=/'/g,g=/"/g,$=/^(?:script|style|textarea|title)$/i,y=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),x=y(1),T=Symbol.for("lit-noChange"),E=Symbol.for("lit-nothing"),A=new WeakMap,C=r.createTreeWalker(r,129);function P(t,i){if(!a(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==s$1?s$1.createHTML(i):i}const V=(t,i)=>{const s=t.length-1,o=[];let r,l=2===i?"<svg>":3===i?"<math>":"",c=f;for(let i=0;i<s;i++){const s=t[i];let a,u,d=-1,y=0;for(;y<s.length&&(c.lastIndex=y,u=c.exec(s),null!==u);)y=c.lastIndex,c===f?"!--"===u[1]?c=v:void 0!==u[1]?c=_:void 0!==u[2]?($.test(u[2])&&(r=RegExp("</"+u[2],"g")),c=m):void 0!==u[3]&&(c=m):c===m?">"===u[0]?(c=r??f,d=-1):void 0===u[1]?d=-2:(d=c.lastIndex-u[2].length,a=u[1],c=void 0===u[3]?m:'"'===u[3]?g:p):c===g||c===p?c=m:c===v||c===_?c=f:(c=m,r=void 0);const x=c===m&&t[i+1].startsWith("/>")?" ":"";l+=c===f?s+n:d>=0?(o.push(a),s.slice(0,d)+e+s.slice(d)+h+x):s+h+(-2===d?i:x);}return [P(t,l+(t[s]||"<?>")+(2===i?"</svg>":3===i?"</math>":"")),o]};class N{constructor({strings:t,_$litType$:s},n){let r;this.parts=[];let c=0,a=0;const u=t.length-1,d=this.parts,[f,v]=V(t,s);if(this.el=N.createElement(f,n),C.currentNode=this.el.content,2===s||3===s){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes);}for(;null!==(r=C.nextNode())&&d.length<u;){if(1===r.nodeType){if(r.hasAttributes())for(const t of r.getAttributeNames())if(t.endsWith(e)){const i=v[a++],s=r.getAttribute(t).split(h),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:c,name:e[2],strings:s,ctor:"."===e[1]?H:"?"===e[1]?I:"@"===e[1]?L:k}),r.removeAttribute(t);}else t.startsWith(h)&&(d.push({type:6,index:c}),r.removeAttribute(t));if($.test(r.tagName)){const t=r.textContent.split(h),s=t.length-1;if(s>0){r.textContent=i$1?i$1.emptyScript:"";for(let i=0;i<s;i++)r.append(t[i],l()),C.nextNode(),d.push({type:2,index:++c});r.append(t[s],l());}}}else if(8===r.nodeType)if(r.data===o$1)d.push({type:2,index:c});else {let t=-1;for(;-1!==(t=r.data.indexOf(h,t+1));)d.push({type:7,index:c}),t+=h.length-1;}c++;}}static createElement(t,i){const s=r.createElement("template");return s.innerHTML=t,s}}function S(t,i,s=t,e){if(i===T)return i;let h=void 0!==e?s._$Co?.[e]:s._$Cl;const o=c(i)?void 0:i._$litDirective$;return h?.constructor!==o&&(h?._$AO?.(false),void 0===o?h=void 0:(h=new o(t),h._$AT(t,s,e)),void 0!==e?(s._$Co??=[])[e]=h:s._$Cl=h),void 0!==h&&(i=S(t,h._$AS(t,i.values),h,e)),i}class M{constructor(t,i){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=i;}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:i},parts:s}=this._$AD,e=(t?.creationScope??r).importNode(i,true);C.currentNode=e;let h=C.nextNode(),o=0,n=0,l=s[0];for(;void 0!==l;){if(o===l.index){let i;2===l.type?i=new R(h,h.nextSibling,this,t):1===l.type?i=new l.ctor(h,l.name,l.strings,this,t):6===l.type&&(i=new z(h,this,t)),this._$AV.push(i),l=s[++n];}o!==l?.index&&(h=C.nextNode(),o++);}return C.currentNode=r,e}p(t){let i=0;for(const s of this._$AV) void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++;}}class R{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,i,s,e){this.type=2,this._$AH=E,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cv=e?.isConnected??true;}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t?.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=S(this,t,i),c(t)?t===E||null==t||""===t?(this._$AH!==E&&this._$AR(),this._$AH=E):t!==this._$AH&&t!==T&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):u(t)?this.k(t):this._(t);}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t));}_(t){this._$AH!==E&&c(this._$AH)?this._$AA.nextSibling.data=t:this.T(r.createTextNode(t)),this._$AH=t;}$(t){const{values:i,_$litType$:s}=t,e="number"==typeof s?this._$AC(t):(void 0===s.el&&(s.el=N.createElement(P(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===e)this._$AH.p(i);else {const t=new M(e,this),s=t.u(this.options);t.p(i),this.T(s),this._$AH=t;}}_$AC(t){let i=A.get(t.strings);return void 0===i&&A.set(t.strings,i=new N(t)),i}k(t){a(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const h of t)e===i.length?i.push(s=new R(this.O(l()),this.O(l()),this,this.options)):s=i[e],s._$AI(h),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e);}_$AR(t=this._$AA.nextSibling,i){for(this._$AP?.(false,true,i);t!==this._$AB;){const i=t.nextSibling;t.remove(),t=i;}}setConnected(t){ void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t));}}class k{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,i,s,e,h){this.type=1,this._$AH=E,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=h,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=E;}_$AI(t,i=this,s,e){const h=this.strings;let o=false;if(void 0===h)t=S(this,t,i,0),o=!c(t)||t!==this._$AH&&t!==T,o&&(this._$AH=t);else {const e=t;let n,r;for(t=h[0],n=0;n<h.length-1;n++)r=S(this,e[s+n],i,n),r===T&&(r=this._$AH[n]),o||=!c(r)||r!==this._$AH[n],r===E?t=E:t!==E&&(t+=(r??"")+h[n+1]),this._$AH[n]=r;}o&&!e&&this.j(t);}j(t){t===E?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"");}}class H extends k{constructor(){super(...arguments),this.type=3;}j(t){this.element[this.name]=t===E?void 0:t;}}class I extends k{constructor(){super(...arguments),this.type=4;}j(t){this.element.toggleAttribute(this.name,!!t&&t!==E);}}class L extends k{constructor(t,i,s,e,h){super(t,i,s,e,h),this.type=5;}_$AI(t,i=this){if((t=S(this,t,i,0)??E)===T)return;const s=this._$AH,e=t===E&&s!==E||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,h=t!==E&&(s===E||e);e&&this.element.removeEventListener(this.name,this,s),h&&this.element.addEventListener(this.name,this,t),this._$AH=t;}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t);}}class z{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s;}get _$AU(){return this._$AM._$AU}_$AI(t){S(this,t);}}const j=t.litHtmlPolyfillSupport;j?.(N,R),(t.litHtmlVersions??=[]).push("3.3.1");const B=(t,i,s)=>{const e=s?.renderBefore??i;let h=e._$litPart$;if(void 0===h){const t=s?.renderBefore??null;e._$litPart$=h=new R(i.insertBefore(l(),t),t,void 0,s??{});}return h._$AI(t),h};
+
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */class nt extends v{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,s)=>{const i=s?.renderBefore??e;let o=i._$litPart$;if(void 0===o){const t=s?.renderBefore??null;i._$litPart$=o=new F(e.insertBefore(T(),t),t,void 0,s??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return V}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const rt=ot.litElementPolyfillSupport;rt?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const at={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},custom:{}},lt=[{value:"simple",label:"Simple (Default)"},{value:"dj",label:"DJ Mode"},{value:"jukebox",label:"Jukebox Mode"},{value:"minimal",label:"Minimal"},{value:"custom",label:"Custom"}],ct=[{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}],ht=[{value:"auto",label:"Auto (show when has items)"},{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}];customElements.define("xschedule-card-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_currentTab:{type:String}}}constructor(){super(),this._currentTab="general"}setConfig(t){if(!t)return void(this.config=t);const e=t.mode||"simple",s=at[e]||at.simple;this.config={entity:t.entity,mode:e,...s,...t}}render(){if(!this.config)return q``;const t="custom"===this.config.mode;return q`
+ */const s=globalThis;class i extends y$1{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0;}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const r=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=B(r,this.renderRoot,this.renderOptions);}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(true);}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(false);}render(){return T}}i._$litElement$=true,i["finalized"]=true,s.litElementHydrateSupport?.({LitElement:i});const o=s.litElementPolyfillSupport;o?.({LitElement:i});(s.litElementVersions??=[]).push("4.2.1");
+
+/**
+ * Mode Presets for xSchedule Card
+ * 
+ * Shared configuration presets for different card display modes
+ */
+
+const MODE_PRESETS = {
+  simple: {
+    playlistDisplay: 'collapsed',
+    songsDisplay: 'hidden',
+    queueDisplay: 'hidden',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: true,
+  },
+  dj: {
+    playlistDisplay: 'expanded',
+    songsDisplay: 'expanded',
+    queueDisplay: 'expanded',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    showSongActions: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: false,
+  },
+  jukebox: {
+    playlistDisplay: 'collapsed',
+    songsDisplay: 'expanded',
+    queueDisplay: 'expanded',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    showSongActions: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: false,
+  },
+  minimal: {
+    playlistDisplay: 'hidden',
+    songsDisplay: 'hidden',
+    queueDisplay: 'hidden',
+    showVolumeControl: false,
+    showProgressBar: true,
+    showPlaybackControls: true,
+    enableSeek: false,
+    showEntityName: false,
+    showPlaylistName: false,
+    showSongActions: false,
+    showPlayButton: true,
+    showAddToQueueButton: true,
+    showDuration: true,
+    compactMode: false,
+    autoHideSongsWhenEmpty: true,
+  },
+  custom: {
+    // Custom mode uses user-provided settings
+  },
+};
+
+/**
+ * xSchedule Card Editor
+ *
+ * Configuration UI for xSchedule media player card
+ */
+
+
+const MODE_OPTIONS = [
+  { value: 'simple', label: 'Simple (Default)' },
+  { value: 'dj', label: 'DJ Mode' },
+  { value: 'jukebox', label: 'Jukebox Mode' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'custom', label: 'Custom' },
+];
+
+const DISPLAY_MODE_OPTIONS = [
+  { value: 'expanded', label: 'Expanded' },
+  { value: 'collapsed', label: 'Collapsed' },
+  { value: 'hidden', label: 'Hidden' },
+];
+
+const QUEUE_DISPLAY_OPTIONS = [
+  { value: 'auto', label: 'Auto (show when has items)' },
+  { value: 'expanded', label: 'Expanded' },
+  { value: 'collapsed', label: 'Collapsed' },
+  { value: 'hidden', label: 'Hidden' },
+];
+
+class XScheduleCardEditor extends i {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      config: { type: Object },
+      _currentTab: { type: String },
+    };
+  }
+
+  constructor() {
+    super();
+    this._currentTab = 'general';
+  }
+
+  setConfig(config) {
+    if (!config) {
+      this.config = config;
+      return;
+    }
+    
+    const mode = config.mode || 'simple';
+    const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+    
+    // Merge mode preset with config (same logic as card)
+    this.config = {
+      entity: config.entity,
+      mode,
+      ...modePreset,
+      ...config, // User config overrides preset
+    };
+  }
+
+  render() {
+    if (!this.config) {
+      return x``;
+    }
+
+    const isCustomMode = this.config.mode === 'custom';
+
+    return x`
       <div class="card-config">
         <!-- General Settings -->
         <div class="form-group">
           <label for="entity">Entity (required)</label>
           <select
             id="entity"
-            .value=${this.config.entity||""}
+            .value=${this.config.entity || ''}
             @change=${this._entityChanged}
           >
             <option value="">Select entity...</option>
-            ${this._getMediaPlayerEntities().map(t=>q`
-                <option value=${t.entity_id} ?selected=${t.entity_id===this.config.entity}>
-                  ${t.attributes.friendly_name||t.entity_id}
+            ${this._getMediaPlayerEntities().map(
+              (entity) => x`
+                <option value=${entity.entity_id} ?selected=${entity.entity_id === this.config.entity}>
+                  ${entity.attributes.friendly_name || entity.entity_id}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -42,55 +196,59 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="mode">Card Mode</label>
           <select
             id="mode"
-            .value=${this.config.mode||"simple"}
+            .value=${this.config.mode || 'simple'}
             @change=${this._modeChanged}
           >
-            ${lt.map(t=>q`
-                <option value=${t.value} ?selected=${this.config.mode===t.value}>
-                  ${t.label}
+            ${MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${this.config.mode === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
           <div class="hint">
-            ${this._getModeDescription(this.config.mode||"simple")}
+            ${this._getModeDescription(this.config.mode || 'simple')}
           </div>
         </div>
 
-        ${t?q`
+        ${isCustomMode
+          ? x`
               <!-- Tabs for Custom Mode -->
               <div class="tabs">
                 <button
-                  class="tab ${"general"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("general")}
+                  class="tab ${this._currentTab === 'general' ? 'active' : ''}"
+                  @click=${() => this._selectTab('general')}
                 >
                   General
                 </button>
                 <button
-                  class="tab ${"appearance"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("appearance")}
+                  class="tab ${this._currentTab === 'appearance' ? 'active' : ''}"
+                  @click=${() => this._selectTab('appearance')}
                 >
                   Appearance
                 </button>
                 <button
-                  class="tab ${"controls"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("controls")}
+                  class="tab ${this._currentTab === 'controls' ? 'active' : ''}"
+                  @click=${() => this._selectTab('controls')}
                 >
                   Controls
                 </button>
                 <button
-                  class="tab ${"advanced"===this._currentTab?"active":""}"
-                  @click=${()=>this._selectTab("advanced")}
+                  class="tab ${this._currentTab === 'advanced' ? 'active' : ''}"
+                  @click=${() => this._selectTab('advanced')}
                 >
                   Advanced
                 </button>
               </div>
 
               <!-- Tab Content -->
-              ${"general"===this._currentTab?this._renderGeneralTab():""}
-              ${"appearance"===this._currentTab?this._renderAppearanceTab():""}
-              ${"controls"===this._currentTab?this._renderControlsTab():""}
-              ${"advanced"===this._currentTab?this._renderAdvancedTab():""}
-            `:q`
+              ${this._currentTab === 'general' ? this._renderGeneralTab() : ''}
+              ${this._currentTab === 'appearance' ? this._renderAppearanceTab() : ''}
+              ${this._currentTab === 'controls' ? this._renderControlsTab() : ''}
+              ${this._currentTab === 'advanced' ? this._renderAdvancedTab() : ''}
+            `
+          : x`
               <div class="preset-info">
                 <ha-icon icon="mdi:information"></ha-icon>
                 <p>
@@ -100,7 +258,11 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
               </div>
             `}
       </div>
-    `}_renderGeneralTab(){return q`
+    `;
+  }
+
+  _renderGeneralTab() {
+    return x`
       <div class="tab-content">
         <h3>Display Options</h3>
 
@@ -108,14 +270,16 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="playlistDisplay">Playlist Display</label>
           <select
             id="playlistDisplay"
-            .value=${this.config.playlistDisplay||"collapsed"}
+            .value=${this.config.playlistDisplay || 'collapsed'}
             @change=${this._valueChanged}
           >
-            ${ct.map(t=>q`
-                <option value=${t.value} ?selected=${(this.config.playlistDisplay||"collapsed")===t.value}>
-                  ${t.label}
+            ${DISPLAY_MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.playlistDisplay || 'collapsed') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -123,14 +287,16 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="songsDisplay">Songs Display</label>
           <select
             id="songsDisplay"
-            .value=${this.config.songsDisplay||"collapsed"}
+            .value=${this.config.songsDisplay || 'collapsed'}
             @change=${this._valueChanged}
           >
-            ${ct.map(t=>q`
-                <option value=${t.value} ?selected=${(this.config.songsDisplay||"collapsed")===t.value}>
-                  ${t.label}
+            ${DISPLAY_MODE_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.songsDisplay || 'collapsed') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
 
@@ -138,8 +304,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.autoHideSongsWhenEmpty||!1}
-              @change=${t=>this._checkboxChanged("autoHideSongsWhenEmpty",t)}
+              .checked=${this.config.autoHideSongsWhenEmpty || false}
+              @change=${(e) => this._checkboxChanged('autoHideSongsWhenEmpty', e)}
             />
             Auto-hide song list when empty or single song
           </label>
@@ -150,18 +316,24 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label for="queueDisplay">Queue Display</label>
           <select
             id="queueDisplay"
-            .value=${this.config.queueDisplay||"auto"}
+            .value=${this.config.queueDisplay || 'auto'}
             @change=${this._valueChanged}
           >
-            ${ht.map(t=>q`
-                <option value=${t.value} ?selected=${(this.config.queueDisplay||"auto")===t.value}>
-                  ${t.label}
+            ${QUEUE_DISPLAY_OPTIONS.map(
+              (option) => x`
+                <option value=${option.value} ?selected=${(this.config.queueDisplay || 'auto') === option.value}>
+                  ${option.label}
                 </option>
-              `)}
+              `
+            )}
           </select>
         </div>
       </div>
-    `}_renderAppearanceTab(){return q`
+    `;
+  }
+
+  _renderAppearanceTab() {
+    return x`
       <div class="tab-content">
         <h3>Visual Options</h3>
 
@@ -169,8 +341,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showEntityName||!1}
-              @change=${t=>this._checkboxChanged("showEntityName",t)}
+              .checked=${this.config.showEntityName || false}
+              @change=${(e) => this._checkboxChanged('showEntityName', e)}
             />
             Show entity name header
           </label>
@@ -180,8 +352,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showPlaylistName||!1}
-              @change=${t=>this._checkboxChanged("showPlaylistName",t)}
+              .checked=${this.config.showPlaylistName || false}
+              @change=${(e) => this._checkboxChanged('showPlaylistName', e)}
             />
             Show playlist name
           </label>
@@ -191,8 +363,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showProgressBar}
-              @change=${t=>this._checkboxChanged("showProgressBar",t)}
+              .checked=${this.config.showProgressBar !== false}
+              @change=${(e) => this._checkboxChanged('showProgressBar', e)}
             />
             Show progress bar
           </label>
@@ -203,9 +375,9 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
             <input
               type="checkbox"
               id="songActionsParent"
-              .checked=${!1!==this.config.showSongActions}
+              .checked=${this.config.showSongActions !== false}
               .indeterminate=${this._getSongActionsIndeterminate()}
-              @change=${t=>this._songActionsParentChanged(t)}
+              @change=${(e) => this._songActionsParentChanged(e)}
             />
             Show song actions (enable both buttons below)
           </label>
@@ -215,8 +387,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label style="padding-left: 20px;">
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showPlayButton}
-              @change=${t=>this._songActionsChildChanged("showPlayButton",t)}
+              .checked=${this.config.showPlayButton !== false}
+              @change=${(e) => this._songActionsChildChanged('showPlayButton', e)}
             />
             Show "Play Now" button
           </label>
@@ -226,8 +398,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label style="padding-left: 20px;">
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showAddToQueueButton}
-              @change=${t=>this._songActionsChildChanged("showAddToQueueButton",t)}
+              .checked=${this.config.showAddToQueueButton !== false}
+              @change=${(e) => this._songActionsChildChanged('showAddToQueueButton', e)}
             />
             Show "Add to Queue" button
           </label>
@@ -237,8 +409,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showDuration}
-              @change=${t=>this._checkboxChanged("showDuration",t)}
+              .checked=${this.config.showDuration !== false}
+              @change=${(e) => this._checkboxChanged('showDuration', e)}
             />
             Show song duration
           </label>
@@ -248,14 +420,18 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.compactMode||!1}
-              @change=${t=>this._checkboxChanged("compactMode",t)}
+              .checked=${this.config.compactMode || false}
+              @change=${(e) => this._checkboxChanged('compactMode', e)}
             />
             Compact mode (reduced padding)
           </label>
         </div>
       </div>
-    `}_renderControlsTab(){return q`
+    `;
+  }
+
+  _renderControlsTab() {
+    return x`
       <div class="tab-content">
         <h3>Playback Controls</h3>
 
@@ -263,8 +439,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showPlaybackControls}
-              @change=${t=>this._checkboxChanged("showPlaybackControls",t)}
+              .checked=${this.config.showPlaybackControls !== false}
+              @change=${(e) => this._checkboxChanged('showPlaybackControls', e)}
             />
             Show playback controls
           </label>
@@ -274,8 +450,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.showVolumeControl||!1}
-              @change=${t=>this._checkboxChanged("showVolumeControl",t)}
+              .checked=${this.config.showVolumeControl || false}
+              @change=${(e) => this._checkboxChanged('showVolumeControl', e)}
             />
             Show volume controls
           </label>
@@ -285,15 +461,19 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${this.config.enableSeek||!1}
-              @change=${t=>this._checkboxChanged("enableSeek",t)}
+              .checked=${this.config.enableSeek || false}
+              @change=${(e) => this._checkboxChanged('enableSeek', e)}
             />
             Enable seek on progress bar
           </label>
           <div class="hint">Allow clicking progress bar to seek to position</div>
         </div>
       </div>
-    `}_renderAdvancedTab(){return q`
+    `;
+  }
+
+  _renderAdvancedTab() {
+    return x`
       <div class="tab-content">
         <h3>Behavior</h3>
 
@@ -304,7 +484,7 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
             id="maxVisibleSongs"
             min="1"
             max="50"
-            .value=${this.config.maxVisibleSongs||10}
+            .value=${this.config.maxVisibleSongs || 10}
             @change=${this._valueChanged}
           />
           <div class="hint">Number of songs to show before scrolling</div>
@@ -314,8 +494,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.confirmDisruptive}
-              @change=${t=>this._checkboxChanged("confirmDisruptive",t)}
+              .checked=${this.config.confirmDisruptive !== false}
+              @change=${(e) => this._checkboxChanged('confirmDisruptive', e)}
             />
             Confirm before disruptive actions
           </label>
@@ -326,8 +506,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           <label>
             <input
               type="checkbox"
-              .checked=${!1!==this.config.showTooltips}
-              @change=${t=>this._checkboxChanged("showTooltips",t)}
+              .checked=${this.config.showTooltips !== false}
+              @change=${(e) => this._checkboxChanged('showTooltips', e)}
             />
             Show tooltips on hover
           </label>
@@ -340,7 +520,205 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
           </button>
         </div>
       </div>
-    `}_getMediaPlayerEntities(){return this.hass?Object.values(this.hass.states).filter(t=>t.entity_id.startsWith("media_player.")).sort((t,e)=>{const s=t.entity_id.includes("xschedule")||void 0!==t.attributes.playlist_songs,i=e.entity_id.includes("xschedule")||void 0!==e.attributes.playlist_songs;if(s&&!i)return-1;if(!s&&i)return 1;const o=t.attributes.friendly_name||t.entity_id,n=e.attributes.friendly_name||e.entity_id;return o.localeCompare(n)}):[]}_getModeDescription(t){return{simple:"Best for basic playback. Shows playlist selector and playback controls.",dj:"Best for live performance. Shows all playlists expanded, queue prominent, and song actions visible.",jukebox:"Best for party mode. Shows all songs expanded with prominent queue section.",minimal:"Best for small spaces. Shows only playback controls and now playing info.",custom:"Unlock all configuration options for complete customization."}[t]||""}_selectTab(t){this._currentTab=t,this.requestUpdate()}_entityChanged(t){this._updateConfig({entity:t.target.value})}_modeChanged(t){const e=t.target.value,s=new Set(Object.keys(at.simple)),i={};for(const t of s)void 0!==this.config[t]&&(i[t]=this.config[t]);const o={};for(const t in this.config)"entity"===t||"mode"===t||s.has(t)||(o[t]=this.config[t]);let n;if("custom"===e)n=i;else{n=at[e]||at.simple}const r={...o,entity:this.config.entity,mode:e,...n};this.config=r;const a=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(a)}_valueChanged(t){const e=t.target.id,s=t.target.value;this._updateConfig({[e]:s})}_checkboxChanged(t,e){this._updateConfig({[t]:e.target.checked})}_songActionsParentChanged(t){const e=t.target.checked;this._updateConfig({showSongActions:e,showPlayButton:e,showAddToQueueButton:e})}_songActionsChildChanged(t,e){const s={[t]:e.target.checked},i="showPlayButton"===t?e.target.checked:!1!==this.config.showPlayButton,o="showAddToQueueButton"===t?e.target.checked:!1!==this.config.showAddToQueueButton;s.showSongActions=!(!i||!o)||!(!i&&!o),this._updateConfig(s)}_getSongActionsIndeterminate(){return!1!==this.config.showPlayButton!==(!1!==this.config.showAddToQueueButton)}_resetToDefaults(){if(confirm("Reset all settings to Simple mode defaults?")){const t="simple",e=at[t]||at.simple,s=new Set(Object.keys(at.simple)),i={};for(const t in this.config)"entity"===t||"mode"===t||s.has(t)||(i[t]=this.config[t]);const o={...i,entity:this.config.entity,mode:t,...e};this.config=o;const n=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(n)}}_updateConfig(t){this.config={...this.config,...t};const e=new CustomEvent("config-changed",{detail:{config:this.config},bubbles:!0,composed:!0});this.dispatchEvent(e)}static get styles(){return n`
+    `;
+  }
+
+  _getMediaPlayerEntities() {
+    if (!this.hass) return [];
+    // Show all media player entities, not just xSchedule
+    return Object.values(this.hass.states).filter(
+      (entity) => entity.entity_id.startsWith('media_player.')
+    ).sort((a, b) => {
+      // Sort xSchedule players to the top for convenience
+      const aIsXSchedule = a.entity_id.includes('xschedule') || a.attributes.playlist_songs !== undefined;
+      const bIsXSchedule = b.entity_id.includes('xschedule') || b.attributes.playlist_songs !== undefined;
+      if (aIsXSchedule && !bIsXSchedule) return -1;
+      if (!aIsXSchedule && bIsXSchedule) return 1;
+      // Otherwise sort alphabetically
+      const aName = a.attributes.friendly_name || a.entity_id;
+      const bName = b.attributes.friendly_name || b.entity_id;
+      return aName.localeCompare(bName);
+    });
+  }
+
+  _getModeDescription(mode) {
+    const descriptions = {
+      simple: 'Best for basic playback. Shows playlist selector and playback controls.',
+      dj: 'Best for live performance. Shows all playlists expanded, queue prominent, and song actions visible.',
+      jukebox: 'Best for party mode. Shows all songs expanded with prominent queue section.',
+      minimal: 'Best for small spaces. Shows only playback controls and now playing info.',
+      custom: 'Unlock all configuration options for complete customization.',
+    };
+    return descriptions[mode] || '';
+  }
+
+  _selectTab(tab) {
+    this._currentTab = tab;
+    this.requestUpdate();
+  }
+
+  _entityChanged(e) {
+    this._updateConfig({ entity: e.target.value });
+  }
+
+  _modeChanged(e) {
+    const mode = e.target.value;
+    
+    // Get all keys that are in mode presets
+    const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+    
+    // Extract current preset-related values BEFORE clearing
+    // These will be preserved when switching to custom mode
+    const currentPresetValues = {};
+    for (const key of presetKeys) {
+      if (this.config[key] !== undefined) {
+        currentPresetValues[key] = this.config[key];
+      }
+    }
+    
+    // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+    const preservedFields = {};
+    for (const key in this.config) {
+      // Preserve: entity (handled separately), mode (handled separately), 
+      // and any field not in preset keys
+      if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+        preservedFields[key] = this.config[key];
+      }
+    }
+    
+    // Determine which preset values to use
+    let presetValuesToApply;
+    if (mode === 'custom') {
+      // Custom mode: preserve current preset values
+      presetValuesToApply = currentPresetValues;
+    } else {
+      // Preset mode: apply preset values
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      presetValuesToApply = modePreset;
+    }
+    
+    // Create new config: preset values override preset-related settings,
+    // but all non-preset fields are preserved
+    const newConfig = {
+      ...preservedFields, // Preserve all fields not in mode-presets
+      entity: this.config.entity,
+      mode,
+      ...presetValuesToApply, // Either current values (custom) or preset values
+    };
+    
+    // Replace config entirely (don't merge with old preset-related properties)
+    this.config = newConfig;
+    
+    // Dispatch event with fresh config
+    const event = new CustomEvent('config-changed', {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  _valueChanged(e) {
+    const key = e.target.id;
+    const value = e.target.value;
+    this._updateConfig({ [key]: value });
+  }
+
+  _checkboxChanged(key, e) {
+    this._updateConfig({ [key]: e.target.checked });
+  }
+
+  _songActionsParentChanged(e) {
+    // When parent checkbox changes, update both children
+    const checked = e.target.checked;
+    this._updateConfig({
+      showSongActions: checked,
+      showPlayButton: checked,
+      showAddToQueueButton: checked
+    });
+  }
+
+  _songActionsChildChanged(key, e) {
+    // Update the child checkbox
+    const updates = { [key]: e.target.checked };
+
+    // Update parent based on children states
+    const showPlayButton = key === 'showPlayButton' ? e.target.checked : (this.config.showPlayButton !== false);
+    const showAddToQueueButton = key === 'showAddToQueueButton' ? e.target.checked : (this.config.showAddToQueueButton !== false);
+
+    if (showPlayButton && showAddToQueueButton) {
+      // Both checked - parent should be checked
+      updates.showSongActions = true;
+    } else if (!showPlayButton && !showAddToQueueButton) {
+      // Both unchecked - parent should be unchecked
+      updates.showSongActions = false;
+    } else {
+      // Mixed state - keep parent checked but we'll show indeterminate
+      updates.showSongActions = true;
+    }
+
+    this._updateConfig(updates);
+  }
+
+  _getSongActionsIndeterminate() {
+    const showPlayButton = this.config.showPlayButton !== false;
+    const showAddToQueueButton = this.config.showAddToQueueButton !== false;
+    return showPlayButton !== showAddToQueueButton;
+  }
+
+  _resetToDefaults() {
+    if (confirm('Reset all settings to Simple mode defaults?')) {
+      // Use same logic as _modeChanged to properly reset to mode preset
+      const mode = 'simple';
+      const modePreset = MODE_PRESETS[mode] || MODE_PRESETS.simple;
+      
+      // Get all keys that are in mode presets (these will be replaced)
+      const presetKeys = new Set(Object.keys(MODE_PRESETS.simple));
+      
+      // Preserve all fields NOT in mode-presets (metadata, advanced settings, etc.)
+      const preservedFields = {};
+      for (const key in this.config) {
+        // Preserve: entity (handled separately), mode (handled separately), 
+        // and any field not in preset keys
+        if (key !== 'entity' && key !== 'mode' && !presetKeys.has(key)) {
+          preservedFields[key] = this.config[key];
+        }
+      }
+      
+      // Create new config with preset values and preserved non-preset fields
+      const newConfig = {
+        ...preservedFields, // Preserve all fields not in mode-presets
+        entity: this.config.entity,
+        mode,
+        ...modePreset,
+      };
+      
+      // Replace config entirely
+      this.config = newConfig;
+      
+      // Dispatch event with fresh config
+      const event = new CustomEvent('config-changed', {
+        detail: { config: this.config },
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
+    }
+  }
+
+  _updateConfig(updates) {
+    this.config = { ...this.config, ...updates };
+
+    const event = new CustomEvent('config-changed', {
+      detail: { config: this.config },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  static get styles() {
+    return i$3`
       :host {
         display: block;
       }
@@ -481,4 +859,8 @@ const A=globalThis,w=A.trustedTypes,x=w?w.createPolicy("lit-html",{createHTML:t=
       .reset-button ha-icon {
         --mdc-icon-size: 20px;
       }
-    `}});
+    `;
+  }
+}
+
+customElements.define('xschedule-card-editor', XScheduleCardEditor);
