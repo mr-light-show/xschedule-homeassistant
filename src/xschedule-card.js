@@ -210,8 +210,15 @@ class XScheduleCard extends LitElement {
         <div class="card-content ${this.config.compactMode ? 'compact' : ''}">
           ${this.config.showEntityName ? this._renderEntityName() : ''}
           ${this._renderNowPlaying()}
-          ${this._renderProgressBar()}
-          ${this._renderPlaybackControls()}
+          
+          ${this.config.compactMode
+            ? this._renderCompactControlsAndProgress()
+            : html`
+                ${this._renderProgressBar()}
+                ${this._renderPlaybackControls()}
+              `
+          }
+          
           ${this.config.showVolumeControl ? this._renderVolumeControl() : ''}
           ${this._renderPlaylistSelector()}
           ${this._supportsQueue() ? this._renderQueue() : ''}
@@ -310,6 +317,31 @@ class XScheduleCard extends LitElement {
         <div class="time-display">
           <span>${this._formatTime(position)}</span>
           <span>${this._formatTime(duration)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderCompactControlsAndProgress() {
+    const progressBar = this._renderProgressBar();
+    const controls = this._renderPlaybackControls();
+    
+    // If either is empty, render them separately (fallback)
+    if (!progressBar || !controls) {
+      return html`
+        ${controls}
+        ${progressBar}
+      `;
+    }
+    
+    // Both exist: render in compact horizontal layout
+    return html`
+      <div class="compact-controls-progress">
+        <div class="compact-controls">
+          ${controls}
+        </div>
+        <div class="compact-progress">
+          ${progressBar}
         </div>
       </div>
     `;
@@ -1092,6 +1124,33 @@ class XScheduleCard extends LitElement {
         font-size: 0.75em; /* Badges slightly smaller */
       }
 
+      /* Compact mode: controls and progress on same line */
+      .compact-controls-progress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .compact-controls {
+        flex-shrink: 0; /* Don't shrink controls */
+      }
+
+      .compact-progress {
+        flex: 1; /* Fill remaining space */
+        min-width: 0; /* Allow flexbox to shrink if needed */
+      }
+
+      /* Adjust progress bar styling in compact mode */
+      .compact-controls-progress .progress-container {
+        /* Ensure progress bar uses full width */
+        width: 100%;
+      }
+
+      /* Ensure controls don't have extra spacing in compact layout */
+      .compact-controls .playback-controls {
+        margin: 0;
+      }
+
       .error {
         display: flex;
         flex-direction: column;
@@ -1616,7 +1675,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre4  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre5  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

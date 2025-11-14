@@ -215,6 +215,91 @@ describe('XScheduleCard', () => {
 
       expect(element.config.showPlaybackControls).to.be.true;
     });
+
+    it('renders controls and progress bar on same line in compact mode', async () => {
+      const config = createMockCardConfig({ 
+        compactMode: true,
+        showPlaybackControls: true,
+        showProgressBar: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          playlist_songs: [{ name: 'Song 1', duration: 180 }],
+          media_duration: 180,
+          media_position: 30,
+          media_position_updated_at: new Date().toISOString(),
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const compactContainer = element.shadowRoot.querySelector('.compact-controls-progress');
+      expect(compactContainer).to.exist;
+      
+      const controls = compactContainer.querySelector('.compact-controls');
+      const progress = compactContainer.querySelector('.compact-progress');
+      expect(controls).to.exist;
+      expect(progress).to.exist;
+    });
+
+    it('renders controls and progress separately in non-compact mode', async () => {
+      const config = createMockCardConfig({ 
+        compactMode: false,
+        showPlaybackControls: true,
+        showProgressBar: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          playlist_songs: [{ name: 'Song 1', duration: 180 }],
+          media_duration: 180,
+          media_position: 30,
+          media_position_updated_at: new Date().toISOString(),
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const compactContainer = element.shadowRoot.querySelector('.compact-controls-progress');
+      expect(compactContainer).to.not.exist;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      const progress = element.shadowRoot.querySelector('.progress-container');
+      expect(controls).to.exist;
+      expect(progress).to.exist;
+    });
+
+    it('handles compact mode when controls are hidden', async () => {
+      const config = createMockCardConfig({ 
+        compactMode: true,
+        showPlaybackControls: false,
+        showProgressBar: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          playlist_songs: [{ name: 'Song 1', duration: 180 }],
+          media_duration: 180,
+          media_position: 30,
+          media_position_updated_at: new Date().toISOString(),
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const compactContainer = element.shadowRoot.querySelector('.compact-controls-progress');
+      expect(compactContainer).to.not.exist;
+      
+      const progress = element.shadowRoot.querySelector('.progress-container');
+      expect(progress).to.exist;
+    });
   });
 
   describe('Component Lifecycle', () => {
