@@ -664,15 +664,10 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         """Jump to specified step in current playlist at end of current step."""
         try:
             _LOGGER.debug("Jump to step called: step='%s'", step)
-            if self._websocket and self._websocket.connected:
-                _LOGGER.debug("Sending via WebSocket: 'Jump to specified step in current playlist at the end of current step' with step='%s'", step)
-                await self._websocket.send_command(
-                    "Jump to specified step in current playlist at the end of current step",
-                    step
-                )
-            else:
-                _LOGGER.debug("Sending via REST API: step='%s'", step)
-                await self._api_client.jump_to_step_at_end(step)
+            # Use REST API for now - WebSocket format needs investigation
+            # WebSocket was returning: {'result': 'failed', 'reference': '', 'message': 'Empty request.'}
+            _LOGGER.debug("Sending via REST API: step='%s'", step)
+            await self._api_client.jump_to_step_at_end(step)
 
             _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
 

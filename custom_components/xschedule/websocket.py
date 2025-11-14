@@ -226,7 +226,8 @@ class XScheduleWebSocket:
 
         try:
             await self._ws.send_json(message)
-            _LOGGER.debug("Sent command: %s", command_name)
+            _LOGGER.debug("Sent command: %s with parameters: %s (full message: %s)", 
+                         command_name, parameters, message)
             return True
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error sending command: %s", err)
