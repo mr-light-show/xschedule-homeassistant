@@ -13,6 +13,10 @@ from .const import WS_HEARTBEAT_INTERVAL, WS_RETRY_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
+# Define custom TRACE level for very verbose logging
+TRACE_LEVEL = 5
+logging.addLevelName(TRACE_LEVEL, "TRACE")
+
 
 class XScheduleWebSocket:
     """WebSocket connection manager for xSchedule real-time updates."""
@@ -160,7 +164,7 @@ class XScheduleWebSocket:
         """Handle incoming WebSocket message."""
         try:
             message = json.loads(data)
-            _LOGGER.debug("Received WebSocket message: %s", message)
+            _LOGGER.log(TRACE_LEVEL, "Received WebSocket message: %s", message)
 
             # xSchedule sends status updates - call callback for all messages
             # Not just those with "status" key

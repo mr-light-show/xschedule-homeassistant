@@ -43,6 +43,10 @@ from .websocket import XScheduleWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 
+# Define custom TRACE level for very verbose logging
+TRACE_LEVEL = 5
+logging.addLevelName(TRACE_LEVEL, "TRACE")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -185,7 +189,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
     def _handle_websocket_update(self, data: dict[str, Any]) -> None:
         """Handle WebSocket status update."""
-        _LOGGER.debug("WebSocket status update: %s", data)
+        _LOGGER.log(TRACE_LEVEL, "WebSocket status update: %s", data)
 
         # Store previous state for change detection
         old_state = self._attr_state
