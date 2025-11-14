@@ -454,14 +454,30 @@ class XScheduleCard extends LitElement {
 
     return html`
       <div class="section queue-section">
-        <div class="section-header" @click=${this._toggleQueue}>
-          <h3>
-            <ha-icon icon="mdi:format-list-numbered"></ha-icon>
-            Queue
-            ${queueCount > 0 ? html`<span class="badge">${queueCount}</span>` : ''}
-          </h3>
-          ${displayMode === 'collapsed'
-            ? html`<ha-icon icon=${this._queueExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>`
+        <div class="section-header">
+          <div @click=${this._toggleQueue} style="display: flex; align-items: center; flex: 1; cursor: pointer;">
+            <h3>
+              <ha-icon icon="mdi:format-list-numbered"></ha-icon>
+              Queue
+              ${queueCount > 0 ? html`<span class="badge">${queueCount}</span>` : ''}
+            </h3>
+            ${displayMode === 'collapsed'
+              ? html`<ha-icon icon=${this._queueExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>`
+              : ''}
+          </div>
+          ${queueCount > 0 
+            ? html`
+                <button 
+                  class="queue-header-delete"
+                  @click=${(e) => {
+                    e.stopPropagation();
+                    this._handleClearQueue();
+                  }}
+                  title="Clear entire queue"
+                >
+                  <ha-icon icon="mdi:close"></ha-icon>
+                </button>
+              `
             : ''}
         </div>
 
@@ -503,10 +519,6 @@ class XScheduleCard extends LitElement {
                   `
                 )}
               </div>
-              <button class="clear-queue-btn" @click=${this._handleClearQueue}>
-                <ha-icon icon="mdi:playlist-remove"></ha-icon>
-                Clear Queue
-              </button>
             `
           : ''}
       </div>
@@ -1338,25 +1350,27 @@ class XScheduleCard extends LitElement {
         --mdc-icon-size: 18px;
       }
 
-      .clear-queue-btn {
+      .queue-header-delete {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 10px;
-        margin-top: 8px;
-        background: var(--error-color);
-        color: white;
+        background: none;
         border: none;
-        border-radius: 6px;
-        font-size: 0.9em;
         cursor: pointer;
-        transition: opacity 0.2s;
+        color: var(--secondary-text-color);
+        padding: 8px;
+        border-radius: 4px;
+        transition: color 0.2s, background 0.2s;
+        flex-shrink: 0;
       }
 
-      .clear-queue-btn:hover {
-        opacity: 0.8;
+      .queue-header-delete:hover {
+        color: var(--error-color);
+        background: var(--error-color-opacity, rgba(var(--rgb-error-color), 0.1));
+      }
+
+      .queue-header-delete ha-icon {
+        --mdc-icon-size: 20px;
       }
 
       .empty-state {
