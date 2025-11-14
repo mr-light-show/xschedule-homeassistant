@@ -497,12 +497,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, SERVICE_PLAY_SONG, async_play_song, schema=SCHEMA_PLAY_SONG
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_ADD_TO_QUEUE, async_add_to_queue, schema=SCHEMA_ADD_TO_QUEUE
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR_QUEUE, async_clear_queue, schema=SCHEMA_CLEAR_QUEUE
-    )
-    hass.services.async_register(
         DOMAIN, SERVICE_JUMP_TO_STEP, async_jump_to_step, schema=SCHEMA_JUMP_TO_STEP
     )
     hass.services.async_register(
