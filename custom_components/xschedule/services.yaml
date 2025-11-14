@@ -22,32 +22,74 @@ play_song:
       selector:
         text:
 
-add_to_queue:
-  name: Add to Queue
-  description: Add a song to the playback queue
+jump_to_step:
+  name: Jump to Step
+  description: Jump to a specific step (song) in the current playlist at the end of the current step
   target:
     entity:
       domain: media_player
       integration: xschedule
   fields:
-    playlist:
-      name: Playlist
-      description: Name of the playlist containing the song
+    step:
+      name: Step
+      description: Name of the step (song) to jump to
       required: true
-      example: "Christmas Lights"
+      example: "Jingle Bells"
       selector:
         text:
+
+# Internal Queue Management Services
+add_to_internal_queue:
+  name: Add to Internal Queue
+  description: Add a song from the current playlist to the internal queue. Songs added multiple times gain priority.
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
     song:
       name: Song
-      description: Name of the song to add to queue
+      description: Name of the song to add to the internal queue
       required: true
       example: "Silent Night"
       selector:
         text:
 
-clear_queue:
-  name: Clear Queue
-  description: Clear all songs from the playback queue
+remove_from_internal_queue:
+  name: Remove from Internal Queue
+  description: Remove a specific item from the internal queue by its ID
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
+    queue_item_id:
+      name: Queue Item ID
+      description: The unique ID of the queue item to remove
+      required: true
+      example: "abc123-def456-789"
+      selector:
+        text:
+
+reorder_internal_queue:
+  name: Reorder Internal Queue
+  description: Reorder the internal queue by providing a list of queue item IDs in the desired order
+  target:
+    entity:
+      domain: media_player
+      integration: xschedule
+  fields:
+    queue_item_ids:
+      name: Queue Item IDs
+      description: List of queue item IDs in the desired order
+      required: true
+      example: ["id3", "id1", "id2"]
+      selector:
+        object:
+
+clear_internal_queue:
+  name: Clear Internal Queue
+  description: Clear all songs from the internal queue
   target:
     entity:
       domain: media_player

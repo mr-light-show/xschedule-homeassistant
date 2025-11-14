@@ -271,7 +271,6 @@ class TestRegressionV122Pre2:
 
         # Verify playlist steps cleared (media_player.py:208-209)
         assert media_player_entity._current_playlist_steps == []
-        assert media_player_entity._queued_steps == []
 
 
 class TestRegressionV121CPUOptimizations:

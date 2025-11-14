@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from typing import Any
 from datetime import datetime
 
@@ -32,8 +33,6 @@ from .const import (
     EVENT_PLAY,
     EVENT_PLAYLIST_CHANGED,
     EVENT_PREVIOUS,
-    EVENT_QUEUE_ADD,
-    EVENT_QUEUE_CLEAR,
     EVENT_SEEK,
     EVENT_STOP,
     EVENT_VOLUME_ADJUST,
@@ -129,10 +128,13 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         # Additional state
         self._playlists: list[str] = []
         self._current_playlist_steps: list[dict[str, Any]] = []
-        self._queued_steps: list[dict[str, Any]] = []
         self._time_remaining = None
         self._controller_status: list[dict[str, Any]] = []  # Controller health (pingstatus)
         self._previous_controller_status: list[dict[str, Any]] = []  # For change detection
+        
+        # Internal queue management (in-memory, lost on reboot)
+        self._internal_queue: list[dict[str, Any]] = []
+        self._previous_song: str | None = None  # For song change detection
 
         # WebSocket connection
         self._websocket: XScheduleWebSocket | None = None
@@ -213,14 +215,20 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # Check: no playlist field AND outputtolights is false
             if "playlist" not in data and data.get("outputtolights", "false") == "false":
                 self._current_playlist_steps = []
-                self._queued_steps = []
 
         # Update current media info
         if "playlist" in data:
             self._attr_media_playlist = data["playlist"]
 
         if "step" in data:
-            self._attr_media_title = data["step"]
+            new_song = data["step"]
+            # Detect song changes for internal queue management
+            if new_song and new_song != self._previous_song:
+                if self._previous_song is not None:  # Skip on first load
+                    _LOGGER.debug("Song changed from '%s' to '%s'", self._previous_song, new_song)
+                    self._handle_song_started(new_song)
+                self._previous_song = new_song
+            self._attr_media_title = new_song
 
         # Update position and duration (use millisecond fields)
         if "positionms" in data:
@@ -377,11 +385,6 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     self._attr_media_playlist
                 )
 
-            # Fetch queue if we don't have it yet or WebSocket is disconnected
-            # WebSocket doesn't push queue updates, so we need to poll periodically
-            if (not self._queued_steps) or (not self._websocket or not self._websocket.connected):
-                self._queued_steps = await self._api_client.get_queued_steps()
-
         except XScheduleAPIError as err:
             _LOGGER.error("Error updating xSchedule state: %s", err)
             self._attr_state = MediaPlayerState.OFF
@@ -415,14 +418,16 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             for step in (self._current_playlist_steps or [])
         ]
 
-        # Add queued steps (always include queue key for frontend compatibility)
-        attributes["queue"] = [
+        # Add internal queue (in-memory, managed by integration)
+        attributes["internal_queue"] = [
             {
-                "name": step.get("name"),
-                "id": step.get("id"),
-                "duration": int(step.get("lengthms") or 0),  # Convert string to int milliseconds
+                "id": item["id"],
+                "name": item["name"],
+                "playlist": item["playlist"],
+                "priority": item["priority"],
+                "duration": int(item.get("lengthms") or 0),  # Convert string to int milliseconds
             }
-            for step in (self._queued_steps or [])
+            for item in (self._internal_queue or [])
         ]
 
         return attributes
@@ -616,49 +621,6 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         except XScheduleAPIError as err:
             _LOGGER.error("Error playing song: %s", err)
 
-    async def async_add_to_queue(self, playlist: str, song: str) -> None:
-        """Add a song (step) to the queue."""
-        try:
-            # Check if already in queue (full duplicate prevention)
-            if self._is_in_queue(song):
-                _LOGGER.info("Song '%s' already in queue, skipping", song)
-                return
-
-            if self._websocket and self._websocket.connected:
-                await self._websocket.send_command(
-                    "Enqueue playlist step", f"{playlist},{song}"
-                )
-            else:
-                await self._api_client.enqueue_step(playlist, song)
-
-            self._hass.bus.fire(
-                EVENT_QUEUE_ADD,
-                {
-                    "entity_id": self.entity_id,
-                    "playlist": playlist,
-                    "song": song,
-                },
-            )
-
-            # Update queue
-            await self.async_update()
-
-        except XScheduleAPIError as err:
-            _LOGGER.error("Error adding to queue: %s", err)
-
-    async def async_clear_queue(self) -> None:
-        """Clear the playlist queue."""
-        try:
-            if self._websocket and self._websocket.connected:
-                await self._websocket.send_command("Clear playlist queue")
-            else:
-                await self._api_client.clear_queue()
-
-            self._queued_steps = []
-            self._hass.bus.fire(EVENT_QUEUE_CLEAR, {"entity_id": self.entity_id})
-
-        except XScheduleAPIError as err:
-            _LOGGER.error("Error clearing queue: %s", err)
 
     async def async_jump_to_step(self, step: str) -> None:
         """Jump to specified step in current playlist at end of current step."""
@@ -686,9 +648,162 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             _LOGGER.error("Error jumping to step '%s': %s", step, err)
             raise
 
-    def _is_in_queue(self, song_name: str) -> bool:
-        """Check if a song is already in the queue."""
-        return any(step.get("name") == song_name for step in self._queued_steps)
+    # Internal Queue Management Methods
+
+    async def async_add_to_internal_queue(self, song_name: str) -> None:
+        """Add song to internal queue with priority management."""
+        _LOGGER.debug("Adding '%s' to internal queue", song_name)
+        
+        # 1. Validate song is in current playlist
+        current_playlist = self._attr_media_playlist
+        if not current_playlist:
+            raise XScheduleAPIError("No playlist currently playing")
+        
+        # Check if song exists in current playlist
+        if not self._current_playlist_steps:
+            # Fetch playlist steps if not already loaded
+            try:
+                steps = await self._api_client.get_playlist_steps(current_playlist)
+                self._current_playlist_steps = steps
+            except XScheduleAPIError as err:
+                raise XScheduleAPIError(f"Failed to fetch playlist steps: {err}")
+        
+        song_exists = any(step.get("name") == song_name for step in self._current_playlist_steps)
+        if not song_exists:
+            raise XScheduleAPIError(f"Song '{song_name}' not found in current playlist '{current_playlist}'")
+        
+        # 2. Check for duplicates - if exists, bump priority
+        existing_item = next((item for item in self._internal_queue if item["name"] == song_name), None)
+        if existing_item:
+            _LOGGER.info("Song '%s' already in queue, bumping priority", song_name)
+            existing_item["priority"] += 1
+            # Re-sort queue by priority (highest first)
+            self._internal_queue.sort(key=lambda x: x["priority"], reverse=True)
+        else:
+            # 4. Add to queue with UUID
+            song_data = next((step for step in self._current_playlist_steps if step.get("name") == song_name), {})
+            queue_item = {
+                "id": str(uuid.uuid4()),
+                "name": song_name,
+                "playlist": current_playlist,
+                "priority": 1,
+                "lengthms": song_data.get("lengthms", "0")
+            }
+            self._internal_queue.append(queue_item)
+            _LOGGER.info("Added '%s' to internal queue with id %s", song_name, queue_item["id"])
+        
+        # 3. If first song (or only song after priority bump), issue jump command immediately
+        is_first = self._internal_queue[0]["name"] == song_name
+        if is_first:
+            try:
+                _LOGGER.info("Issuing jump command for '%s' (top of queue)", song_name)
+                await self.async_jump_to_step(song_name)
+            except XScheduleAPIError as err:
+                _LOGGER.error("Failed to jump to '%s': %s", song_name, err)
+                # Don't remove from queue - let user retry or remove manually
+                raise XScheduleAPIError(f"Failed to jump to song: {err}")
+        
+        # 6. Update state (triggers state change event)
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    async def async_remove_from_internal_queue(self, queue_item_id: str) -> None:
+        """Remove specific item from internal queue by UUID."""
+        _LOGGER.debug("Removing queue item with id '%s'", queue_item_id)
+        
+        # Find and remove item
+        item = next((item for item in self._internal_queue if item["id"] == queue_item_id), None)
+        if not item:
+            raise XScheduleAPIError(f"Queue item with id '{queue_item_id}' not found")
+        
+        self._internal_queue.remove(item)
+        _LOGGER.info("Removed '%s' from internal queue", item["name"])
+        
+        # Update state
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    async def async_reorder_internal_queue(self, queue_item_ids: list[str]) -> None:
+        """Reorder internal queue items."""
+        _LOGGER.debug("Reordering queue: %s", queue_item_ids)
+        
+        # 1. Validate all IDs exist
+        for queue_id in queue_item_ids:
+            if not any(item["id"] == queue_id for item in self._internal_queue):
+                raise XScheduleAPIError(f"Queue item with id '{queue_id}' not found")
+        
+        # Validate count matches
+        if len(queue_item_ids) != len(self._internal_queue):
+            raise XScheduleAPIError(
+                f"Invalid reorder: expected {len(self._internal_queue)} items, got {len(queue_item_ids)}"
+            )
+        
+        # Store old first item
+        old_first_id = self._internal_queue[0]["id"] if self._internal_queue else None
+        
+        # 2. Reorder internal list
+        id_to_item = {item["id"]: item for item in self._internal_queue}
+        self._internal_queue = [id_to_item[queue_id] for queue_id in queue_item_ids]
+        _LOGGER.info("Reordered internal queue")
+        
+        # 3. If first item changed, issue jump command
+        new_first_id = self._internal_queue[0]["id"] if self._internal_queue else None
+        if old_first_id != new_first_id and new_first_id:
+            new_first_song = self._internal_queue[0]["name"]
+            try:
+                _LOGGER.info("First item changed to '%s', issuing jump command", new_first_song)
+                await self.async_jump_to_step(new_first_song)
+            except XScheduleAPIError as err:
+                _LOGGER.error("Failed to jump to '%s': %s", new_first_song, err)
+                # Don't revert reorder - let user fix manually
+                raise XScheduleAPIError(f"Reordered but failed to jump: {err}")
+        
+        # Update state
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    async def async_clear_internal_queue(self) -> None:
+        """Clear entire internal queue."""
+        _LOGGER.info("Clearing internal queue (%d items)", len(self._internal_queue))
+        self._internal_queue = []
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    def _handle_song_started(self, song_name: str) -> None:
+        """Handle song start - remove from queue and advance if needed."""
+        if not self._internal_queue:
+            return
+        
+        # Search queue for matching song name
+        matching_item = next((item for item in self._internal_queue if item["name"] == song_name), None)
+        if not matching_item:
+            return  # Song not in queue
+        
+        _LOGGER.info("Song '%s' started playing, removing from queue", song_name)
+        self._internal_queue.remove(matching_item)
+        
+        # If queue not empty, issue jump for next song
+        if self._internal_queue:
+            next_song = self._internal_queue[0]["name"]
+            _LOGGER.info("Queue has %d items remaining, scheduling jump to '%s'", 
+                        len(self._internal_queue), next_song)
+            # Schedule jump command asynchronously
+            asyncio.create_task(self._jump_to_next_queued_song(next_song))
+        else:
+            _LOGGER.info("Queue is now empty")
+        
+        # Update state
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    async def _jump_to_next_queued_song(self, song_name: str) -> None:
+        """Jump to the next queued song (helper for async scheduling)."""
+        try:
+            await self.async_jump_to_step(song_name)
+        except XScheduleAPIError as err:
+            _LOGGER.error("Failed to auto-advance to '%s': %s", song_name, err)
+            # Keep in queue for manual retry
+
 
     async def async_browse_media(
         self,

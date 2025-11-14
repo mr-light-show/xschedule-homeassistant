@@ -155,10 +155,6 @@ class XSchedulePlaylistBrowser extends LitElement {
     );
   }
 
-  _supportsQueue() {
-    return this._isXSchedulePlayer();
-  }
-
   async _fetchScheduleInfo(forceRefresh = false) {
     // Don't fetch if already in progress
     if (this._loading) return;
@@ -821,27 +817,6 @@ class XSchedulePlaylistBrowser extends LitElement {
         white-space: nowrap;
       }
 
-      .add-queue-btn-compact {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background 0.2s;
-        flex-shrink: 0;
-      }
-
-      .add-queue-btn-compact:hover {
-        background: var(--dark-primary-color);
-      }
-
-      .add-queue-btn-compact ha-icon {
-        --mdc-icon-size: 18px;
-      }
 
       /* Removed special styling for songs in playing playlist - songs use normal colors */
 
@@ -1045,7 +1020,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.2  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.3-pre3  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

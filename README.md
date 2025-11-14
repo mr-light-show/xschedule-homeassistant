@@ -336,34 +336,41 @@ For Custom mode, use the built-in visual editor instead of editing YAML:
    - **Controls**: Enable/disable playback and volume controls
    - **Advanced**: Fine-tune behavior and limits
 
-### Smart Queue Management
+### Smart Internal Queue Management
 
-The card uses intelligent command selection for optimal playback:
+The integration features an **internal, in-memory queue** managed entirely by Home Assistant, replacing xSchedule's native queue mechanism. This provides better control, priority management, and advanced features.
 
-**Scenario 1: No Playlist Playing**
-- Plays the selected song immediately
-- Uses `media_player.play_media` for instant playback
-- Perfect for starting playback from idle
+**Key Features:**
+- **In-Memory Storage**: Queue is managed by the integration (lost on reboot, which is acceptable)
+- **Priority System**: Songs added multiple times gain higher priority and play sooner
+- **Drag-and-Drop Reordering**: Reorder queue items via the UI
+- **Individual Delete**: Remove specific songs from the queue
+- **Auto-Advancement**: Automatically plays queued songs after current song ends
+- **Same-Playlist Only**: Queue only accepts songs from the currently playing playlist
 
-**Scenario 2: Same Playlist (Within-Playlist Selection)**
-- Uses `Jump to specified step in current playlist at the end of current step` command
-- Provides smooth transition after current song ends
-- No interruption, no queue needed
-- Automatically falls back to queue if jump fails
+**How It Works:**
+1. **Adding to Queue**: Use the queue button on any song in the current playlist
+   - First addition: Immediately jumps to that song at end of current song
+   - Subsequent additions: Adds to queue with priority tracking
+   - Multiple additions: Priority increases (×2, ×3, etc.) to play sooner
+2. **Song Change Detection**: Integration monitors song changes via WebSocket
+3. **Auto-Advancement**: When a queued song starts playing:
+   - It's removed from the queue
+   - Next queued song (if any) is automatically scheduled with jump command
+4. **Reordering**: Drag queue items to reorder, automatically triggers jump for new first item
+5. **Error Handling**: Failed jumps show error toast messages
 
-**Scenario 3: Different Playlist (Cross-Playlist Selection)**
-- Adds song to persistent queue
-- Queue plays automatically when current playlist ends
-- Includes duplicate prevention:
-  - Checks entire queue (not just last song)
-  - Shows "Already in queue" message
-  - Prevents accidental duplicates
+**Priority System:**
+- Songs added once: Priority 1 (play in order added)
+- Songs added twice: Priority 2 (play before priority 1 songs)
+- Songs added three times: Priority 3 (play before priority 2 songs)
+- Within same priority: Songs play in the order they were first added
 
-**Why This Design?**
-- **Smoother Transitions**: Within-playlist jumps don't require queue system
-- **Cross-Playlist Support**: Queue enables mixing songs from different playlists
-- **Intelligent Fallback**: Automatically uses the best method for each scenario
-- **User-Friendly**: You don't need to think about it - just click to add!
+**Why Internal Queue?**
+- **Better Control**: Full control over queue behavior and priority management
+- **Advanced Features**: Supports drag-and-drop, priority bumping, individual deletion
+- **Reliable Auto-Play**: Automatic song advancement without relying on xSchedule's queue
+- **UI Integration**: Queue state is part of the entity attributes, enabling rich frontend features
 
 ### Real-Time Updates
 

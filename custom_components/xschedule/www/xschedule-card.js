@@ -3,23 +3,23 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,i=Symbol(),s=new WeakMap;let o=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==i)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const i=this.t;if(e&&void 0===t){const e=void 0!==i&&1===i.length;e&&(t=s.get(i)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&s.set(i,t))}return t}toString(){return this.cssText}};const n=(t,...e)=>{const s=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new o(s,t,i)},a=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,i))(e)})(t):t,{is:r,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:p}=Object,u=globalThis,g=u.trustedTypes,m=g?g.emptyScript:"",_=u.reactiveElementPolyfillSupport,y=(t,e)=>t,f={toAttribute(t,e){switch(e){case Boolean:t=t?m:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},b=(t,e)=>!r(t,e),v={attribute:!0,type:String,converter:f,reflect:!1,useDefault:!1,hasChanged:b};
+const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,i=Symbol(),s=new WeakMap;let o=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==i)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const i=this.t;if(e&&void 0===t){const e=void 0!==i&&1===i.length;e&&(t=s.get(i)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&s.set(i,t))}return t}toString(){return this.cssText}};const n=(t,...e)=>{const s=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new o(s,t,i)},a=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new o("string"==typeof t?t:t+"",void 0,i))(e)})(t):t,{is:r,defineProperty:l,getOwnPropertyDescriptor:c,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:u}=Object,p=globalThis,g=p.trustedTypes,m=g?g.emptyScript:"",_=p.reactiveElementPolyfillSupport,y=(t,e)=>t,f={toAttribute(t,e){switch(e){case Boolean:t=t?m:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},b=(t,e)=>!r(t,e),v={attribute:!0,type:String,converter:f,reflect:!1,useDefault:!1,hasChanged:b};
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */Symbol.metadata??=Symbol("metadata"),u.litPropertyMetadata??=new WeakMap;let $=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=v){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&l(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:o}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const n=s?.call(this);o?.call(this,e),this.requestUpdate(t,n,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??v}static _$Ei(){if(this.hasOwnProperty(y("elementProperties")))return;const t=p(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(y("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(y("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(a(t))}else void 0!==t&&e.push(a(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const i=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((i,s)=>{if(e)i.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of s){const s=document.createElement("style"),o=t.litNonce;void 0!==o&&s.setAttribute("nonce",o),s.textContent=e.cssText,i.appendChild(s)}})(i,this.constructor.elementStyles),i}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const o=(void 0!==i.converter?.toAttribute?i.converter:f).toAttribute(e,i.type);this._$Em=t,null==o?this.removeAttribute(s):this.setAttribute(s,o),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),o="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:f;this._$Em=s;const n=o.fromAttribute(e,t.type);this[s]=n??this._$Ej?.get(s)??n,this._$Em=null}}requestUpdate(t,e,i){if(void 0!==t){const s=this.constructor,o=this[t];if(i??=s.getPropertyOptions(t),!((i.hasChanged??b)(o,e)||i.useDefault&&i.reflect&&o===this._$Ej?.get(t)&&!this.hasAttribute(s._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:o},n){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,n??e??this[t]),!0!==o||void 0!==n)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};$.elementStyles=[],$.shadowRootOptions={mode:"open"},$[y("elementProperties")]=new Map,$[y("finalized")]=new Map,_?.({ReactiveElement:$}),(u.reactiveElementVersions??=[]).push("2.1.1");
+ */Symbol.metadata??=Symbol("metadata"),p.litPropertyMetadata??=new WeakMap;let $=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=v){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&l(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:o}=c(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const n=s?.call(this);o?.call(this,e),this.requestUpdate(t,n,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??v}static _$Ei(){if(this.hasOwnProperty(y("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(y("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(y("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(a(t))}else void 0!==t&&e.push(a(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const i=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((i,s)=>{if(e)i.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of s){const s=document.createElement("style"),o=t.litNonce;void 0!==o&&s.setAttribute("nonce",o),s.textContent=e.cssText,i.appendChild(s)}})(i,this.constructor.elementStyles),i}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const o=(void 0!==i.converter?.toAttribute?i.converter:f).toAttribute(e,i.type);this._$Em=t,null==o?this.removeAttribute(s):this.setAttribute(s,o),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),o="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:f;this._$Em=s;const n=o.fromAttribute(e,t.type);this[s]=n??this._$Ej?.get(s)??n,this._$Em=null}}requestUpdate(t,e,i){if(void 0!==t){const s=this.constructor,o=this[t];if(i??=s.getPropertyOptions(t),!((i.hasChanged??b)(o,e)||i.useDefault&&i.reflect&&o===this._$Ej?.get(t)&&!this.hasAttribute(s._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:o},n){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,n??e??this[t]),!0!==o||void 0!==n)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};$.elementStyles=[],$.shadowRootOptions={mode:"open"},$[y("elementProperties")]=new Map,$[y("finalized")]=new Map,_?.({ReactiveElement:$}),(p.reactiveElementVersions??=[]).push("2.1.1");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,C="?"+A,P=`<${C}>`,E=document,T=()=>E.createComment(""),M=t=>null===t||"object"!=typeof t&&"function"!=typeof t,D=Array.isArray,N="[ \t\n\f\r]",q=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,O=/-->/g,U=/>/g,z=RegExp(`>|${N}(?:([^\\s"'>=/]+)(${N}*=${N}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),B=/'/g,H=/"/g,j=/^(?:script|style|textarea|title)$/i,Q=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),R=Symbol.for("lit-noChange"),I=Symbol.for("lit-nothing"),L=new WeakMap,V=E.createTreeWalker(E,129);function W(t,e){if(!D(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const J=(t,e)=>{const i=t.length-1,s=[];let o,n=2===e?"<svg>":3===e?"<math>":"",a=q;for(let e=0;e<i;e++){const i=t[e];let r,l,c=-1,h=0;for(;h<i.length&&(a.lastIndex=h,l=a.exec(i),null!==l);)h=a.lastIndex,a===q?"!--"===l[1]?a=O:void 0!==l[1]?a=U:void 0!==l[2]?(j.test(l[2])&&(o=RegExp("</"+l[2],"g")),a=z):void 0!==l[3]&&(a=z):a===z?">"===l[0]?(a=o??q,c=-1):void 0===l[1]?c=-2:(c=a.lastIndex-l[2].length,r=l[1],a=void 0===l[3]?z:'"'===l[3]?H:B):a===H||a===B?a=z:a===O||a===U?a=q:(a=z,o=void 0);const d=a===z&&t[e+1].startsWith("/>")?" ":"";n+=a===q?i+P:c>=0?(s.push(r),i.slice(0,c)+S+i.slice(c)+A+d):i+A+(-2===c?e:d)}return[W(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class X{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,n=0;const a=t.length-1,r=this.parts,[l,c]=J(t,e);if(this.el=X.createElement(l,i),V.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=V.nextNode())&&r.length<a;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=c[n++],i=s.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?Z:"?"===a[1]?tt:"@"===a[1]?et:K}),s.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),s.removeAttribute(t));if(j.test(s.tagName)){const t=s.textContent.split(A),e=t.length-1;if(e>0){s.textContent=w?w.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],T()),V.nextNode(),r.push({type:2,index:++o});s.append(t[e],T())}}}else if(8===s.nodeType)if(s.data===C)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=E.createElement("template");return i.innerHTML=t,i}}function Y(t,e,i=t,s){if(e===R)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const n=M(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=Y(t,o._$AS(t,e.values),o,s)),e}class F{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??E).importNode(e,!0);V.currentNode=s;let o=V.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new G(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new it(o,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(o=V.nextNode(),n++)}return V.currentNode=E,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class G{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=I,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Y(this,t,e),M(t)?t===I||null==t||""===t?(this._$AH!==I&&this._$AR(),this._$AH=I):t!==this._$AH&&t!==R&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>D(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==I&&M(this._$AH)?this._$AA.nextSibling.data=t:this.T(E.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=X.createElement(W(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new F(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=L.get(t.strings);return void 0===e&&L.set(t.strings,e=new X(t)),e}k(t){D(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new G(this.O(T()),this.O(T()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class K{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=I,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=I}_$AI(t,e=this,i,s){const o=this.strings;let n=!1;if(void 0===o)t=Y(this,t,e,0),n=!M(t)||t!==this._$AH&&t!==R,n&&(this._$AH=t);else{const s=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=Y(this,s[i+a],e,a),r===R&&(r=this._$AH[a]),n||=!M(r)||r!==this._$AH[a],r===I?t=I:t!==I&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}n&&!s&&this.j(t)}j(t){t===I?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Z extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===I?void 0:t}}class tt extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==I)}}class et extends K{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=Y(this,t,e,0)??I)===R)return;const i=this._$AH,s=t===I&&i!==I||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==I&&(i===I||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class it{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Y(this,t)}}const st=x.litHtmlPolyfillSupport;st?.(X,G),(x.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
+const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=>t}):void 0,S="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,P="?"+A,C=`<${P}>`,E=document,T=()=>E.createComment(""),q=t=>null===t||"object"!=typeof t&&"function"!=typeof t,D=Array.isArray,M="[ \t\n\f\r]",N=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,z=/-->/g,O=/>/g,U=RegExp(`>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),B=/'/g,H=/"/g,Q=/^(?:script|style|textarea|title)$/i,R=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),j=Symbol.for("lit-noChange"),I=Symbol.for("lit-nothing"),L=new WeakMap,V=E.createTreeWalker(E,129);function W(t,e){if(!D(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const J=(t,e)=>{const i=t.length-1,s=[];let o,n=2===e?"<svg>":3===e?"<math>":"",a=N;for(let e=0;e<i;e++){const i=t[e];let r,l,c=-1,h=0;for(;h<i.length&&(a.lastIndex=h,l=a.exec(i),null!==l);)h=a.lastIndex,a===N?"!--"===l[1]?a=z:void 0!==l[1]?a=O:void 0!==l[2]?(Q.test(l[2])&&(o=RegExp("</"+l[2],"g")),a=U):void 0!==l[3]&&(a=U):a===U?">"===l[0]?(a=o??N,c=-1):void 0===l[1]?c=-2:(c=a.lastIndex-l[2].length,r=l[1],a=void 0===l[3]?U:'"'===l[3]?H:B):a===H||a===B?a=U:a===z||a===O?a=N:(a=U,o=void 0);const d=a===U&&t[e+1].startsWith("/>")?" ":"";n+=a===N?i+C:c>=0?(s.push(r),i.slice(0,c)+S+i.slice(c)+A+d):i+A+(-2===c?e:d)}return[W(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),s]};class X{constructor({strings:t,_$litType$:e},i){let s;this.parts=[];let o=0,n=0;const a=t.length-1,r=this.parts,[l,c]=J(t,e);if(this.el=X.createElement(l,i),V.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(s=V.nextNode())&&r.length<a;){if(1===s.nodeType){if(s.hasAttributes())for(const t of s.getAttributeNames())if(t.endsWith(S)){const e=c[n++],i=s.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?Z:"?"===a[1]?tt:"@"===a[1]?et:K}),s.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),s.removeAttribute(t));if(Q.test(s.tagName)){const t=s.textContent.split(A),e=t.length-1;if(e>0){s.textContent=w?w.emptyScript:"";for(let i=0;i<e;i++)s.append(t[i],T()),V.nextNode(),r.push({type:2,index:++o});s.append(t[e],T())}}}else if(8===s.nodeType)if(s.data===P)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=s.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=E.createElement("template");return i.innerHTML=t,i}}function F(t,e,i=t,s){if(e===j)return e;let o=void 0!==s?i._$Co?.[s]:i._$Cl;const n=q(e)?void 0:e._$litDirective$;return o?.constructor!==n&&(o?._$AO?.(!1),void 0===n?o=void 0:(o=new n(t),o._$AT(t,i,s)),void 0!==s?(i._$Co??=[])[s]=o:i._$Cl=o),void 0!==o&&(e=F(t,o._$AS(t,e.values),o,s)),e}class Y{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,s=(t?.creationScope??E).importNode(e,!0);V.currentNode=s;let o=V.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new G(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new it(o,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(o=V.nextNode(),n++)}return V.currentNode=E,s}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class G{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,s){this.type=2,this._$AH=I,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=s,this._$Cv=s?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=F(this,t,e),q(t)?t===I||null==t||""===t?(this._$AH!==I&&this._$AR(),this._$AH=I):t!==this._$AH&&t!==j&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>D(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==I&&q(this._$AH)?this._$AA.nextSibling.data=t:this.T(E.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,s="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=X.createElement(W(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===s)this._$AH.p(e);else{const t=new Y(s,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=L.get(t.strings);return void 0===e&&L.set(t.strings,e=new X(t)),e}k(t){D(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,s=0;for(const o of t)s===e.length?e.push(i=new G(this.O(T()),this.O(T()),this,this.options)):i=e[s],i._$AI(o),s++;s<e.length&&(this._$AR(i&&i._$AB.nextSibling,s),e.length=s)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class K{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,s,o){this.type=1,this._$AH=I,this._$AN=void 0,this.element=t,this.name=e,this._$AM=s,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=I}_$AI(t,e=this,i,s){const o=this.strings;let n=!1;if(void 0===o)t=F(this,t,e,0),n=!q(t)||t!==this._$AH&&t!==j,n&&(this._$AH=t);else{const s=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=F(this,s[i+a],e,a),r===j&&(r=this._$AH[a]),n||=!q(r)||r!==this._$AH[a],r===I?t=I:t!==I&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}n&&!s&&this.j(t)}j(t){t===I?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Z extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===I?void 0:t}}class tt extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==I)}}class et extends K{constructor(t,e,i,s,o){super(t,e,i,s,o),this.type=5}_$AI(t,e=this){if((t=F(this,t,e,0)??I)===j)return;const i=this._$AH,s=t===I&&i!==I||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==I&&(i===I||s);s&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class it{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){F(this,t)}}const st=x.litHtmlPolyfillSupport;st?.(X,G),(x.litHtmlVersions??=[]).push("3.3.1");const ot=globalThis;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */class nt extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new G(e.insertBefore(T(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return R}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const rt={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},custom:{}};class lt extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_entity:{type:Object},_playlists:{type:Array},_songs:{type:Array},_queue:{type:Array},_songsExpanded:{type:Boolean},_queueExpanded:{type:Boolean},_toast:{type:Object},_contextMenu:{type:Object}}}constructor(){super(),this._playlists=[],this._songs=[],this._queue=[],this._songsExpanded=!1,this._queueExpanded=!1,this._toast=null,this._contextMenu=null,this._longPressTimer=null,this._progressInterval=null,this._lastPlaylist=null,this._lastPlaylistSongs=[],this._previousState=null,this._previousTitle=null,this._previousPlaylist=null,this._previousPlaylists=null,this._previousSongs=null,this._previousQueue=null,this._previousMediaPositionUpdatedAt=null}setConfig(t){if(!t.entity)throw new Error("You need to define an entity");const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}connectedCallback(){super.connectedCallback(),this._progressInterval=setInterval(()=>{"playing"===this._entity?.state&&this._updateProgressBar()},1e3)}_updateProgressBar(){const t=this.shadowRoot?.querySelector(".progress-fill");if(t&&this._entity){const e=this._calculateProgress();t.style.width=`${e}%`}}_calculateProgress(){if(!this._entity?.attributes)return 0;const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position,i=this._entity.attributes.media_position_updated_at;if(!t||!e||!i)return 0;const s=new Date(i),o=e+(new Date-s)/1e3;return Math.min(100,o/t*100)}disconnectedCallback(){super.disconnectedCallback(),this._progressInterval&&(clearInterval(this._progressInterval),this._progressInterval=null)}set hass(t){this._hass=t;const e=this.config.entity;if(this._entity=t.states[e],this._entity){this._playlists=(this._entity.attributes.source_list||[]).sort((t,e)=>t.localeCompare(e));const t=this._entity.attributes.playlist,e=this._entity.attributes.playlist_songs||[];("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state)&&!t?this._lastPlaylistSongs=[]:t&&"Queue"!==t&&e.length>0&&(this._lastPlaylist=t,this._lastPlaylistSongs=e),this._songs=e.length>0?e:this._lastPlaylistSongs,this._queue=this._entity.attributes.queue||[]}this.requestUpdate()}shouldUpdate(t){if(t.has("config"))return!0;if(this._entity){const t=null===this._previousState,e=this._entity.state!==this._previousState,i=this._entity.attributes.media_title!==this._previousTitle,s=this._entity.attributes.playlist!==this._previousPlaylist,o=JSON.stringify(this._entity.attributes.source_list)!==this._previousPlaylists,n=JSON.stringify(this._entity.attributes.playlist_songs)!==this._previousSongs,a=JSON.stringify(this._entity.attributes.queue)!==this._previousQueue,r=this._entity.attributes.media_position_updated_at!==this._previousMediaPositionUpdatedAt;return this._previousState=this._entity.state,this._previousTitle=this._entity.attributes.media_title,this._previousPlaylist=this._entity.attributes.playlist,this._previousPlaylists=JSON.stringify(this._entity.attributes.source_list),this._previousSongs=JSON.stringify(this._entity.attributes.playlist_songs),this._previousQueue=JSON.stringify(this._entity.attributes.queue),this._previousMediaPositionUpdatedAt=this._entity.attributes.media_position_updated_at,t||e||i||s||o||n||a||r}return super.shouldUpdate(t)}render(){return this.config?this._entity?(this._entity.state,this._entity.state,this._entity.state,Q`
+ */class nt extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const s=i?.renderBefore??e;let o=s._$litPart$;if(void 0===o){const t=i?.renderBefore??null;s._$litPart$=o=new G(e.insertBefore(T(),t),t,void 0,i??{})}return o._$AI(t),o})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return j}}nt._$litElement$=!0,nt.finalized=!0,ot.litElementHydrateSupport?.({LitElement:nt});const at=ot.litElementPolyfillSupport;at?.({LitElement:nt}),(ot.litElementVersions??=[]).push("4.2.1");const rt={simple:{playlistDisplay:"collapsed",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},dj:{playlistDisplay:"expanded",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},jukebox:{playlistDisplay:"collapsed",songsDisplay:"expanded",queueDisplay:"expanded",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,showSongActions:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!1},minimal:{playlistDisplay:"hidden",songsDisplay:"hidden",queueDisplay:"hidden",showVolumeControl:!1,showProgressBar:!0,showPlaybackControls:!0,enableSeek:!1,showEntityName:!1,showPlaylistName:!1,showSongActions:!1,showPlayButton:!0,showAddToQueueButton:!0,showDuration:!0,compactMode:!1,autoHideSongsWhenEmpty:!0},custom:{}};class lt extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_entity:{type:Object},_playlists:{type:Array},_songs:{type:Array},_queue:{type:Array},_songsExpanded:{type:Boolean},_queueExpanded:{type:Boolean},_toast:{type:Object},_contextMenu:{type:Object}}}constructor(){super(),this._playlists=[],this._songs=[],this._queue=[],this._songsExpanded=!1,this._queueExpanded=!1,this._toast=null,this._contextMenu=null,this._longPressTimer=null,this._progressInterval=null,this._lastPlaylist=null,this._lastPlaylistSongs=[],this._previousState=null,this._previousTitle=null,this._previousPlaylist=null,this._previousPlaylists=null,this._previousSongs=null,this._previousQueue=null,this._previousMediaPositionUpdatedAt=null}setConfig(t){if(!t.entity)throw new Error("You need to define an entity");const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}connectedCallback(){super.connectedCallback(),this._progressInterval=setInterval(()=>{"playing"===this._entity?.state&&this._updateProgressBar()},1e3)}_updateProgressBar(){const t=this.shadowRoot?.querySelector(".progress-fill");if(t&&this._entity){const e=this._calculateProgress();t.style.width=`${e}%`}}_calculateProgress(){if(!this._entity?.attributes)return 0;const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position,i=this._entity.attributes.media_position_updated_at;if(!t||!e||!i)return 0;const s=new Date(i),o=e+(new Date-s)/1e3;return Math.min(100,o/t*100)}disconnectedCallback(){super.disconnectedCallback(),this._progressInterval&&(clearInterval(this._progressInterval),this._progressInterval=null)}set hass(t){this._hass=t;const e=this.config.entity;if(this._entity=t.states[e],this._entity){this._playlists=(this._entity.attributes.source_list||[]).sort((t,e)=>t.localeCompare(e));const t=this._entity.attributes.playlist,e=this._entity.attributes.playlist_songs||[];("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state)&&!t?this._lastPlaylistSongs=[]:t&&"Queue"!==t&&e.length>0&&(this._lastPlaylist=t,this._lastPlaylistSongs=e),this._songs=e.length>0?e:this._lastPlaylistSongs,this._queue=this._entity.attributes.internal_queue||[]}this.requestUpdate()}shouldUpdate(t){if(t.has("config"))return!0;if(this._entity){const t=null===this._previousState,e=this._entity.state!==this._previousState,i=this._entity.attributes.media_title!==this._previousTitle,s=this._entity.attributes.playlist!==this._previousPlaylist,o=JSON.stringify(this._entity.attributes.source_list)!==this._previousPlaylists,n=JSON.stringify(this._entity.attributes.playlist_songs)!==this._previousSongs,a=JSON.stringify(this._entity.attributes.internal_queue)!==this._previousQueue,r=this._entity.attributes.media_position_updated_at!==this._previousMediaPositionUpdatedAt;return this._previousState=this._entity.state,this._previousTitle=this._entity.attributes.media_title,this._previousPlaylist=this._entity.attributes.playlist,this._previousPlaylists=JSON.stringify(this._entity.attributes.source_list),this._previousSongs=JSON.stringify(this._entity.attributes.playlist_songs),this._previousQueue=JSON.stringify(this._entity.attributes.internal_queue),this._previousMediaPositionUpdatedAt=this._entity.attributes.media_position_updated_at,t||e||i||s||o||n||a||r}return super.shouldUpdate(t)}render(){return this.config?this._entity?(this._entity.state,this._entity.state,this._entity.state,R`
       <ha-card>
         <div class="card-content ${this.config.compactMode?"compact":""}">
           ${this.config.showEntityName?this._renderEntityName():""}
@@ -34,24 +34,24 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         ${this._toast?this._renderToast():""}
         ${this._contextMenu?this._renderContextMenu():""}
       </ha-card>
-    `):Q`
+    `):R`
         <ha-card>
           <div class="card-content error">
             <ha-icon icon="mdi:alert-circle"></ha-icon>
             <p>Entity ${this.config.entity} not found</p>
           </div>
         </ha-card>
-      `:Q``}_renderEntityName(){const t=this._entity.attributes.friendly_name||this._entity.entity_id;return Q`
+      `:R``}_renderEntityName(){const t=this._entity.attributes.friendly_name||this._entity.entity_id;return R`
       <div class="entity-name">
         <ha-icon icon="mdi:lightbulb-group"></ha-icon>
         <span>${t}</span>
       </div>
-    `}_renderNowPlaying(){const t=this._entity.attributes.playlist,e=this._entity.attributes.song,i=t&&""!==t&&"No playlist"!==t,s=e&&""!==e&&"No song"!==e;return"idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||!i&&!s||0===this._queue.length&&0===this._songs.length?"":Q`
+    `}_renderNowPlaying(){const t=this._entity.attributes.playlist,e=this._entity.attributes.song,i=t&&""!==t&&"No playlist"!==t,s=e&&""!==e&&"No song"!==e;return"idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||!i&&!s||0===this._queue.length&&0===this._songs.length?"":R`
       <div class="now-playing">
-        ${this.config.showPlaylistName&&i?Q`<div class="playlist-name">${t}</div>`:""}
-        ${s?Q`<div class="song-name">${e}</div>`:""}
+        ${this.config.showPlaylistName&&i?R`<div class="playlist-name">${t}</div>`:""}
+        ${s?R`<div class="song-name">${e}</div>`:""}
       </div>
-    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";if("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||0===this._queue.length&&0===this._songs.length)return"";const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position;if(!t||t<=0)return"";const i=this._calculateProgress();let s=e||0;if("playing"===this._entity.state){const e=this._entity.attributes.media_position_updated_at;if(e){const i=new Date(e),o=(new Date-i)/1e3;s=Math.min(t,s+o)}}return Q`
+    `}_renderProgressBar(){if(!this.config.showProgressBar)return"";if("idle"===this._entity.state||"off"===this._entity.state||"unavailable"===this._entity.state||"unknown"===this._entity.state||0===this._queue.length&&0===this._songs.length)return"";const t=this._entity.attributes.media_duration,e=this._entity.attributes.media_position;if(!t||t<=0)return"";const i=this._calculateProgress();let s=e||0;if("playing"===this._entity.state){const e=this._entity.attributes.media_position_updated_at;if(e){const i=new Date(e),o=(new Date-i)/1e3;s=Math.min(t,s+o)}}return R`
       <div class="progress-container">
         <div
           class="progress-bar ${this.config.enableSeek?"seekable":""}"
@@ -64,7 +64,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <span>${this._formatTime(t)}</span>
         </div>
       </div>
-    `}_renderPlaybackControls(){if(!this.config.showPlaybackControls)return"";const t="playing"===this._entity.state;return this._entity.state,Q`
+    `}_renderPlaybackControls(){if(!this.config.showPlaybackControls)return"";const t="playing"===this._entity.state;return this._entity.state,R`
       <div class="playback-controls">
         <ha-icon-button
           @click=${this._handlePrevious}
@@ -95,7 +95,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <ha-icon icon="mdi:skip-next"></ha-icon>
         </ha-icon-button>
       </div>
-    `}_renderVolumeControl(){const t=this._entity.attributes.volume_level||0,e=this._entity.attributes.is_volume_muted||!1;return Q`
+    `}_renderVolumeControl(){const t=this._entity.attributes.volume_level||0,e=this._entity.attributes.is_volume_muted||!1;return R`
       <div class="volume-control">
         <ha-icon-button
           @click=${this._handleMuteToggle}
@@ -112,7 +112,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           class="volume-slider"
         />
       </div>
-    `}_renderPlaylistSelector(){const t=this.config.playlistDisplay;if("hidden"===t)return"";const e=this._entity.attributes.playlist;return"collapsed"===t?Q`
+    `}_renderPlaylistSelector(){const t=this.config.playlistDisplay;if("hidden"===t)return"";const e=this._entity.attributes.playlist;return"collapsed"===t?R`
         <div class="section playlist-section">
           <select
             @change=${this._handlePlaylistChange}
@@ -120,21 +120,21 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             class="playlist-select"
           >
             <option value="">Select playlist...</option>
-            ${this._playlists.map(t=>Q`
+            ${this._playlists.map(t=>R`
                 <option value=${t} ?selected=${t===e}>
                   ${t}
                 </option>
               `)}
           </select>
         </div>
-      `:Q`
+      `:R`
       <div class="section playlist-section">
         <h3>
           <ha-icon icon="mdi:playlist-music"></ha-icon>
           Playlists
         </h3>
         <div class="playlist-list">
-          ${this._playlists.map(t=>Q`
+          ${this._playlists.map(t=>R`
               <div
                 class="playlist-item ${t===e?"active":""}"
                 @click=${()=>this._selectPlaylist(t)}
@@ -145,49 +145,74 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             `)}
         </div>
       </div>
-    `}_renderQueue(){const t=this.config.queueDisplay,e=this._queue.length;if(0===e)return"";if("auto"===t&&0===e)return"";if("hidden"===t)return"";const i="collapsed"===t&&!this._queueExpanded;return Q`
+    `}_renderQueue(){const t=this.config.queueDisplay,e=this._queue.length;if(0===e)return"";if("auto"===t&&0===e)return"";if("hidden"===t)return"";const i="collapsed"===t&&!this._queueExpanded;return R`
       <div class="section queue-section">
-        <div class="section-header" @click=${this._toggleQueue}>
-          <h3>
-            <ha-icon icon="mdi:format-list-numbered"></ha-icon>
-            Queue
-            ${e>0?Q`<span class="badge">${e}</span>`:""}
-          </h3>
-          ${"collapsed"===t?Q`<ha-icon icon=${this._queueExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
+        <div class="section-header">
+          <div @click=${this._toggleQueue} style="display: flex; align-items: center; flex: 1; cursor: pointer;">
+            <h3>
+              <ha-icon icon="mdi:format-list-numbered"></ha-icon>
+              Queue
+              ${e>0?R`<span class="badge">${e}</span>`:""}
+            </h3>
+            ${"collapsed"===t?R`<ha-icon icon=${this._queueExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
+          </div>
+          ${e>0?R`
+                <button 
+                  class="queue-header-delete"
+                  @click=${t=>{t.stopPropagation(),this._handleClearQueue()}}
+                  title="Clear entire queue"
+                >
+                  <ha-icon icon="mdi:close"></ha-icon>
+                </button>
+              `:""}
         </div>
 
-        ${i?"":Q`
+        ${i?"":R`
               <div class="queue-list">
-                ${this._queue.map((t,e)=>Q`
-                    <div class="queue-item">
+                ${this._queue.map((t,e)=>R`
+                    <div 
+                      class="queue-item"
+                      draggable="true"
+                      data-id="${t.id}"
+                      @dragstart=${e=>this._handleDragStart(e,t.id)}
+                      @dragover=${this._handleDragOver}
+                      @drop=${t=>this._handleDrop(t,e)}
+                    >
+                      <div class="queue-drag-handle">
+                        <ha-icon icon="mdi:drag"></ha-icon>
+                      </div>
                       <span class="queue-number">${e+1}</span>
                       <div class="queue-info">
                         <span class="queue-name">${t.name}</span>
-                        ${t.duration?Q`<span class="queue-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
+                        ${t.priority>1?R`<span class="queue-priority-badge">×${t.priority}</span>`:""}
+                        ${t.duration?R`<span class="queue-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
                       </div>
+                      <button 
+                        class="queue-item-delete"
+                        @click=${e=>{e.stopPropagation(),this._removeFromQueue(t.id)}}
+                        title="Remove from queue"
+                      >
+                        <ha-icon icon="mdi:close"></ha-icon>
+                      </button>
                     </div>
                   `)}
               </div>
-              <button class="clear-queue-btn" @click=${this._handleClearQueue}>
-                <ha-icon icon="mdi:playlist-remove"></ha-icon>
-                Clear Queue
-              </button>
             `}
       </div>
-    `}_renderSongs(){const t=this.config.songsDisplay;if("hidden"===t)return"";const e=this._songs.length;if(this.config.autoHideSongsWhenEmpty&&e<=1)return"";const i="collapsed"===t&&!this._songsExpanded,s=this._entity.attributes.song;return Q`
+    `}_renderSongs(){const t=this.config.songsDisplay;if("hidden"===t)return"";const e=this._songs.length;if(this.config.autoHideSongsWhenEmpty&&e<=1)return"";const i="collapsed"===t&&!this._songsExpanded,s=this._entity.attributes.song;return R`
       <div class="section songs-section">
         <div class="section-header" @click=${this._toggleSongs}>
           <h3>
             <ha-icon icon="mdi:music"></ha-icon>
             Songs
-            ${e>0?Q`<span class="badge">${e}</span>`:""}
+            ${e>0?R`<span class="badge">${e}</span>`:""}
           </h3>
-          ${"collapsed"===t?Q`<ha-icon icon=${this._songsExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
+          ${"collapsed"===t?R`<ha-icon icon=${this._songsExpanded?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>`:""}
         </div>
 
-        ${i?"":Q`
+        ${i?"":R`
               <div class="song-list">
-                ${this._songs.map(t=>Q`
+                ${this._songs.map(t=>R`
                     <div
                       class="song-item ${t.name===s?"current":""}"
                       @touchstart=${e=>this._handleLongPressStart(e,t.name)}
@@ -197,12 +222,12 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
                       @mouseup=${this._handleLongPressEnd}
                       @mouseleave=${this._handleLongPressEnd}
                     >
-                      ${t.name===s?Q`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>`:""}
+                      ${t.name===s?R`<ha-icon icon="mdi:music" class="current-icon"></ha-icon>`:""}
                       <span class="song-name">${t.name}</span>
-                      ${!1!==this.config.showDuration&&t.duration?Q`<span class="song-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
-                      ${!1!==this.config.showSongActions?Q`
+                      ${!1!==this.config.showDuration&&t.duration?R`<span class="song-duration">${this._formatTime(t.duration/1e3)}</span>`:""}
+                      ${!1!==this.config.showSongActions?R`
                             <div class="song-actions">
-                              ${!1!==this.config.showPlayButton?Q`
+                              ${!1!==this.config.showPlayButton?R`
                                     <button
                                       @click=${()=>this._playSong(t.name)}
                                       class="action-btn-compact"
@@ -211,7 +236,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
                                       <ha-icon icon="mdi:play-outline"></ha-icon>
                                     </button>
                                   `:""}
-                              ${!1!==this.config.showAddToQueueButton&&this._supportsQueue()?Q`
+                              ${!1!==this.config.showAddToQueueButton&&this._supportsQueue()?R`
                                     <button
                                       @click=${()=>this._addToQueue(t.name)}
                                       class="action-btn-compact"
@@ -227,12 +252,12 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
               </div>
             `}
       </div>
-    `}_renderToast(){return Q`
+    `}_renderToast(){return R`
       <div class="toast ${this._toast.type}">
         <ha-icon icon=${this._toast.icon}></ha-icon>
         <span>${this._toast.message}</span>
       </div>
-    `}_renderContextMenu(){return Q`
+    `}_renderContextMenu(){return R`
       <div class="context-menu-overlay" @click=${this._closeContextMenu}>
         <div
           class="context-menu"
@@ -250,7 +275,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             <ha-icon icon="mdi:play-outline"></ha-icon>
             <span>Play Now</span>
           </button>
-          ${this._supportsQueue()?Q`
+          ${this._supportsQueue()?R`
                 <button
                   class="context-menu-item"
                   @click=${()=>{this._addToQueue(this._contextMenu.songName),this._closeContextMenu()}}
@@ -268,7 +293,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </button>
         </div>
       </div>
-    `}_handlePlay(){this._callService("media_play")}_handlePause(){this._callService("media_pause")}_handleStop(){this._callService("media_stop")}_handleNext(){this._callService("media_next_track")}_handlePrevious(){this._callService("media_previous_track")}_handleSeek(t){const e=t.currentTarget.getBoundingClientRect(),i=(t.clientX-e.left)/e.width,s=(this._entity.attributes.media_duration||0)*i;this._callService("media_seek",{seek_position:s})}_handleVolumeChange(t){const e=parseInt(t.target.value)/100;this._callService("volume_set",{volume_level:e})}_handleMuteToggle(){const t=this._entity.attributes.is_volume_muted||!1;this._callService("volume_mute",{is_volume_muted:!t})}_handlePlaylistChange(t){const e=t.target.value;e&&this._selectPlaylist(e)}_isXSchedulePlayer(){return!!this._entity&&("xschedule"===this._entity.attributes.integration||void 0!==this._entity.attributes.playlist_songs||void 0!==this._entity.attributes.queue)}_supportsQueue(){return this._isXSchedulePlayer()}_selectPlaylist(t){this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"playlist",media_content_id:t}),this._showToast("success","mdi:check-circle",`Playing: ${t}`)}async _playSong(t){const e=this._entity.attributes.playlist||this._entity.attributes.source;if(e){if(!1===this.config.confirmDisruptive||"playing"!==this._entity.state||confirm("Replace current song?"))try{await this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"music",media_content_id:`${e}|||${t}`}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song"),console.error("Error playing song:",t)}}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _addToQueue(t){if(!this._supportsQueue())return void this._showToast("error","mdi:alert-circle","Queue not supported by this player");const e=this._entity.attributes.playlist||this._entity.attributes.source;if(e)try{console.log(`Jumping to step: "${t}" in playlist: "${e}"`),await this._hass.callService("xschedule","jump_to_step",{entity_id:[this.config.entity],step:t}),console.log("Jump command sent successfully"),this._showToast("success","mdi:skip-next",`${t} will play next`)}catch(t){console.error("Jump to step failed:",t),this._showToast("error","mdi:alert-circle",`Jump failed: ${t.message||t}`)}else try{await this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"music",media_content_id:`${e}|||${t}`}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song"),console.error("Error playing song:",t)}}async _handleClearQueue(){if(confirm("Clear entire queue?"))try{await this._hass.callService("xschedule","clear_queue",{entity_id:this.config.entity}),this._showToast("success","mdi:check-circle","Queue cleared")}catch(t){this._showToast("error","mdi:alert-circle","Failed to clear queue")}}_toggleSongs(){"collapsed"===this.config.songsDisplay&&(this._songsExpanded=!this._songsExpanded)}_toggleQueue(){"collapsed"===this.config.queueDisplay&&(this._queueExpanded=!this._queueExpanded)}_handleLongPressStart(t,e){this._longPressTimer&&clearTimeout(this._longPressTimer),this._longPressTimer=setTimeout(()=>{t.preventDefault();const i=t.touches?t.touches[0].clientX:t.clientX,s=t.touches?t.touches[0].clientY:t.clientY;this._contextMenu={songName:e,x:Math.min(i,window.innerWidth-220),y:Math.min(s,window.innerHeight-200)},this.requestUpdate(),navigator.vibrate&&navigator.vibrate(50)},500)}_handleLongPressEnd(){this._longPressTimer&&(clearTimeout(this._longPressTimer),this._longPressTimer=null)}_closeContextMenu(){this._contextMenu=null}_showSongInfo(t){const e=this._songs.find(e=>e.name===t);if(e){const i=e.duration?this._formatTime(e.duration/1e3):"Unknown";this._showToast("info","mdi:information",`${t} - Duration: ${i}`)}}_callService(t,e={}){this._hass.callService("media_player",t,{entity_id:this.config.entity,...e})}_formatTime(t){if(!t||t<0)return"0:00";return`${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2,"0")}`}_showToast(t,e,i){this._toast={type:t,icon:e,message:i},setTimeout(()=>{this._toast=null},2e3)}getCardSize(){return 3}static get styles(){return n`
+    `}_handlePlay(){this._callService("media_play")}_handlePause(){this._callService("media_pause")}_handleStop(){this._callService("media_stop")}_handleNext(){this._callService("media_next_track")}_handlePrevious(){this._callService("media_previous_track")}_handleSeek(t){const e=t.currentTarget.getBoundingClientRect(),i=(t.clientX-e.left)/e.width,s=(this._entity.attributes.media_duration||0)*i;this._callService("media_seek",{seek_position:s})}_handleVolumeChange(t){const e=parseInt(t.target.value)/100;this._callService("volume_set",{volume_level:e})}_handleMuteToggle(){const t=this._entity.attributes.is_volume_muted||!1;this._callService("volume_mute",{is_volume_muted:!t})}_handlePlaylistChange(t){const e=t.target.value;e&&this._selectPlaylist(e)}_isXSchedulePlayer(){return!!this._entity&&("xschedule"===this._entity.attributes.integration||void 0!==this._entity.attributes.playlist_songs||void 0!==this._entity.attributes.queue)}_supportsQueue(){return this._isXSchedulePlayer()}_selectPlaylist(t){this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"playlist",media_content_id:t}),this._showToast("success","mdi:check-circle",`Playing: ${t}`)}async _playSong(t){const e=this._entity.attributes.playlist||this._entity.attributes.source;if(e){if(!1===this.config.confirmDisruptive||"playing"!==this._entity.state||confirm("Replace current song?"))try{await this._hass.callService("media_player","play_media",{entity_id:this.config.entity,media_content_type:"music",media_content_id:`${e}|||${t}`}),this._showToast("success","mdi:play-circle",`Now playing: ${t}`)}catch(t){this._showToast("error","mdi:alert-circle","Failed to play song"),console.error("Error playing song:",t)}}else this._showToast("error","mdi:alert-circle","No playlist selected")}async _addToQueue(t){if(this._supportsQueue())try{const e=this._queue.find(e=>e.name===t),i=void 0!==e;if(await this._hass.callService("xschedule","add_to_internal_queue",{entity_id:[this.config.entity],song:t}),i){const i=e.priority+1;this._showToast("success","mdi:arrow-up-bold",`${t} will play sooner (priority ×${i})`)}else this._showToast("success","mdi:playlist-plus",`${t} added to queue`)}catch(t){console.error("Add to queue failed:",t),this._showToast("error","mdi:alert-circle",`Failed: ${t.message||t}`)}else this._showToast("error","mdi:alert-circle","Queue not supported by this player")}async _handleClearQueue(){if(confirm("Clear entire queue?"))try{await this._hass.callService("xschedule","clear_internal_queue",{entity_id:[this.config.entity]}),this._showToast("success","mdi:check-circle","Queue cleared")}catch(t){this._showToast("error","mdi:alert-circle","Failed to clear queue")}}async _removeFromQueue(t){try{await this._hass.callService("xschedule","remove_from_internal_queue",{entity_id:[this.config.entity],queue_item_id:t}),this._showToast("success","mdi:check-circle","Removed from queue")}catch(t){this._showToast("error","mdi:alert-circle","Failed to remove from queue"),console.error("Error removing from queue:",t)}}async _reorderQueue(t){try{await this._hass.callService("xschedule","reorder_internal_queue",{entity_id:[this.config.entity],queue_item_ids:t})}catch(t){this._showToast("error","mdi:alert-circle","Failed to reorder queue"),console.error("Error reordering queue:",t)}}_handleDragStart(t,e){t.dataTransfer.effectAllowed="move",t.dataTransfer.setData("text/plain",e),this._draggedItemId=e,t.target.classList.add("dragging")}_handleDragOver(t){t.preventDefault(),t.dataTransfer.dropEffect="move"}_handleDrop(t,e){t.preventDefault();this.shadowRoot.querySelectorAll(".queue-item").forEach(t=>t.classList.remove("dragging"));const i=t.dataTransfer.getData("text/plain");if(!i)return;const s=this._queue||[],o=s.findIndex(t=>t.id===i);if(-1===o||o===e)return;const n=[...s],[a]=n.splice(o,1);n.splice(e,0,a),this._reorderQueue(n.map(t=>t.id))}_toggleSongs(){"collapsed"===this.config.songsDisplay&&(this._songsExpanded=!this._songsExpanded)}_toggleQueue(){"collapsed"===this.config.queueDisplay&&(this._queueExpanded=!this._queueExpanded)}_handleLongPressStart(t,e){this._longPressTimer&&clearTimeout(this._longPressTimer),this._longPressTimer=setTimeout(()=>{t.preventDefault();const i=t.touches?t.touches[0].clientX:t.clientX,s=t.touches?t.touches[0].clientY:t.clientY;this._contextMenu={songName:e,x:Math.min(i,window.innerWidth-220),y:Math.min(s,window.innerHeight-200)},this.requestUpdate(),navigator.vibrate&&navigator.vibrate(50)},500)}_handleLongPressEnd(){this._longPressTimer&&(clearTimeout(this._longPressTimer),this._longPressTimer=null)}_closeContextMenu(){this._contextMenu=null}_showSongInfo(t){const e=this._songs.find(e=>e.name===t);if(e){const i=e.duration?this._formatTime(e.duration/1e3):"Unknown";this._showToast("info","mdi:information",`${t} - Duration: ${i}`)}}_callService(t,e={}){this._hass.callService("media_player",t,{entity_id:this.config.entity,...e})}_formatTime(t){if(!t||t<0)return"0:00";return`${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2,"0")}`}_showToast(t,e,i){this._toast={type:t,icon:e,message:i},setTimeout(()=>{this._toast=null},2e3)}getCardSize(){return 3}static get styles(){return n`
       :host {
         display: block;
       }
@@ -562,37 +587,115 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
         --mdc-icon-size: 18px;
       }
 
+      .queue-item {
+        cursor: move;
+      }
+
+      .queue-item:hover {
+        background: var(--secondary-background-color);
+      }
+
+      .queue-item.dragging {
+        opacity: 0.5;
+      }
+
+      .queue-drag-handle {
+        display: flex;
+        align-items: center;
+        color: var(--secondary-text-color);
+        cursor: grab;
+        margin-right: -4px;
+      }
+
+      .queue-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .queue-drag-handle ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
       .queue-number {
         font-weight: 700;
         color: var(--accent-color);
+        min-width: 24px;
       }
 
       .queue-info {
         flex: 1;
         display: flex;
-        justify-content: space-between;
+        gap: 8px;
         align-items: center;
+        min-width: 0;
       }
 
-      .clear-queue-btn {
+      .queue-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .queue-priority-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.8em;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      .queue-duration {
+        font-size: 0.85em;
+        color: var(--secondary-text-color);
+        flex-shrink: 0;
+      }
+
+      .queue-item-delete {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 10px;
-        margin-top: 8px;
-        background: var(--error-color);
-        color: white;
+        background: none;
         border: none;
-        border-radius: 6px;
-        font-size: 0.9em;
         cursor: pointer;
-        transition: opacity 0.2s;
+        color: var(--secondary-text-color);
+        padding: 4px;
+        border-radius: 4px;
+        transition: color 0.2s, background 0.2s;
       }
 
-      .clear-queue-btn:hover {
-        opacity: 0.8;
+      .queue-item-delete:hover {
+        color: var(--error-color);
+        background: var(--error-color-opacity, rgba(var(--rgb-error-color), 0.1));
+      }
+
+      .queue-item-delete ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .queue-header-delete {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--secondary-text-color);
+        padding: 8px;
+        border-radius: 4px;
+        transition: color 0.2s, background 0.2s;
+        flex-shrink: 0;
+      }
+
+      .queue-header-delete:hover {
+        color: var(--error-color);
+        background: var(--error-color-opacity, rgba(var(--rgb-error-color), 0.1));
+      }
+
+      .queue-header-delete ha-icon {
+        --mdc-icon-size: 20px;
       }
 
       .empty-state {
@@ -749,7 +852,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           min-width: 180px;
         }
       }
-    `}}customElements.define("xschedule-card",lt),console.info("%c  XSCHEDULE-CARD  \n%c  Version 1.5.2  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-card",name:"xSchedule Media Player",description:"A custom card for controlling xSchedule lighting sequencer",preview:!0}),lt.getConfigElement=async()=>(await Promise.resolve().then(function(){return pt}),document.createElement("xschedule-card-editor")),lt.getStubConfig=()=>({entity:"",mode:"simple"});const ct=[{value:"simple",label:"Simple (Default)"},{value:"dj",label:"DJ Mode"},{value:"jukebox",label:"Jukebox Mode"},{value:"minimal",label:"Minimal"},{value:"custom",label:"Custom"}],ht=[{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}],dt=[{value:"auto",label:"Auto (show when has items)"},{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}];customElements.define("xschedule-card-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_currentTab:{type:String}}}constructor(){super(),this._currentTab="general"}setConfig(t){if(!t)return void(this.config=t);const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}render(){if(!this.config)return Q``;const t="custom"===this.config.mode;return Q`
+    `}}customElements.define("xschedule-card",lt),console.info("%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre3  ","color: orange; font-weight: bold; background: black","color: white; font-weight: bold; background: dimgray"),window.customCards=window.customCards||[],window.customCards.push({type:"xschedule-card",name:"xSchedule Media Player",description:"A custom card for controlling xSchedule lighting sequencer",preview:!0}),lt.getConfigElement=async()=>(await Promise.resolve().then(function(){return ut}),document.createElement("xschedule-card-editor")),lt.getStubConfig=()=>({entity:"",mode:"simple"});const ct=[{value:"simple",label:"Simple (Default)"},{value:"dj",label:"DJ Mode"},{value:"jukebox",label:"Jukebox Mode"},{value:"minimal",label:"Minimal"},{value:"custom",label:"Custom"}],ht=[{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}],dt=[{value:"auto",label:"Auto (show when has items)"},{value:"expanded",label:"Expanded"},{value:"collapsed",label:"Collapsed"},{value:"hidden",label:"Hidden"}];customElements.define("xschedule-card-editor",class extends nt{static get properties(){return{hass:{type:Object},config:{type:Object},_currentTab:{type:String}}}constructor(){super(),this._currentTab="general"}setConfig(t){if(!t)return void(this.config=t);const e=t.mode||"simple",i=rt[e]||rt.simple;this.config={entity:t.entity,mode:e,...i,...t}}render(){if(!this.config)return R``;const t="custom"===this.config.mode;return R`
       <div class="card-config">
         <!-- General Settings -->
         <div class="form-group">
@@ -760,7 +863,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             @change=${this._entityChanged}
           >
             <option value="">Select entity...</option>
-            ${this._getMediaPlayerEntities().map(t=>Q`
+            ${this._getMediaPlayerEntities().map(t=>R`
                 <option value=${t.entity_id} ?selected=${t.entity_id===this.config.entity}>
                   ${t.attributes.friendly_name||t.entity_id}
                 </option>
@@ -775,7 +878,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             .value=${this.config.mode||"simple"}
             @change=${this._modeChanged}
           >
-            ${ct.map(t=>Q`
+            ${ct.map(t=>R`
                 <option value=${t.value} ?selected=${this.config.mode===t.value}>
                   ${t.label}
                 </option>
@@ -786,7 +889,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </div>
         </div>
 
-        ${t?Q`
+        ${t?R`
               <!-- Tabs for Custom Mode -->
               <div class="tabs">
                 <button
@@ -820,7 +923,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
               ${"appearance"===this._currentTab?this._renderAppearanceTab():""}
               ${"controls"===this._currentTab?this._renderControlsTab():""}
               ${"advanced"===this._currentTab?this._renderAdvancedTab():""}
-            `:Q`
+            `:R`
               <div class="preset-info">
                 <ha-icon icon="mdi:information"></ha-icon>
                 <p>
@@ -830,7 +933,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
               </div>
             `}
       </div>
-    `}_renderGeneralTab(){return Q`
+    `}_renderGeneralTab(){return R`
       <div class="tab-content">
         <h3>Display Options</h3>
 
@@ -841,7 +944,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             .value=${this.config.playlistDisplay||"collapsed"}
             @change=${this._valueChanged}
           >
-            ${ht.map(t=>Q`
+            ${ht.map(t=>R`
                 <option value=${t.value} ?selected=${(this.config.playlistDisplay||"collapsed")===t.value}>
                   ${t.label}
                 </option>
@@ -856,7 +959,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             .value=${this.config.songsDisplay||"collapsed"}
             @change=${this._valueChanged}
           >
-            ${ht.map(t=>Q`
+            ${ht.map(t=>R`
                 <option value=${t.value} ?selected=${(this.config.songsDisplay||"collapsed")===t.value}>
                   ${t.label}
                 </option>
@@ -883,7 +986,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
             .value=${this.config.queueDisplay||"auto"}
             @change=${this._valueChanged}
           >
-            ${dt.map(t=>Q`
+            ${dt.map(t=>R`
                 <option value=${t.value} ?selected=${(this.config.queueDisplay||"auto")===t.value}>
                   ${t.label}
                 </option>
@@ -891,7 +994,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </select>
         </div>
       </div>
-    `}_renderAppearanceTab(){return Q`
+    `}_renderAppearanceTab(){return R`
       <div class="tab-content">
         <h3>Visual Options</h3>
 
@@ -985,7 +1088,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           </label>
         </div>
       </div>
-    `}_renderControlsTab(){return Q`
+    `}_renderControlsTab(){return R`
       <div class="tab-content">
         <h3>Playback Controls</h3>
 
@@ -1023,7 +1126,7 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
           <div class="hint">Allow clicking progress bar to seek to position</div>
         </div>
       </div>
-    `}_renderAdvancedTab(){return Q`
+    `}_renderAdvancedTab(){return R`
       <div class="tab-content">
         <h3>Behavior</h3>
 
@@ -1211,4 +1314,4 @@ const x=globalThis,w=x.trustedTypes,k=w?w.createPolicy("lit-html",{createHTML:t=
       .reset-button ha-icon {
         --mdc-icon-size: 20px;
       }
-    `}});var pt=Object.freeze({__proto__:null});
+    `}});var ut=Object.freeze({__proto__:null});
