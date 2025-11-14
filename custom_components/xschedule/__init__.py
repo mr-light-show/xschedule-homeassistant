@@ -307,13 +307,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_ids = call.data["entity_id"]
         step = call.data["step"]
 
+        _LOGGER.debug("jump_to_step service called: entity_ids=%s, step=%s", entity_ids, step)
+
         for entity_id in entity_ids:
             # Get the media player entity directly from the component
             component = hass.data.get("media_player")
-            if component:
-                entity_obj = component.get_entity(entity_id)
-                if entity_obj and hasattr(entity_obj, "async_jump_to_step"):
-                    await entity_obj.async_jump_to_step(step)
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_jump_to_step"):
+                _LOGGER.error("Entity %s does not have async_jump_to_step method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_jump_to_step on entity %s with step=%s", entity_id, step)
+                await entity_obj.async_jump_to_step(step)
+                _LOGGER.info("Successfully called async_jump_to_step for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_jump_to_step for %s: %s", entity_id, err, exc_info=True)
 
     async def async_get_playlist_schedules(call: ServiceCall) -> dict[str, Any]:
         """Handle get_playlist_schedules service call."""

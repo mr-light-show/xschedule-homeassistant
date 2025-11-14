@@ -764,13 +764,14 @@ class XScheduleCard extends LitElement {
     try {
       console.log(`Jumping to step: "${songName}" in playlist: "${currentPlaylist}"`);
       await this._hass.callService('xschedule', 'jump_to_step', {
-        entity_id: this.config.entity,
+        entity_id: [this.config.entity],  // Pass as array
         step: songName,
       });
+      console.log('Jump command sent successfully');
       this._showToast('success', 'mdi:skip-next', `Will play next: ${songName}`);
     } catch (err) {
       console.error('Jump to step failed:', err);
-      this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message}`);
+      this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message || err}`);
     }
   }
 
@@ -1368,7 +1369,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre6  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.1-pre7  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
