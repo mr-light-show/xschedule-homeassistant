@@ -36,6 +36,7 @@ class XScheduleCard extends LitElement {
     this._progressInterval = null;
     this._lastPlaylist = null;
     this._lastPlaylistSongs = [];
+    this._forceExpandPlaylists = false;
 
     // Track previous values for render optimization
     this._previousState = null;
@@ -204,10 +205,6 @@ class XScheduleCard extends LitElement {
       `;
     }
 
-    const isPlaying = this._entity.state === 'playing';
-    const isPaused = this._entity.state === 'paused';
-    const isIdle = this._entity.state === 'idle';
-
     return html`
       <ha-card>
         <div class="card-content ${this.config.compactMode ? 'compact' : ''}">
@@ -318,11 +315,49 @@ class XScheduleCard extends LitElement {
     `;
   }
 
+  _isIdle() {
+    return this._entity.state === 'idle' ||
+           this._entity.state === 'off' ||
+           this._entity.state === 'unavailable' ||
+           this._entity.state === 'unknown';
+  }
+
+  _hasActivePlaylist() {
+    const playlist = this._entity.attributes.playlist;
+    return playlist && playlist !== '' && playlist !== 'No playlist';
+  }
+
   _renderPlaybackControls() {
     if (!this.config.showPlaybackControls) return '';
-
+    
+    const isIdle = this._isIdle();
+    const hasActivePlaylist = this._hasActivePlaylist();
+    
+    // Idle state logic
+    if (isIdle || !hasActivePlaylist) {
+      const playlistHidden = this.config.playlistDisplay === 'hidden';
+      
+      // Only show play button if playlists are hidden
+      if (playlistHidden) {
+        return html`
+          <div class="playback-controls">
+            <ha-icon-button
+              @click=${this._handleIdlePlay}
+              class="play-pause"
+              title="Play"
+            >
+              <ha-icon icon="mdi:play"></ha-icon>
+            </ha-icon-button>
+          </div>
+        `;
+      }
+      
+      // Otherwise hide all controls
+      return '';
+    }
+    
+    // Normal playback controls when active
     const isPlaying = this._entity.state === 'playing';
-    const isPaused = this._entity.state === 'paused';
 
     return html`
       <div class="playback-controls">
@@ -384,6 +419,19 @@ class XScheduleCard extends LitElement {
 
   _renderPlaylistSelector() {
     const displayMode = this.config.playlistDisplay;
+    const isIdle = this._isIdle();
+    const hasActivePlaylist = this._hasActivePlaylist();
+    
+    // Auto mode: show playlists when idle without active playlist
+    if (displayMode === 'auto' && isIdle && !hasActivePlaylist) {
+      this._forceExpandPlaylists = true;
+    }
+    
+    // Force expand takes precedence
+    if (this._forceExpandPlaylists) {
+      return this._renderExpandedPlaylists();
+    }
+    
     if (displayMode === 'hidden') return '';
 
     const currentPlaylist = this._entity.attributes.playlist;
@@ -410,6 +458,12 @@ class XScheduleCard extends LitElement {
     }
 
     // Expanded mode
+    return this._renderExpandedPlaylists();
+  }
+
+  _renderExpandedPlaylists() {
+    const currentPlaylist = this._entity.attributes.playlist;
+    
     return html`
       <div class="section playlist-section">
         <h3>
@@ -738,7 +792,34 @@ class XScheduleCard extends LitElement {
       media_content_type: 'playlist',
       media_content_id: playlist,
     });
+    
+    // Auto-collapse after selection
+    if (this._forceExpandPlaylists) {
+      this._forceExpandPlaylists = false;
+      this.requestUpdate();
+    }
+    
     this._showToast('success', 'mdi:check-circle', `Playing: ${playlist}`);
+  }
+
+  async _handleIdlePlay() {
+    const playlists = this._entity.attributes.source_list || [];
+    
+    if (playlists.length === 0) {
+      this._showToast('error', 'mdi:alert-circle', 'No playlists available');
+      return;
+    }
+    
+    // Single playlist: play it immediately
+    if (playlists.length === 1) {
+      await this._selectPlaylist(playlists[0]);
+      return;
+    }
+    
+    // Multiple playlists: force expand playlist section
+    this._forceExpandPlaylists = true;
+    this.requestUpdate();
+    this._showToast('info', 'mdi:playlist-music', 'Select a playlist to play');
   }
 
   async _playSong(songName) {
@@ -1092,13 +1173,13 @@ class XScheduleCard extends LitElement {
       }
 
       .playback-controls ha-icon-button {
-        --mdc-icon-button-size: 40px;
-        --mdc-icon-size: 28px;
+        --mdc-icon-button-size: 34px;
+        --mdc-icon-size: 24px;
       }
 
       .playback-controls .play-pause {
-        --mdc-icon-button-size: 56px;
-        --mdc-icon-size: 40px;
+        --mdc-icon-button-size: 48px;
+        --mdc-icon-size: 34px;
       }
 
       .volume-control {
@@ -1535,7 +1616,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre3  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

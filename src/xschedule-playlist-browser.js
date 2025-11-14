@@ -230,8 +230,6 @@ class XSchedulePlaylistBrowser extends LitElement {
                 });
 
               schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
-              if (schedule) {
-              }
             }
 
             if (!schedule) {
@@ -1020,7 +1018,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.3-pre3  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.3-pre4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

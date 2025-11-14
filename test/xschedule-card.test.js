@@ -152,12 +152,48 @@ describe('XScheduleCard', () => {
   });
 
   describe('Media Controls', () => {
-    it('renders playback controls', async () => {
+    it('renders playback controls when playlist is active', async () => {
       const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+        }
+      );
       element = await createConfiguredElement('xschedule-card', config, mockHass);
 
       const controls = element.shadowRoot.querySelector('.playback-controls');
       expect(controls).to.exist;
+    });
+
+    it('hides playback controls when no playlist is active and playlists are visible', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      expect(controls).to.not.exist;
+    });
+
+    it('shows only play button when no playlist is active and playlists are hidden', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'hidden' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      expect(controls).to.exist;
+      const playButton = controls.querySelector('.play-pause');
+      expect(playButton).to.exist;
+      const prevButton = controls.querySelector('ha-icon-button:nth-child(1)');
+      // Only play button should exist, not prev/stop/next
+      expect(controls.querySelectorAll('ha-icon-button').length).to.equal(1);
     });
 
     it('shows playing state when entity is playing', async () => {
