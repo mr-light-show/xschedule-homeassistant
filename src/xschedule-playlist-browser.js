@@ -1045,7 +1045,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.1-pre10  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
