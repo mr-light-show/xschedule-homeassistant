@@ -217,7 +217,7 @@ class XScheduleCard extends LitElement {
           ${this._renderPlaybackControls()}
           ${this.config.showVolumeControl ? this._renderVolumeControl() : ''}
           ${this._renderPlaylistSelector()}
-          ${this._renderQueue()}
+          ${this._supportsQueue() ? this._renderQueue() : ''}
           ${this._renderSongs()}
         </div>
         ${this._toast ? this._renderToast() : ''}
@@ -548,7 +548,7 @@ class XScheduleCard extends LitElement {
                                     </button>
                                   `
                                 : ''}
-                              ${this.config.showAddToQueueButton !== false
+                              ${this.config.showAddToQueueButton !== false && this._supportsQueue()
                                 ? html`
                                     <button
                                       @click=${() => this._addToQueue(song.name)}
@@ -603,16 +603,20 @@ class XScheduleCard extends LitElement {
             <ha-icon icon="mdi:play-outline"></ha-icon>
             <span>Play Now</span>
           </button>
-          <button
-            class="context-menu-item"
-            @click=${() => {
-              this._addToQueue(this._contextMenu.songName);
-              this._closeContextMenu();
-            }}
-          >
-            <ha-icon icon="mdi:playlist-plus"></ha-icon>
-            <span>Add to Queue</span>
-          </button>
+          ${this._supportsQueue()
+            ? html`
+                <button
+                  class="context-menu-item"
+                  @click=${() => {
+                    this._addToQueue(this._contextMenu.songName);
+                    this._closeContextMenu();
+                  }}
+                >
+                  <ha-icon icon="mdi:playlist-plus"></ha-icon>
+                  <span>Add to Queue</span>
+                </button>
+              `
+            : ''}
           <button
             class="context-menu-item"
             @click=${() => {
@@ -677,13 +681,33 @@ class XScheduleCard extends LitElement {
     }
   }
 
+  // Feature detection helpers
+  _isXSchedulePlayer() {
+    if (!this._entity) return false;
+    // Detect xSchedule player by checking for xSchedule-specific attributes
+    return (
+      this._entity.attributes.integration === 'xschedule' ||
+      this._entity.attributes.playlist_songs !== undefined ||
+      this._entity.attributes.queue !== undefined
+    );
+  }
+
+  _supportsQueue() {
+    return this._isXSchedulePlayer();
+  }
+
   _selectPlaylist(playlist) {
-    this._callService('select_source', { source: playlist });
+    // Use standard media_player.play_media command
+    this._hass.callService('media_player', 'play_media', {
+      entity_id: this.config.entity,
+      media_content_type: 'playlist',
+      media_content_id: playlist,
+    });
     this._showToast('success', 'mdi:check-circle', `Playing: ${playlist}`);
   }
 
   async _playSong(songName) {
-    const playlist = this._entity.attributes.playlist;
+    const playlist = this._entity.attributes.playlist || this._entity.attributes.source;
     if (!playlist) {
       this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
       return;
@@ -697,39 +721,57 @@ class XScheduleCard extends LitElement {
     }
 
     try {
-      await this._hass.callService('xschedule', 'play_song', {
+      // Use standard media_player.play_media command with |||  delimiter
+      await this._hass.callService('media_player', 'play_media', {
         entity_id: this.config.entity,
-        playlist,
-        song: songName,
+        media_content_type: 'music',
+        media_content_id: `${playlist}|||${songName}`,
       });
       this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
     } catch (err) {
       this._showToast('error', 'mdi:alert-circle', 'Failed to play song');
+      console.error('Error playing song:', err);
     }
   }
 
   async _addToQueue(songName) {
-    const playlist = this._entity.attributes.playlist;
-    if (!playlist) {
-      this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
+    // Queue functionality is xSchedule-specific
+    if (!this._supportsQueue()) {
+      this._showToast('error', 'mdi:alert-circle', 'Queue not supported by this player');
       return;
     }
 
-    // Check if already in queue
-    if (this._queue.some((item) => item.name === songName)) {
-      this._showToast('info', 'mdi:information', 'Already in queue');
+    const currentPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
+    
+    // Scenario 1: No playlist playing - play immediately
+    if (!currentPlaylist) {
+      try {
+        await this._hass.callService('media_player', 'play_media', {
+          entity_id: this.config.entity,
+          media_content_type: 'music',
+          media_content_id: `${currentPlaylist}|||${songName}`,
+        });
+        this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
+      } catch (err) {
+        this._showToast('error', 'mdi:alert-circle', 'Failed to play song');
+        console.error('Error playing song:', err);
+      }
       return;
     }
-
+    
+    // Scenario 2: Songs from _songs array are ALWAYS from current playlist
+    // Use jump command for smoother transition
     try {
-      await this._hass.callService('xschedule', 'add_to_queue', {
-        entity_id: this.config.entity,
-        playlist,
-        song: songName,
+      console.log(`Jumping to step: "${songName}" in playlist: "${currentPlaylist}"`);
+      await this._hass.callService('xschedule', 'jump_to_step', {
+        entity_id: [this.config.entity],  // Pass as array
+        step: songName,
       });
-      this._showToast('success', 'mdi:check-circle', 'Added to queue');
+      console.log('Jump command sent successfully');
+      this._showToast('success', 'mdi:skip-next', `${songName} will play next`);
     } catch (err) {
-      this._showToast('error', 'mdi:alert-circle', 'Failed to add to queue');
+      console.error('Jump to step failed:', err);
+      this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message || err}`);
     }
   }
 
@@ -751,14 +793,12 @@ class XScheduleCard extends LitElement {
   _toggleSongs() {
     if (this.config.songsDisplay === 'collapsed') {
       this._songsExpanded = !this._songsExpanded;
-      this.requestUpdate();
     }
   }
 
   _toggleQueue() {
     if (this.config.queueDisplay === 'collapsed') {
       this._queueExpanded = !this._queueExpanded;
-      this.requestUpdate();
     }
   }
 
@@ -801,7 +841,6 @@ class XScheduleCard extends LitElement {
 
   _closeContextMenu() {
     this._contextMenu = null;
-    this.requestUpdate();
   }
 
   _showSongInfo(songName) {
@@ -830,11 +869,9 @@ class XScheduleCard extends LitElement {
 
   _showToast(type, icon, message) {
     this._toast = { type, icon, message };
-    this.requestUpdate();
 
     setTimeout(() => {
       this._toast = null;
-      this.requestUpdate();
     }, 2000);
   }
 
@@ -1332,7 +1369,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.0  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

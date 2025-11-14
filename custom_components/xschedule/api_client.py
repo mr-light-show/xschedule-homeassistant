@@ -142,14 +142,22 @@ class XScheduleAPIClient:
 
     async def command(self, command_name: str, parameters: str = "") -> Any:
         """Execute a command against xSchedule API."""
-        params = {"Command": command_name}
+        # Manually encode command name to use %20 instead of + for spaces
+        # xSchedule doesn't accept + as space encoding
+        params = {"Command": quote(command_name, safe='')}
         if parameters:
             # Manually encode parameters to use %20 instead of + for spaces
-            # xSchedule doesn't accept + as space encoding
             params["Parameters"] = quote(parameters, safe='')
 
         _LOGGER.debug("Executing command: %s with params: %s", command_name, parameters)
-        return await self._request(API_COMMAND, params)
+        result = await self._request(API_COMMAND, params)
+        _LOGGER.debug("Command response: %s", result)
+        
+        # Check if command failed
+        if isinstance(result, dict) and result.get("result") == "failed":
+            _LOGGER.warning("Command '%s' failed: %s", command_name, result.get("message", "Unknown error"))
+        
+        return result
 
     # Status and information queries
 
@@ -342,6 +350,15 @@ class XScheduleAPIClient:
     async def clear_queue(self) -> dict[str, Any]:
         """Clear the playlist queue."""
         result = await self.command("Clear playlist queue")
+        self.invalidate_cache()
+        return result
+
+    async def jump_to_step_at_end(self, step_name: str) -> dict[str, Any]:
+        """Jump to specified step in current playlist at end of current step."""
+        result = await self.command(
+            "Jump to specified step in current playlist at the end of current step",
+            step_name
+        )
         self.invalidate_cache()
         return result
 

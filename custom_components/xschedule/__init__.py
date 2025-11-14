@@ -23,6 +23,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 SERVICE_PLAY_SONG = "play_song"
 SERVICE_ADD_TO_QUEUE = "add_to_queue"
 SERVICE_CLEAR_QUEUE = "clear_queue"
+SERVICE_JUMP_TO_STEP = "jump_to_step"
 SERVICE_GET_PLAYLIST_SCHEDULES = "get_playlist_schedules"
 SERVICE_GET_PLAYLIST_STEPS = "get_playlist_steps"
 SERVICE_GET_PLAYLISTS_WITH_METADATA = "get_playlists_with_metadata"
@@ -46,6 +47,13 @@ SCHEMA_ADD_TO_QUEUE = vol.Schema(
 SCHEMA_CLEAR_QUEUE = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_ids,
+    }
+)
+
+SCHEMA_JUMP_TO_STEP = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
+        vol.Required("step"): cv.string,
     }
 )
 
@@ -294,6 +302,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if entity_obj and hasattr(entity_obj, "async_clear_queue"):
                     await entity_obj.async_clear_queue()
 
+    async def async_jump_to_step(call: ServiceCall) -> None:
+        """Handle jump_to_step service call."""
+        entity_ids = call.data["entity_id"]
+        step = call.data["step"]
+
+        _LOGGER.debug("jump_to_step service called: entity_ids=%s, step=%s", entity_ids, step)
+
+        for entity_id in entity_ids:
+            # Get the media player entity directly from the component
+            component = hass.data.get("media_player")
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_jump_to_step"):
+                _LOGGER.error("Entity %s does not have async_jump_to_step method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_jump_to_step on entity %s with step=%s", entity_id, step)
+                await entity_obj.async_jump_to_step(step)
+                _LOGGER.info("Successfully called async_jump_to_step for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_jump_to_step for %s: %s", entity_id, err, exc_info=True)
+
     async def async_get_playlist_schedules(call: ServiceCall) -> dict[str, Any]:
         """Handle get_playlist_schedules service call."""
         entity_id = call.data["entity_id"]
@@ -351,6 +389,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, SERVICE_CLEAR_QUEUE, async_clear_queue, schema=SCHEMA_CLEAR_QUEUE
     )
     hass.services.async_register(
+        DOMAIN, SERVICE_JUMP_TO_STEP, async_jump_to_step, schema=SCHEMA_JUMP_TO_STEP
+    )
+    hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PLAYLIST_SCHEDULES,
         async_get_playlist_schedules,
@@ -389,6 +430,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_PLAY_SONG)
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TO_QUEUE)
         hass.services.async_remove(DOMAIN, SERVICE_CLEAR_QUEUE)
+        hass.services.async_remove(DOMAIN, SERVICE_JUMP_TO_STEP)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_SCHEDULES)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_STEPS)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLISTS_WITH_METADATA)

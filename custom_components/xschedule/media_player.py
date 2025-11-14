@@ -43,6 +43,10 @@ from .websocket import XScheduleWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 
+# Define custom TRACE level for very verbose logging
+TRACE_LEVEL = 5
+logging.addLevelName(TRACE_LEVEL, "TRACE")
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -185,7 +189,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
     def _handle_websocket_update(self, data: dict[str, Any]) -> None:
         """Handle WebSocket status update."""
-        _LOGGER.debug("WebSocket status update: %s", data)
+        _LOGGER.log(TRACE_LEVEL, "WebSocket status update: %s", data)
 
         # Store previous state for change detection
         old_state = self._attr_state
@@ -655,6 +659,32 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error clearing queue: %s", err)
+
+    async def async_jump_to_step(self, step: str) -> None:
+        """Jump to specified step in current playlist at end of current step."""
+        try:
+            _LOGGER.debug("Jump to step called: step='%s'", step)
+            # Use REST API for now - WebSocket format needs investigation
+            # WebSocket was returning: {'result': 'failed', 'reference': '', 'message': 'Empty request.'}
+            _LOGGER.debug("Sending via REST API: step='%s'", step)
+            result = await self._api_client.jump_to_step_at_end(step)
+            
+            # Check if command succeeded
+            if isinstance(result, dict):
+                if result.get("result") == "ok":
+                    _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
+                elif result.get("result") == "failed":
+                    error_msg = result.get("message", "Unknown error")
+                    _LOGGER.error("Jump to step '%s' failed: %s", step, error_msg)
+                    raise XScheduleAPIError(f"Jump failed: {error_msg}")
+                else:
+                    _LOGGER.warning("Jump to step '%s' returned unexpected response: %s", step, result)
+            else:
+                _LOGGER.info("Jump to step '%s' sent (response: %s)", step, result)
+
+        except XScheduleAPIError as err:
+            _LOGGER.error("Error jumping to step '%s': %s", step, err)
+            raise
 
     def _is_in_queue(self, song_name: str) -> bool:
         """Check if a song is already in the queue."""

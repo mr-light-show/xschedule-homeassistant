@@ -144,6 +144,21 @@ class XSchedulePlaylistBrowser extends LitElement {
     return super.shouldUpdate(changedProperties);
   }
 
+  // Feature detection helpers
+  _isXSchedulePlayer() {
+    if (!this._entity) return false;
+    // Detect xSchedule player by checking for xSchedule-specific attributes
+    return (
+      this._entity.attributes.integration === 'xschedule' ||
+      this._entity.attributes.playlist_songs !== undefined ||
+      this._entity.attributes.queue !== undefined
+    );
+  }
+
+  _supportsQueue() {
+    return this._isXSchedulePlayer();
+  }
+
   async _fetchScheduleInfo(forceRefresh = false) {
     // Don't fetch if already in progress
     if (this._loading) return;
@@ -577,31 +592,10 @@ class XSchedulePlaylistBrowser extends LitElement {
           <div class="song-item-compact">
             <span class="song-name-compact">${song.name}</span>
             ${song.duration ? html`<span class="song-duration-compact">${this._formatDuration(song.duration / 1000)}</span>` : ''}
-            <button
-              class="add-queue-btn-compact"
-              @click=${(e) => this._addSongToQueue(e, playlistName, song.name)}
-              title="Add to queue"
-            >
-              <ha-icon icon="mdi:playlist-plus"></ha-icon>
-            </button>
           </div>
         `)}
       </div>
     `;
-  }
-
-  async _addSongToQueue(e, playlistName, songName) {
-    e.stopPropagation(); // Prevent playlist toggle
-
-    try {
-      await this._hass.callService('xschedule', 'add_to_queue', {
-        entity_id: this.config.entity,
-        playlist: playlistName,
-        song: songName,
-      });
-    } catch (err) {
-      console.error('Failed to add to queue:', err);
-    }
   }
 
   async _playPlaylist(e, playlistName) {
@@ -616,9 +610,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     try {
-      await this._hass.callService('media_player', 'select_source', {
+      // Use standard media_player.play_media command
+      await this._hass.callService('media_player', 'play_media', {
         entity_id: this.config.entity,
-        source: playlistName,
+        media_content_type: 'playlist',
+        media_content_id: playlistName,
       });
     } catch (err) {
       console.error('Failed to play playlist:', err);
@@ -910,14 +906,22 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
       return html``;
     }
 
-    // Get all xSchedule media_player entities
+    // Get all media_player entities (not just xSchedule)
     const entities = Object.keys(this.hass.states)
-      .filter(entityId =>
-        entityId.startsWith('media_player.') &&
-        (this.hass.states[entityId].attributes.playlist_songs !== undefined ||
-         entityId.includes('xschedule'))
-      )
-      .sort();
+      .filter(entityId => entityId.startsWith('media_player.'))
+      .sort((a, b) => {
+        // Sort xSchedule players to the top for convenience
+        const aIsXSchedule = a.includes('xschedule') || 
+                            this.hass.states[a].attributes.playlist_songs !== undefined;
+        const bIsXSchedule = b.includes('xschedule') || 
+                            this.hass.states[b].attributes.playlist_songs !== undefined;
+        if (aIsXSchedule && !bIsXSchedule) return -1;
+        if (!aIsXSchedule && bIsXSchedule) return 1;
+        // Otherwise sort alphabetically
+        const aName = this.hass.states[a].attributes.friendly_name || a;
+        const bName = this.hass.states[b].attributes.friendly_name || b;
+        return aName.localeCompare(bName);
+      });
 
     return html`
       <div class="card-config">
@@ -929,7 +933,7 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
             .value=${this.config.entity || ''}
             @change=${this._valueChanged}
           >
-            <option value="">Select an xSchedule entity...</option>
+            <option value="">Select a media player...</option>
             ${entities.map(entityId => html`
               <option value="${entityId}" ?selected=${this.config.entity === entityId}>
                 ${this.hass.states[entityId].attributes.friendly_name || entityId}
@@ -1041,7 +1045,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.0  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.5.2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
