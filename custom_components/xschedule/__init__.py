@@ -21,32 +21,22 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
 # Service schemas
 SERVICE_PLAY_SONG = "play_song"
-SERVICE_ADD_TO_QUEUE = "add_to_queue"
-SERVICE_CLEAR_QUEUE = "clear_queue"
 SERVICE_JUMP_TO_STEP = "jump_to_step"
 SERVICE_GET_PLAYLIST_SCHEDULES = "get_playlist_schedules"
 SERVICE_GET_PLAYLIST_STEPS = "get_playlist_steps"
 SERVICE_GET_PLAYLISTS_WITH_METADATA = "get_playlists_with_metadata"
+
+# Internal Queue services
+SERVICE_ADD_TO_INTERNAL_QUEUE = "add_to_internal_queue"
+SERVICE_REMOVE_FROM_INTERNAL_QUEUE = "remove_from_internal_queue"
+SERVICE_REORDER_INTERNAL_QUEUE = "reorder_internal_queue"
+SERVICE_CLEAR_INTERNAL_QUEUE = "clear_internal_queue"
 
 SCHEMA_PLAY_SONG = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_ids,
         vol.Required("playlist"): cv.string,
         vol.Required("song"): cv.string,
-    }
-)
-
-SCHEMA_ADD_TO_QUEUE = vol.Schema(
-    {
-        vol.Required("entity_id"): cv.entity_ids,
-        vol.Required("playlist"): cv.string,
-        vol.Required("song"): cv.string,
-    }
-)
-
-SCHEMA_CLEAR_QUEUE = vol.Schema(
-    {
-        vol.Required("entity_id"): cv.entity_ids,
     }
 )
 
@@ -77,6 +67,34 @@ SCHEMA_GET_PLAYLISTS_WITH_METADATA = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
         vol.Optional("force_refresh", default=False): cv.boolean,
+    }
+)
+
+# Internal Queue schemas
+SCHEMA_ADD_TO_INTERNAL_QUEUE = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
+        vol.Required("song"): cv.string,
+    }
+)
+
+SCHEMA_REMOVE_FROM_INTERNAL_QUEUE = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
+        vol.Required("queue_item_id"): cv.string,
+    }
+)
+
+SCHEMA_REORDER_INTERNAL_QUEUE = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
+        vol.Required("queue_item_ids"): [cv.string],
+    }
+)
+
+SCHEMA_CLEAR_INTERNAL_QUEUE = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
     }
 )
 
@@ -276,32 +294,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if entity_obj and hasattr(entity_obj, "async_play_song"):
                     await entity_obj.async_play_song(playlist, song)
 
-    async def async_add_to_queue(call: ServiceCall) -> None:
-        """Handle add_to_queue service call."""
-        entity_ids = call.data["entity_id"]
-        playlist = call.data["playlist"]
-        song = call.data["song"]
-
-        for entity_id in entity_ids:
-            # Get the media player entity directly from the component
-            component = hass.data.get("media_player")
-            if component:
-                entity_obj = component.get_entity(entity_id)
-                if entity_obj and hasattr(entity_obj, "async_add_to_queue"):
-                    await entity_obj.async_add_to_queue(playlist, song)
-
-    async def async_clear_queue(call: ServiceCall) -> None:
-        """Handle clear_queue service call."""
-        entity_ids = call.data["entity_id"]
-
-        for entity_id in entity_ids:
-            # Get the media player entity directly from the component
-            component = hass.data.get("media_player")
-            if component:
-                entity_obj = component.get_entity(entity_id)
-                if entity_obj and hasattr(entity_obj, "async_clear_queue"):
-                    await entity_obj.async_clear_queue()
-
     async def async_jump_to_step(call: ServiceCall) -> None:
         """Handle jump_to_step service call."""
         entity_ids = call.data["entity_id"]
@@ -379,6 +371,128 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return {"playlists": []}
 
+    # Internal Queue service handlers
+    async def async_add_to_internal_queue(call: ServiceCall) -> None:
+        """Handle add_to_internal_queue service call."""
+        entity_ids = call.data["entity_id"]
+        song = call.data["song"]
+
+        _LOGGER.debug("add_to_internal_queue service called: entity_ids=%s, song=%s", entity_ids, song)
+
+        for entity_id in entity_ids:
+            component = hass.data.get("media_player")
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_add_to_internal_queue"):
+                _LOGGER.error("Entity %s does not have async_add_to_internal_queue method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_add_to_internal_queue on entity %s with song=%s", entity_id, song)
+                await entity_obj.async_add_to_internal_queue(song)
+                _LOGGER.info("Successfully called async_add_to_internal_queue for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_add_to_internal_queue for %s: %s", entity_id, err, exc_info=True)
+                raise
+
+    async def async_remove_from_internal_queue(call: ServiceCall) -> None:
+        """Handle remove_from_internal_queue service call."""
+        entity_ids = call.data["entity_id"]
+        queue_item_id = call.data["queue_item_id"]
+
+        _LOGGER.debug("remove_from_internal_queue service called: entity_ids=%s, queue_item_id=%s", 
+                     entity_ids, queue_item_id)
+
+        for entity_id in entity_ids:
+            component = hass.data.get("media_player")
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_remove_from_internal_queue"):
+                _LOGGER.error("Entity %s does not have async_remove_from_internal_queue method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_remove_from_internal_queue on entity %s", entity_id)
+                await entity_obj.async_remove_from_internal_queue(queue_item_id)
+                _LOGGER.info("Successfully called async_remove_from_internal_queue for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_remove_from_internal_queue for %s: %s", entity_id, err, exc_info=True)
+                raise
+
+    async def async_reorder_internal_queue(call: ServiceCall) -> None:
+        """Handle reorder_internal_queue service call."""
+        entity_ids = call.data["entity_id"]
+        queue_item_ids = call.data["queue_item_ids"]
+
+        _LOGGER.debug("reorder_internal_queue service called: entity_ids=%s, queue_item_ids=%s", 
+                     entity_ids, queue_item_ids)
+
+        for entity_id in entity_ids:
+            component = hass.data.get("media_player")
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_reorder_internal_queue"):
+                _LOGGER.error("Entity %s does not have async_reorder_internal_queue method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_reorder_internal_queue on entity %s", entity_id)
+                await entity_obj.async_reorder_internal_queue(queue_item_ids)
+                _LOGGER.info("Successfully called async_reorder_internal_queue for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_reorder_internal_queue for %s: %s", entity_id, err, exc_info=True)
+                raise
+
+    async def async_clear_internal_queue(call: ServiceCall) -> None:
+        """Handle clear_internal_queue service call."""
+        entity_ids = call.data["entity_id"]
+
+        _LOGGER.debug("clear_internal_queue service called: entity_ids=%s", entity_ids)
+
+        for entity_id in entity_ids:
+            component = hass.data.get("media_player")
+            if not component:
+                _LOGGER.error("media_player component not found in hass.data")
+                continue
+                
+            entity_obj = component.get_entity(entity_id)
+            if not entity_obj:
+                _LOGGER.error("Entity %s not found in media_player component", entity_id)
+                continue
+                
+            if not hasattr(entity_obj, "async_clear_internal_queue"):
+                _LOGGER.error("Entity %s does not have async_clear_internal_queue method", entity_id)
+                continue
+                
+            try:
+                _LOGGER.debug("Calling async_clear_internal_queue on entity %s", entity_id)
+                await entity_obj.async_clear_internal_queue()
+                _LOGGER.info("Successfully called async_clear_internal_queue for %s", entity_id)
+            except Exception as err:
+                _LOGGER.error("Error calling async_clear_internal_queue for %s: %s", entity_id, err, exc_info=True)
+                raise
+
     hass.services.async_register(
         DOMAIN, SERVICE_PLAY_SONG, async_play_song, schema=SCHEMA_PLAY_SONG
     )
@@ -413,6 +527,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         supports_response=True,
     )
 
+    # Register internal queue services
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_TO_INTERNAL_QUEUE,
+        async_add_to_internal_queue,
+        schema=SCHEMA_ADD_TO_INTERNAL_QUEUE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_FROM_INTERNAL_QUEUE,
+        async_remove_from_internal_queue,
+        schema=SCHEMA_REMOVE_FROM_INTERNAL_QUEUE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REORDER_INTERNAL_QUEUE,
+        async_reorder_internal_queue,
+        schema=SCHEMA_REORDER_INTERNAL_QUEUE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_INTERNAL_QUEUE,
+        async_clear_internal_queue,
+        schema=SCHEMA_CLEAR_INTERNAL_QUEUE,
+    )
+
     return True
 
 
@@ -428,11 +568,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Unregister services if this is the last entry
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_PLAY_SONG)
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_TO_QUEUE)
-        hass.services.async_remove(DOMAIN, SERVICE_CLEAR_QUEUE)
         hass.services.async_remove(DOMAIN, SERVICE_JUMP_TO_STEP)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_SCHEDULES)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLIST_STEPS)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PLAYLISTS_WITH_METADATA)
+        # Unregister internal queue services
+        hass.services.async_remove(DOMAIN, SERVICE_ADD_TO_INTERNAL_QUEUE)
+        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_FROM_INTERNAL_QUEUE)
+        hass.services.async_remove(DOMAIN, SERVICE_REORDER_INTERNAL_QUEUE)
+        hass.services.async_remove(DOMAIN, SERVICE_CLEAR_INTERNAL_QUEUE)
 
     return unload_ok

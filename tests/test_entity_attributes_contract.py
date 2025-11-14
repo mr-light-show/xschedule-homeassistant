@@ -24,7 +24,7 @@ def mock_api_client():
         {"name": "Light Em Up", "lengthms": "185750"},
         {"name": "Pirates of the Caribbean", "lengthms": "289400"},
     ])
-    client.get_queued_steps = AsyncMock(return_value=[])
+    client.jump_to_step_at_end = AsyncMock(return_value={"result": "ok"})
     client.invalidate_cache = MagicMock()
     client.close = AsyncMock()
     return client
@@ -114,7 +114,7 @@ class TestEntityAttributesPlaying:
 
         # Verify required attributes exist
         assert "playlist_songs" in attrs
-        assert "queue" in attrs
+        assert "internal_queue" in attrs
         assert "source_list" in attrs
 
     @pytest.mark.asyncio
@@ -215,8 +215,8 @@ class TestEntityAttributesIdle:
         assert attrs["playlist_songs"] == []
 
         # Queue should be empty
-        assert "queue" in attrs
-        assert attrs["queue"] == []
+        assert "internal_queue" in attrs
+        assert attrs["internal_queue"] == []
 
 
 class TestEntityAttributesQueue:
@@ -226,41 +226,50 @@ class TestEntityAttributesQueue:
     async def test_queue_attribute_structure(self, media_player_entity, mock_api_client):
         """Verify queue attribute structure for frontend.
 
-        Frontend expects array of objects with name, id, and duration.
-        Source: xschedule-card.js:200, 518-527
+        Frontend expects array of objects with name, id, playlist, priority, and duration.
+        Source: xschedule-card.js
         """
-        # Mock queued steps
-        mock_api_client.get_queued_steps.return_value = [
-            {"name": "Thriller", "id": "20", "lengthms": "358000"},
-            {"name": "Monster Mash", "id": "21", "lengthms": "182000"},
+        # Set up playing state with a playlist
+        playing_data = {
+            "status": "playing",
+            "playlist": "Halloween",
+            "step": "Thriller",
+            "lengthms": "358000",
+        }
+        media_player_entity._handle_websocket_update(playing_data)
+        
+        # Mock playlist steps so songs can be found
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Thriller", "lengthms": "358000"},
+            {"name": "Monster Mash", "lengthms": "182000"},
         ]
-
         await media_player_entity.async_update()
+        
+        # Add songs to internal queue
+        await media_player_entity.async_add_to_internal_queue("Thriller")
+        await media_player_entity.async_add_to_internal_queue("Monster Mash")
 
         attrs = media_player_entity.extra_state_attributes
-        queue = attrs["queue"]
+        queue = attrs["internal_queue"]
 
         # Should be list
         assert isinstance(queue, list)
         assert len(queue) == 2
 
-        # Each queue item should have name, id, duration
+        # Each queue item should have name, id, playlist, priority, duration
         item1 = queue[0]
         assert "name" in item1
         assert "id" in item1
+        assert "playlist" in item1
+        assert "priority" in item1
         assert "duration" in item1
         assert item1["name"] == "Thriller"
-        assert item1["duration"] == 358000  # Milliseconds
 
     @pytest.mark.asyncio
     async def test_empty_queue(self, media_player_entity, mock_api_client):
         """Verify empty queue returns empty list, not None."""
-        mock_api_client.get_queued_steps.return_value = []
-
-        await media_player_entity.async_update()
-
         attrs = media_player_entity.extra_state_attributes
-        queue = attrs["queue"]
+        queue = attrs["internal_queue"]
 
         assert isinstance(queue, list)
         assert len(queue) == 0
@@ -432,7 +441,7 @@ class TestEntityAttributeAvailability:
         assert isinstance(attrs, dict)
         assert "source_list" in attrs
         assert "playlist_songs" in attrs
-        assert "queue" in attrs
+        assert "internal_queue" in attrs
 
     @pytest.mark.asyncio
     async def test_attributes_survive_state_transitions(self, media_player_entity):

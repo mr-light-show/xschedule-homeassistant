@@ -1,6 +1,6 @@
 {
   "name": "xschedule-homeassistant",
-  "version": "1.5.2",
+  "version": "1.5.3-pre1",
   "description": "Home Assistant integration and custom card for xSchedule lighting sequencer",
   "main": "dist/xschedule-card.js",
   "scripts": {

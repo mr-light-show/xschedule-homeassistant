@@ -143,8 +143,8 @@ class XScheduleCard extends LitElement {
       // Extract songs - use current playlist songs if available, otherwise use last known playlist songs
       this._songs = playlistSongs.length > 0 ? playlistSongs : this._lastPlaylistSongs;
 
-      // Extract queue
-      this._queue = this._entity.attributes.queue || [];
+      // Extract internal queue (managed by integration)
+      this._queue = this._entity.attributes.internal_queue || [];
     }
 
     // Trigger update check
@@ -168,7 +168,7 @@ class XScheduleCard extends LitElement {
       const playlistChanged = this._entity.attributes.playlist !== this._previousPlaylist;
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
       const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
-      const queueChanged = JSON.stringify(this._entity.attributes.queue) !== this._previousQueue;
+      const queueChanged = JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue;
       const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
 
       // Update tracking variables
@@ -177,7 +177,7 @@ class XScheduleCard extends LitElement {
       this._previousPlaylist = this._entity.attributes.playlist;
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
       this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
-      this._previousQueue = JSON.stringify(this._entity.attributes.queue);
+      this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
       this._previousMediaPositionUpdatedAt = this._entity.attributes.media_position_updated_at;
 
       // Allow first render, or only if something meaningful changed
@@ -470,12 +470,35 @@ class XScheduleCard extends LitElement {
               <div class="queue-list">
                 ${this._queue.map(
                   (item, index) => html`
-                    <div class="queue-item">
+                    <div 
+                      class="queue-item"
+                      draggable="true"
+                      data-id="${item.id}"
+                      @dragstart=${(e) => this._handleDragStart(e, item.id)}
+                      @dragover=${this._handleDragOver}
+                      @drop=${(e) => this._handleDrop(e, index)}
+                    >
+                      <div class="queue-drag-handle">
+                        <ha-icon icon="mdi:drag"></ha-icon>
+                      </div>
                       <span class="queue-number">${index + 1}</span>
                       <div class="queue-info">
                         <span class="queue-name">${item.name}</span>
+                        ${item.priority > 1 
+                          ? html`<span class="queue-priority-badge">×${item.priority}</span>`
+                          : ''}
                         ${item.duration ? html`<span class="queue-duration">${this._formatTime(item.duration / 1000)}</span>` : ''}
                       </div>
+                      <button 
+                        class="queue-item-delete"
+                        @click=${(e) => {
+                          e.stopPropagation();
+                          this._removeFromQueue(item.id);
+                        }}
+                        title="Remove from queue"
+                      >
+                        <ha-icon icon="mdi:close"></ha-icon>
+                      </button>
                     </div>
                   `
                 )}
@@ -741,37 +764,25 @@ class XScheduleCard extends LitElement {
       return;
     }
 
-    const currentPlaylist = this._entity.attributes.playlist || this._entity.attributes.source;
-    
-    // Scenario 1: No playlist playing - play immediately
-    if (!currentPlaylist) {
-      try {
-        await this._hass.callService('media_player', 'play_media', {
-          entity_id: this.config.entity,
-          media_content_type: 'music',
-          media_content_id: `${currentPlaylist}|||${songName}`,
-        });
-        this._showToast('success', 'mdi:play-circle', `Now playing: ${songName}`);
-      } catch (err) {
-        this._showToast('error', 'mdi:alert-circle', 'Failed to play song');
-        console.error('Error playing song:', err);
-      }
-      return;
-    }
-    
-    // Scenario 2: Songs from _songs array are ALWAYS from current playlist
-    // Use jump command for smoother transition
     try {
-      console.log(`Jumping to step: "${songName}" in playlist: "${currentPlaylist}"`);
-      await this._hass.callService('xschedule', 'jump_to_step', {
-        entity_id: [this.config.entity],  // Pass as array
-        step: songName,
+      // Check if song is already in queue to show appropriate message
+      const existingItem = this._queue.find(item => item.name === songName);
+      const willBumpPriority = existingItem !== undefined;
+      
+      await this._hass.callService('xschedule', 'add_to_internal_queue', {
+        entity_id: [this.config.entity],
+        song: songName,
       });
-      console.log('Jump command sent successfully');
-      this._showToast('success', 'mdi:skip-next', `${songName} will play next`);
+      
+      if (willBumpPriority) {
+        const newPriority = existingItem.priority + 1;
+        this._showToast('success', 'mdi:arrow-up-bold', `${songName} will play sooner (priority ×${newPriority})`);
+      } else {
+        this._showToast('success', 'mdi:playlist-plus', `${songName} added to queue`);
+      }
     } catch (err) {
-      console.error('Jump to step failed:', err);
-      this._showToast('error', 'mdi:alert-circle', `Jump failed: ${err.message || err}`);
+      console.error('Add to queue failed:', err);
+      this._showToast('error', 'mdi:alert-circle', `Failed: ${err.message || err}`);
     }
   }
 
@@ -781,13 +792,78 @@ class XScheduleCard extends LitElement {
     }
 
     try {
-      await this._hass.callService('xschedule', 'clear_queue', {
-        entity_id: this.config.entity,
+      await this._hass.callService('xschedule', 'clear_internal_queue', {
+        entity_id: [this.config.entity],
       });
       this._showToast('success', 'mdi:check-circle', 'Queue cleared');
     } catch (err) {
       this._showToast('error', 'mdi:alert-circle', 'Failed to clear queue');
     }
+  }
+
+  async _removeFromQueue(queueItemId) {
+    try {
+      await this._hass.callService('xschedule', 'remove_from_internal_queue', {
+        entity_id: [this.config.entity],
+        queue_item_id: queueItemId,
+      });
+      this._showToast('success', 'mdi:check-circle', 'Removed from queue');
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to remove from queue');
+      console.error('Error removing from queue:', err);
+    }
+  }
+
+  async _reorderQueue(queueItemIds) {
+    try {
+      await this._hass.callService('xschedule', 'reorder_internal_queue', {
+        entity_id: [this.config.entity],
+        queue_item_ids: queueItemIds,
+      });
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Failed to reorder queue');
+      console.error('Error reordering queue:', err);
+    }
+  }
+
+  _handleDragStart(e, itemId) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
+    this._draggedItemId = itemId;
+    e.target.classList.add('dragging');
+  }
+
+  _handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  _handleDrop(e, targetIndex) {
+    e.preventDefault();
+    
+    // Remove dragging class from all items
+    const items = this.shadowRoot.querySelectorAll('.queue-item');
+    items.forEach(item => item.classList.remove('dragging'));
+    
+    const draggedId = e.dataTransfer.getData('text/plain');
+    
+    if (!draggedId) return;
+    
+    // Get current queue
+    const queue = this._queue || [];
+    const draggedIndex = queue.findIndex(item => item.id === draggedId);
+    
+    if (draggedIndex === -1 || draggedIndex === targetIndex) {
+      return;
+    }
+    
+    // Reorder IDs
+    const newOrder = [...queue];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+    
+    // Send reorder command
+    this._reorderQueue(newOrder.map(item => item.id));
   }
 
   _toggleSongs() {
@@ -1174,16 +1250,92 @@ class XScheduleCard extends LitElement {
         --mdc-icon-size: 18px;
       }
 
+      .queue-item {
+        cursor: move;
+      }
+
+      .queue-item:hover {
+        background: var(--secondary-background-color);
+      }
+
+      .queue-item.dragging {
+        opacity: 0.5;
+      }
+
+      .queue-drag-handle {
+        display: flex;
+        align-items: center;
+        color: var(--secondary-text-color);
+        cursor: grab;
+        margin-right: -4px;
+      }
+
+      .queue-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .queue-drag-handle ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
       .queue-number {
         font-weight: 700;
         color: var(--accent-color);
+        min-width: 24px;
       }
 
       .queue-info {
         flex: 1;
         display: flex;
-        justify-content: space-between;
+        gap: 8px;
         align-items: center;
+        min-width: 0;
+      }
+
+      .queue-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .queue-priority-badge {
+        background: var(--primary-color);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.8em;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      .queue-duration {
+        font-size: 0.85em;
+        color: var(--secondary-text-color);
+        flex-shrink: 0;
+      }
+
+      .queue-item-delete {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--secondary-text-color);
+        padding: 4px;
+        border-radius: 4px;
+        transition: color 0.2s, background 0.2s;
+      }
+
+      .queue-item-delete:hover {
+        color: var(--error-color);
+        background: var(--error-color-opacity, rgba(var(--rgb-error-color), 0.1));
+      }
+
+      .queue-item-delete ha-icon {
+        --mdc-icon-size: 18px;
       }
 
       .clear-queue-btn {
@@ -1369,7 +1521,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.5.3-pre1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
