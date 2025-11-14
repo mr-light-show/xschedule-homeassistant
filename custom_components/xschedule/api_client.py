@@ -142,10 +142,11 @@ class XScheduleAPIClient:
 
     async def command(self, command_name: str, parameters: str = "") -> Any:
         """Execute a command against xSchedule API."""
-        params = {"Command": command_name}
+        # Manually encode command name to use %20 instead of + for spaces
+        # xSchedule doesn't accept + as space encoding
+        params = {"Command": quote(command_name, safe='')}
         if parameters:
             # Manually encode parameters to use %20 instead of + for spaces
-            # xSchedule doesn't accept + as space encoding
             params["Parameters"] = quote(parameters, safe='')
 
         _LOGGER.debug("Executing command: %s with params: %s", command_name, parameters)
