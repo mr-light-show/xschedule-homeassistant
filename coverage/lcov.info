@@ -1013,8 +1013,8 @@ FN:1064,_formatTime
 FN:1071,_showToast
 FN:1079,getCardSize
 FN:1083,get styles
-FN:1692,XScheduleCard.getConfigElement
-FN:1698,XScheduleCard.getStubConfig
+FN:1697,XScheduleCard.getConfigElement
+FN:1703,XScheduleCard.getStubConfig
 FNF:58
 FNH:23
 FNDA:1,get properties
@@ -2767,17 +2767,22 @@ DA:1689,1
 DA:1690,1
 DA:1691,1
 DA:1692,1
-DA:1693,0
-DA:1694,0
+DA:1693,1
+DA:1694,1
 DA:1695,1
 DA:1696,1
 DA:1697,1
-DA:1698,1
+DA:1698,0
 DA:1699,0
-DA:1700,0
+DA:1700,1
 DA:1701,1
-LF:1701
-LH:1274
+DA:1702,1
+DA:1703,1
+DA:1704,0
+DA:1705,0
+DA:1706,1
+LF:1706
+LH:1279
 BRDA:1,0,0,1
 BRDA:11,1,0,1
 BRDA:26,2,0,34

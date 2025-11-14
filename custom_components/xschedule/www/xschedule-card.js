@@ -1335,6 +1335,11 @@ class XScheduleCard extends i {
         gap: 4px;
       }
 
+      /* Left-justify when only play button is shown (idle state) */
+      .playback-controls:has(ha-icon-button:only-child) {
+        justify-content: flex-start;
+      }
+
       .playback-controls ha-icon-button {
         --mdc-icon-button-size: 34px;
         --mdc-icon-size: 24px;
