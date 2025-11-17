@@ -20,6 +20,7 @@ class XScheduleCard extends LitElement {
       _queueExpanded: { type: Boolean },
       _toast: { type: Object },
       _contextMenu: { type: Object },
+      _forceExpandPlaylists: { type: Boolean },
     };
   }
 
@@ -156,6 +157,11 @@ class XScheduleCard extends LitElement {
     // Always update if config changed (mode or display settings)
     // This ensures all mode preset values are reflected when switching modes
     if (changedProperties.has('config')) {
+      return true;
+    }
+
+    // Always update when force expand changes (for idle play button behavior)
+    if (changedProperties.has('_forceExpandPlaylists')) {
       return true;
     }
 

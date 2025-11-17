@@ -300,6 +300,59 @@ describe('XScheduleCard', () => {
       const progress = element.shadowRoot.querySelector('.progress-container');
       expect(progress).to.exist;
     });
+
+    it('should auto-expand playlists when play pressed with multiple playlists in idle state', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'hidden' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2', 'Playlist 3']
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Initially should show only play button
+      const playButton = element.shadowRoot.querySelector('.playback-controls .play-pause');
+      expect(playButton).to.exist;
+      
+      // Playlist section should be hidden initially
+      let playlistSection = element.shadowRoot.querySelector('.playlist-section');
+      expect(playlistSection).to.not.exist;
+      
+      // Click play button
+      playButton.click();
+      await element.updateComplete;
+      
+      // Playlist section should now be expanded/visible
+      playlistSection = element.shadowRoot.querySelector('.playlist-section');
+      expect(playlistSection).to.exist;
+      
+      // Should show all playlists
+      const playlistItems = element.shadowRoot.querySelectorAll('.playlist-item');
+      expect(playlistItems.length).to.equal(3);
+    });
+
+    it('should update when _forceExpandPlaylists changes', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'hidden' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2']
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Create a changedProperties Map with _forceExpandPlaylists
+      const changedProperties = new Map([['_forceExpandPlaylists', false]]);
+      
+      // shouldUpdate should return true when _forceExpandPlaylists changes
+      const shouldUpdate = element.shouldUpdate(changedProperties);
+      expect(shouldUpdate).to.be.true;
+    });
   });
 
   describe('Component Lifecycle', () => {
