@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">65.6% </span>
+                <span class="strong">65.43% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>513/782</span>
+                <span class='fraction'>515/787</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">47.61% </span>
+                <span class="strong">45.45% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>10/21</span>
+                <span class='fraction'>10/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">65.6% </span>
+                <span class="strong">65.43% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>513/782</span>
+                <span class='fraction'>515/787</span>
             </div>
         
             
@@ -845,7 +845,12 @@
 <a name='L780'></a><a href='#L780'>780</a>
 <a name='L781'></a><a href='#L781'>781</a>
 <a name='L782'></a><a href='#L782'>782</a>
-<a name='L783'></a><a href='#L783'>783</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L783'></a><a href='#L783'>783</a>
+<a name='L784'></a><a href='#L784'>784</a>
+<a name='L785'></a><a href='#L785'>785</a>
+<a name='L786'></a><a href='#L786'>786</a>
+<a name='L787'></a><a href='#L787'>787</a>
+<a name='L788'></a><a href='#L788'>788</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1076,6 +1081,7 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1384,6 +1390,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1877,8 +1887,9 @@ class XScheduleCardEditor extends LitElement {
 <span class="cstat-no" title="statement not covered" >          &lt;label&gt;Custom Entity Name&lt;/label&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;input</span>
 <span class="cstat-no" title="statement not covered" >            type="text"</span>
+<span class="cstat-no" title="statement not covered" >            id="entityName"</span>
 <span class="cstat-no" title="statement not covered" >            .value=${this.config.entityName || ''}</span>
-<span class="cstat-no" title="statement not covered" >            @input=${(e) =&gt; this._valueChanged('entityName', e.target.value)}</span>
+<span class="cstat-no" title="statement not covered" >            @change=${this._valueChanged}</span>
 <span class="cstat-no" title="statement not covered" >            placeholder="Leave empty to use entity friendly name"</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/div&gt;</span>
@@ -1887,7 +1898,7 @@ class XScheduleCardEditor extends LitElement {
 <span class="cstat-no" title="statement not covered" >          &lt;label&gt;Custom Entity Icon&lt;/label&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;ha-icon-picker</span>
 <span class="cstat-no" title="statement not covered" >            .value=${this.config.entityIcon || ''}</span>
-<span class="cstat-no" title="statement not covered" >            @value-changed=${(e) =&gt; this._valueChanged('entityIcon', e.detail.value)}</span>
+<span class="cstat-no" title="statement not covered" >            @value-changed=${this._iconChanged}</span>
 <span class="cstat-no" title="statement not covered" >            .placeholder=${'mdi:lightbulb-group'}</span>
 <span class="cstat-no" title="statement not covered" >          &gt;&lt;/ha-icon-picker&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;small&gt;Leave empty to use default icon (mdi:lightbulb-group)&lt;/small&gt;</span>
@@ -2173,6 +2184,10 @@ class XScheduleCardEditor extends LitElement {
 <span class="cstat-no" title="statement not covered" >    this._updateConfig({ [key]: e.target.checked });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
+<span class="fstat-no" title="function not covered" >  _iconChanged(e) {</span>
+<span class="cstat-no" title="statement not covered" >    this._updateConfig({ entityIcon: e.detail.value || '' });</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+&nbsp;
 <span class="fstat-no" title="function not covered" >  _songActionsParentChanged(e) {</span>
 <span class="cstat-no" title="statement not covered" >    // When parent checkbox changes, update both children</span>
 <span class="cstat-no" title="statement not covered" >    const checked = e.target.checked;</span>
@@ -2416,7 +2431,7 @@ customElements.define('xschedule-card-editor', XScheduleCardEditor);
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T20:31:06.308Z
+                at 2025-11-17T20:59:23.085Z
             </div>
         <script src="prettify.js"></script>
         <script>

@@ -513,6 +513,15 @@ class XScheduleCard extends LitElement {
         <h3>
           <ha-icon icon="mdi:playlist-music"></ha-icon>
           Playlists
+          ${this._forceExpandPlaylists ? html`
+            <ha-icon-button
+              class="playlist-close-btn"
+              @click=${this._closeForceExpandedPlaylists}
+              .label=${'Close'}
+            >
+              <ha-icon icon="mdi:close"></ha-icon>
+            </ha-icon-button>
+          ` : ''}
         </h3>
         <div class="playlist-list">
           ${this._playlists.map(
@@ -864,6 +873,11 @@ class XScheduleCard extends LitElement {
     this._forceExpandPlaylists = true;
     this.requestUpdate();
     this._showToast('info', 'mdi:playlist-music', 'Select a playlist to play');
+  }
+
+  _closeForceExpandedPlaylists(e) {
+    e?.stopPropagation();
+    this._forceExpandPlaylists = false;
   }
 
   async _playSong(songName) {
@@ -1291,6 +1305,24 @@ class XScheduleCard extends LitElement {
         font-weight: 600;
       }
 
+      .playlist-section h3 {
+        position: relative;
+      }
+
+      .playlist-close-btn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        --mdc-icon-button-size: 32px;
+        --mdc-icon-size: 18px;
+        color: var(--secondary-text-color);
+      }
+
+      .playlist-close-btn:hover {
+        color: var(--primary-text-color);
+      }
+
       .badge {
         background: var(--accent-color);
         color: white;
@@ -1692,7 +1724,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.1-pre1  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.1-pre2  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

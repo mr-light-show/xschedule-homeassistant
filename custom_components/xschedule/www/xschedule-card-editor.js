@@ -360,8 +360,9 @@ class XScheduleCardEditor extends i {
           <label>Custom Entity Name</label>
           <input
             type="text"
+            id="entityName"
             .value=${this.config.entityName || ''}
-            @input=${(e) => this._valueChanged('entityName', e.target.value)}
+            @change=${this._valueChanged}
             placeholder="Leave empty to use entity friendly name"
           />
         </div>
@@ -370,7 +371,7 @@ class XScheduleCardEditor extends i {
           <label>Custom Entity Icon</label>
           <ha-icon-picker
             .value=${this.config.entityIcon || ''}
-            @value-changed=${(e) => this._valueChanged('entityIcon', e.detail.value)}
+            @value-changed=${this._iconChanged}
             .placeholder=${'mdi:lightbulb-group'}
           ></ha-icon-picker>
           <small>Leave empty to use default icon (mdi:lightbulb-group)</small>
@@ -654,6 +655,10 @@ class XScheduleCardEditor extends i {
 
   _checkboxChanged(key, e) {
     this._updateConfig({ [key]: e.target.checked });
+  }
+
+  _iconChanged(e) {
+    this._updateConfig({ entityIcon: e.detail.value || '' });
   }
 
   _songActionsParentChanged(e) {

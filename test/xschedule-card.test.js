@@ -353,6 +353,81 @@ describe('XScheduleCard', () => {
       const shouldUpdate = element.shouldUpdate(changedProperties);
       expect(shouldUpdate).to.be.true;
     });
+
+    it('should show close button when playlists are force-expanded', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'hidden' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2']
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Click play button to force-expand playlists
+      const playButton = element.shadowRoot.querySelector('.playback-controls .play-pause');
+      playButton.click();
+      await element.updateComplete;
+      
+      // Close button should be visible
+      const closeButton = element.shadowRoot.querySelector('.playlist-close-btn');
+      expect(closeButton).to.exist;
+    });
+
+    it('should not show close button in normal expanded mode', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'expanded' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          source_list: ['Playlist 1', 'Playlist 2'],
+          playlist: 'Playlist 1'
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Playlist section should be visible
+      const playlistSection = element.shadowRoot.querySelector('.playlist-section');
+      expect(playlistSection).to.exist;
+      
+      // Close button should not be visible (not force-expanded)
+      const closeButton = element.shadowRoot.querySelector('.playlist-close-btn');
+      expect(closeButton).to.not.exist;
+    });
+
+    it('should collapse playlists when close button is clicked', async () => {
+      const config = createMockCardConfig({ playlistDisplay: 'hidden' });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          source_list: ['Playlist 1', 'Playlist 2']
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Click play button to force-expand playlists
+      const playButton = element.shadowRoot.querySelector('.playback-controls .play-pause');
+      playButton.click();
+      await element.updateComplete;
+      
+      // Playlist section should be visible
+      let playlistSection = element.shadowRoot.querySelector('.playlist-section');
+      expect(playlistSection).to.exist;
+      
+      // Click close button
+      const closeButton = element.shadowRoot.querySelector('.playlist-close-btn');
+      closeButton.click();
+      await element.updateComplete;
+      
+      // Playlist section should be hidden again
+      playlistSection = element.shadowRoot.querySelector('.playlist-section');
+      expect(playlistSection).to.not.exist;
+    });
   });
 
   describe('Custom Entity Name and Icon', () => {
