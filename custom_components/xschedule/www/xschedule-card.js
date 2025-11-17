@@ -47,6 +47,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -64,6 +66,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -81,6 +85,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -98,6 +104,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -341,12 +349,18 @@ class XScheduleCard extends i {
   }
 
   _renderEntityName() {
-    const friendlyName = this._entity.attributes.friendly_name || this._entity.entity_id;
+    // Use custom name if provided, otherwise fall back to entity's friendly_name
+    const displayName = this.config.entityName || 
+                        this._entity.attributes.friendly_name || 
+                        this._entity.entity_id;
+    
+    // Use custom icon if provided, otherwise fall back to default
+    const displayIcon = this.config.entityIcon || 'mdi:lightbulb-group';
 
     return x`
       <div class="entity-name">
-        <ha-icon icon="mdi:lightbulb-group"></ha-icon>
-        <span>${friendlyName}</span>
+        <ha-icon icon="${displayIcon}"></ha-icon>
+        <span>${displayName}</span>
       </div>
     `;
   }
@@ -1790,7 +1804,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.0  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.1-pre1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
@@ -2057,6 +2071,26 @@ class XScheduleCardEditor extends i {
             />
             Show entity name header
           </label>
+        </div>
+
+        <div class="form-group">
+          <label>Custom Entity Name</label>
+          <input
+            type="text"
+            .value=${this.config.entityName || ''}
+            @input=${(e) => this._valueChanged('entityName', e.target.value)}
+            placeholder="Leave empty to use entity friendly name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Custom Entity Icon</label>
+          <ha-icon-picker
+            .value=${this.config.entityIcon || ''}
+            @value-changed=${(e) => this._valueChanged('entityIcon', e.detail.value)}
+            .placeholder=${'mdi:lightbulb-group'}
+          ></ha-icon-picker>
+          <small>Leave empty to use default icon (mdi:lightbulb-group)</small>
         </div>
 
         <div class="form-group checkbox">

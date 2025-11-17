@@ -47,6 +47,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -64,6 +66,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -81,6 +85,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -98,6 +104,8 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   custom: {
     // Custom mode uses user-provided settings
@@ -346,6 +354,26 @@ class XScheduleCardEditor extends i {
             />
             Show entity name header
           </label>
+        </div>
+
+        <div class="form-group">
+          <label>Custom Entity Name</label>
+          <input
+            type="text"
+            .value=${this.config.entityName || ''}
+            @input=${(e) => this._valueChanged('entityName', e.target.value)}
+            placeholder="Leave empty to use entity friendly name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Custom Entity Icon</label>
+          <ha-icon-picker
+            .value=${this.config.entityIcon || ''}
+            @value-changed=${(e) => this._valueChanged('entityIcon', e.detail.value)}
+            .placeholder=${'mdi:lightbulb-group'}
+          ></ha-icon-picker>
+          <small>Leave empty to use default icon (mdi:lightbulb-group)</small>
         </div>
 
         <div class="form-group checkbox">

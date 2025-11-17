@@ -244,6 +244,26 @@ class XScheduleCardEditor extends LitElement {
           </label>
         </div>
 
+        <div class="form-group">
+          <label>Custom Entity Name</label>
+          <input
+            type="text"
+            .value=${this.config.entityName || ''}
+            @input=${(e) => this._valueChanged('entityName', e.target.value)}
+            placeholder="Leave empty to use entity friendly name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Custom Entity Icon</label>
+          <ha-icon-picker
+            .value=${this.config.entityIcon || ''}
+            @value-changed=${(e) => this._valueChanged('entityIcon', e.detail.value)}
+            .placeholder=${'mdi:lightbulb-group'}
+          ></ha-icon-picker>
+          <small>Leave empty to use default icon (mdi:lightbulb-group)</small>
+        </div>
+
         <div class="form-group checkbox">
           <label>
             <input

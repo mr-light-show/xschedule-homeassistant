@@ -355,6 +355,95 @@ describe('XScheduleCard', () => {
     });
   });
 
+  describe('Custom Entity Name and Icon', () => {
+    it('should display custom entity name when configured', async () => {
+      const config = createMockCardConfig({ 
+        showEntityName: true,
+        entityName: 'My Custom Name'
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const entityName = element.shadowRoot.querySelector('.entity-name span');
+      expect(entityName).to.exist;
+      expect(entityName.textContent).to.equal('My Custom Name');
+    });
+
+    it('should display custom entity icon when configured', async () => {
+      const config = createMockCardConfig({ 
+        showEntityName: true,
+        entityIcon: 'mdi:speaker'
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const icon = element.shadowRoot.querySelector('.entity-name ha-icon');
+      expect(icon).to.exist;
+      expect(icon.getAttribute('icon')).to.equal('mdi:speaker');
+    });
+
+    it('should fallback to entity friendly_name when entityName not set', async () => {
+      const config = createMockCardConfig({ 
+        showEntityName: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        { friendly_name: 'Test Entity' }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const entityName = element.shadowRoot.querySelector('.entity-name span');
+      expect(entityName).to.exist;
+      expect(entityName.textContent).to.equal('Test Entity');
+    });
+
+    it('should fallback to default icon when entityIcon not set', async () => {
+      const config = createMockCardConfig({ 
+        showEntityName: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const icon = element.shadowRoot.querySelector('.entity-name ha-icon');
+      expect(icon).to.exist;
+      expect(icon.getAttribute('icon')).to.equal('mdi:lightbulb-group');
+    });
+
+    it('should use custom name and icon together', async () => {
+      const config = createMockCardConfig({ 
+        showEntityName: true,
+        entityName: 'Custom Name',
+        entityIcon: 'mdi:speaker'
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const entityName = element.shadowRoot.querySelector('.entity-name span');
+      const icon = element.shadowRoot.querySelector('.entity-name ha-icon');
+      
+      expect(entityName.textContent).to.equal('Custom Name');
+      expect(icon.getAttribute('icon')).to.equal('mdi:speaker');
+    });
+  });
+
   describe('Component Lifecycle', () => {
     it('initializes with default values', async () => {
       const config = createMockCardConfig();

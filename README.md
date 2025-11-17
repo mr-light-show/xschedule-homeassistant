@@ -280,6 +280,8 @@ showSongActions: true         # true or false
 showProgressBar: true         # true or false
 maxVisibleSongs: 10           # number of songs before scrolling
 confirmDisruptive: true       # confirm before replacing current song
+entityName: My Light Show    # custom entity name (optional)
+entityIcon: mdi:speaker      # custom entity icon (optional)
 ```
 
 ### Quick Comparison

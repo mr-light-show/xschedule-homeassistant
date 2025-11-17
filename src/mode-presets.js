@@ -21,6 +21,8 @@ export const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   dj: {
     playlistDisplay: 'expanded',
@@ -38,6 +40,8 @@ export const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   jukebox: {
     playlistDisplay: 'collapsed',
@@ -55,6 +59,8 @@ export const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    entityName: '',
+    entityIcon: '',
   },
   minimal: {
     playlistDisplay: 'hidden',
@@ -72,6 +78,8 @@ export const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    entityName: '',
+    entityIcon: '',
   },
   custom: {
     // Custom mode uses user-provided settings

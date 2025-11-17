@@ -237,12 +237,18 @@ class XScheduleCard extends LitElement {
   }
 
   _renderEntityName() {
-    const friendlyName = this._entity.attributes.friendly_name || this._entity.entity_id;
+    // Use custom name if provided, otherwise fall back to entity's friendly_name
+    const displayName = this.config.entityName || 
+                        this._entity.attributes.friendly_name || 
+                        this._entity.entity_id;
+    
+    // Use custom icon if provided, otherwise fall back to default
+    const displayIcon = this.config.entityIcon || 'mdi:lightbulb-group';
 
     return html`
       <div class="entity-name">
-        <ha-icon icon="mdi:lightbulb-group"></ha-icon>
-        <span>${friendlyName}</span>
+        <ha-icon icon="${displayIcon}"></ha-icon>
+        <span>${displayName}</span>
       </div>
     `;
   }
@@ -1686,7 +1692,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.0  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.1-pre1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
