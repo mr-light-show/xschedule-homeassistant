@@ -47,6 +47,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -66,6 +67,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    showPowerOffButton: true,
     entityName: '',
     entityIcon: '',
   },
@@ -85,6 +87,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -104,6 +107,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -517,6 +521,16 @@ class XScheduleCard extends i {
 
     return x`
       <div class="playback-controls">
+        ${this.config.showPowerOffButton ? x`
+          <ha-icon-button
+            @click=${this._handlePowerOff}
+            title="Power Off (Stop All)"
+            class="power-off-btn"
+          >
+            <ha-icon icon="mdi:power"></ha-icon>
+          </ha-icon-button>
+        ` : ''}
+
         <ha-icon-button
           @click=${this._handlePrevious}
           title="Previous"
@@ -898,6 +912,25 @@ class XScheduleCard extends i {
 
   _handleStop() {
     this._callService('media_stop');
+  }
+
+  async _handlePowerOff() {
+    // Confirm before turning off
+    if (this.config.confirmDisruptive !== false) {
+      if (!confirm('Stop all playlists, schedules, and clear queue?')) {
+        return;
+      }
+    }
+
+    try {
+      await this.hass.callService('media_player', 'turn_off', {
+        entity_id: this.config.entity,
+      });
+      this._showToast('success', 'mdi:power', 'All stopped');
+    } catch (err) {
+      this._showToast('error', 'mdi:alert-circle', 'Power off failed');
+      console.error('Error turning off:', err);
+    }
   }
 
   _handleNext() {
@@ -1384,6 +1417,14 @@ class XScheduleCard extends i {
         --mdc-icon-size: 34px;
       }
 
+      .playback-controls .power-off-btn {
+        color: var(--error-color);
+      }
+
+      .playback-controls .power-off-btn:hover {
+        color: var(--error-state-color);
+      }
+
       .volume-control {
         display: flex;
         align-items: center;
@@ -1836,7 +1877,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.2  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.6.3-pre1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
@@ -2233,6 +2274,18 @@ class XScheduleCardEditor extends i {
             />
             Show volume controls
           </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.config.showPowerOffButton || false}
+              @change=${(e) => this._checkboxChanged('showPowerOffButton', e)}
+            />
+            Show power off button
+          </label>
+          <div class="hint">Stops all playlists, schedules, and clears queue</div>
         </div>
 
         <div class="form-group checkbox">

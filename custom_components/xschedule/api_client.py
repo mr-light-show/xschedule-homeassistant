@@ -291,6 +291,12 @@ class XScheduleAPIClient:
         self.invalidate_cache()
         return result
 
+    async def stop_all_now(self) -> dict[str, Any]:
+        """Stop all playlists, schedules, and empty the queue."""
+        result = await self.command("Stop all now")
+        self.invalidate_cache()
+        return result
+
     async def next_step(self) -> dict[str, Any]:
         """Go to next step in current playlist."""
         result = await self.command("Next step in current playlist")

@@ -378,6 +378,18 @@ class XScheduleCardEditor extends LitElement {
           <label>
             <input
               type="checkbox"
+              .checked=${this.config.showPowerOffButton || false}
+              @change=${(e) => this._checkboxChanged('showPowerOffButton', e)}
+            />
+            Show power off button
+          </label>
+          <div class="hint">Stops all playlists, schedules, and clears queue</div>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
               .checked=${this.config.enableSeek || false}
               @change=${(e) => this._checkboxChanged('enableSeek', e)}
             />

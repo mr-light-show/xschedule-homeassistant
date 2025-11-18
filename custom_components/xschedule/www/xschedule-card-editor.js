@@ -47,6 +47,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -66,6 +67,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    showPowerOffButton: true,
     entityName: '',
     entityIcon: '',
   },
@@ -85,6 +87,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: false,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -104,6 +107,7 @@ const MODE_PRESETS = {
     showDuration: true,
     compactMode: false,
     autoHideSongsWhenEmpty: true,
+    showPowerOffButton: false,
     entityName: '',
     entityIcon: '',
   },
@@ -484,6 +488,18 @@ class XScheduleCardEditor extends i {
             />
             Show volume controls
           </label>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input
+              type="checkbox"
+              .checked=${this.config.showPowerOffButton || false}
+              @change=${(e) => this._checkboxChanged('showPowerOffButton', e)}
+            />
+            Show power off button
+          </label>
+          <div class="hint">Stops all playlists, schedules, and clears queue</div>
         </div>
 
         <div class="form-group checkbox">

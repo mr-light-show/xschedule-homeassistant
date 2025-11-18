@@ -897,4 +897,64 @@ describe('XScheduleCard', () => {
       expect(renderCount).to.be.greaterThan(0);
     });
   });
+
+  describe('Power Off Button', () => {
+    it('should show power off button when configured', async () => {
+      const config = createMockCardConfig({ 
+        showPowerOffButton: true 
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          song: 'Test Song'
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const powerButton = element.shadowRoot.querySelector('.power-off-btn');
+      expect(powerButton).to.exist;
+    });
+
+    it('should not show power off button when not configured', async () => {
+      const config = createMockCardConfig({ 
+        showPowerOffButton: false 
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          song: 'Test Song'
+        }
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const powerButton = element.shadowRoot.querySelector('.power-off-btn');
+      expect(powerButton).to.not.exist;
+    });
+
+    it('should have power off handler method', async () => {
+      const config = createMockCardConfig({ 
+        showPowerOffButton: true
+      });
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          song: 'Test Song'
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      // Check that the _handlePowerOff method exists
+      expect(element._handlePowerOff).to.be.a('function');
+    });
+  });
 });

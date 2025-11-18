@@ -92,6 +92,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
     )
 
     def __init__(
@@ -485,6 +486,19 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error stopping: %s", err)
+
+    async def async_turn_off(self) -> None:
+        """Turn off - stop all playlists, schedules, and empty queue."""
+        try:
+            if self._websocket and self._websocket.connected:
+                await self._websocket.send_command("Stop all now")
+            else:
+                await self._api_client.stop_all_now()
+
+            _LOGGER.info("Executed 'Stop all now' command")
+
+        except XScheduleAPIError as err:
+            _LOGGER.error("Error turning off: %s", err)
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""

@@ -34,6 +34,7 @@ def mock_api_client():
     client.play_playlist_step = AsyncMock(return_value={"result": "success"})
     client.pause = AsyncMock(return_value={"result": "success"})
     client.stop = AsyncMock(return_value={"result": "success"})
+    client.stop_all_now = AsyncMock(return_value={"result": "success"})
     client.next_step = AsyncMock(return_value={"result": "success"})
     client.previous_step = AsyncMock(return_value={"result": "success"})
     client.set_volume = AsyncMock(return_value={"result": "success"})
@@ -375,3 +376,41 @@ class TestEntityAttributes:
     def test_name(self, media_player_entity):
         """Test entity name is set."""
         assert media_player_entity.name is not None
+
+
+class TestPowerOff:
+    """Test power off/turn off functionality."""
+
+    @pytest.mark.asyncio
+    async def test_turn_off_via_api(self, media_player_entity, mock_api_client):
+        """Test turn off command via API."""
+        media_player_entity._websocket = None
+        
+        await media_player_entity.async_turn_off()
+        
+        mock_api_client.stop_all_now.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_turn_off_via_websocket(self, media_player_entity):
+        """Test turn off command via WebSocket."""
+        mock_websocket = MagicMock()
+        mock_websocket.connected = True
+        mock_websocket.send_command = AsyncMock()
+        media_player_entity._websocket = mock_websocket
+        
+        await media_player_entity.async_turn_off()
+        
+        mock_websocket.send_command.assert_called_once_with("Stop all now")
+
+    @pytest.mark.asyncio
+    async def test_turn_off_handles_error(self, media_player_entity, mock_api_client):
+        """Test turn off handles errors gracefully."""
+        from custom_components.xschedule.api_client import XScheduleAPIError
+        
+        media_player_entity._websocket = None
+        mock_api_client.stop_all_now.side_effect = XScheduleAPIError("Test error")
+        
+        # Should not raise exception
+        await media_player_entity.async_turn_off()
+        
+        mock_api_client.stop_all_now.assert_called_once()
