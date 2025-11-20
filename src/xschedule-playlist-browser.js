@@ -6,6 +6,22 @@
 
 import { LitElement, html, css } from 'lit';
 
+// Home Assistant MediaPlayerEntityFeature standard values
+// Source: homeassistant.components.media_player.MediaPlayerEntityFeature
+const FEATURE_PAUSE = 0x1;           // MediaPlayerEntityFeature.PAUSE
+const FEATURE_SEEK = 0x2;            // MediaPlayerEntityFeature.SEEK
+const FEATURE_VOLUME_SET = 0x4;      // MediaPlayerEntityFeature.VOLUME_SET
+const FEATURE_VOLUME_MUTE = 0x8;     // MediaPlayerEntityFeature.VOLUME_MUTE
+const FEATURE_PREVIOUS = 0x10;       // MediaPlayerEntityFeature.PREVIOUS_TRACK
+const FEATURE_NEXT = 0x20;           // MediaPlayerEntityFeature.NEXT_TRACK
+const FEATURE_TURN_ON = 0x80;        // MediaPlayerEntityFeature.TURN_ON
+const FEATURE_TURN_OFF = 0x100;      // MediaPlayerEntityFeature.TURN_OFF
+const FEATURE_PLAY_MEDIA = 0x200;    // MediaPlayerEntityFeature.PLAY_MEDIA
+const FEATURE_SELECT_SOURCE = 0x800; // MediaPlayerEntityFeature.SELECT_SOURCE
+const FEATURE_STOP = 0x1000;         // MediaPlayerEntityFeature.STOP
+const FEATURE_PLAY = 0x4000;         // MediaPlayerEntityFeature.PLAY
+const FEATURE_BROWSE_MEDIA = 0x20000; // MediaPlayerEntityFeature.BROWSE_MEDIA
+
 class XSchedulePlaylistBrowser extends LitElement {
   static get properties() {
     return {
@@ -76,6 +92,7 @@ class XSchedulePlaylistBrowser extends LitElement {
       show_status: config.show_status !== false,
       compact_mode: config.compact_mode || false,
       confirm_play: config.confirm_play !== false,
+      expandable_playlists: config.expandable_playlists !== false,  // Default to true
       ...config,
     };
   }
@@ -157,9 +174,13 @@ class XSchedulePlaylistBrowser extends LitElement {
 
   _supportsBrowseMedia() {
     if (!this._entity) return false;
+    
+    // Check if user has disabled playlist expansion via config
+    if (this.config.expandable_playlists === false) return false;
+    
+    // Check if player actually supports browse_media
     const features = this._entity.attributes.supported_features || 0;
-    const SUPPORT_BROWSE_MEDIA = 0x800; // 2048
-    return (features & SUPPORT_BROWSE_MEDIA) !== 0;
+    return (features & FEATURE_BROWSE_MEDIA) !== 0;
   }
 
   async _fetchScheduleInfo(forceRefresh = false) {
@@ -629,26 +650,22 @@ class XSchedulePlaylistBrowser extends LitElement {
       const entity = this._hass.states[this.config.entity];
       const features = entity?.attributes?.supported_features || 0;
       
-      // Feature flags from Home Assistant
-      const SUPPORT_PLAY_MEDIA = 0x200;    // 512
-      const SUPPORT_SELECT_SOURCE = 0x400; // 1024
-      
       const isXSchedule = this._isXSchedulePlayer();
       
       // For xSchedule, prefer PLAY_MEDIA
       // For generic players, prefer SELECT_SOURCE (standard way to change source)
-      if (isXSchedule && (features & SUPPORT_PLAY_MEDIA)) {
+      if (isXSchedule && (features & FEATURE_PLAY_MEDIA)) {
         await this._hass.callService('media_player', 'play_media', {
           entity_id: this.config.entity,
           media_content_type: 'playlist',
           media_content_id: playlistName,
         });
-      } else if (features & SUPPORT_SELECT_SOURCE) {
+      } else if (features & FEATURE_SELECT_SOURCE) {
         await this._hass.callService('media_player', 'select_source', {
           entity_id: this.config.entity,
           source: playlistName,
         });
-      } else if (features & SUPPORT_PLAY_MEDIA) {
+      } else if (features & FEATURE_PLAY_MEDIA) {
         // Fallback to PLAY_MEDIA for players that only support that
         await this._hass.callService('media_player', 'play_media', {
           entity_id: this.config.entity,
@@ -1024,6 +1041,22 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
             Confirm Before Playing
           </label>
         </div>
+
+        <div class="form-group">
+          <label>
+            <input
+              type="checkbox"
+              .configValue=${'expandable_playlists'}
+              .checked=${this.config.expandable_playlists !== false}
+              @change=${this._valueChanged}
+            />
+            Expandable Playlists
+          </label>
+          <div class="helper-text">
+            Enable to show songs when expanding playlists (requires browse_media support). 
+            Disable if playlists show incorrect content.
+          </div>
+        </div>
       </div>
     `;
   }
@@ -1058,6 +1091,13 @@ class XSchedulePlaylistBrowserEditor extends LitElement {
       .form-group label input[type="checkbox"] {
         margin-right: 8px;
       }
+
+      .helper-text {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin-top: 4px;
+        margin-left: 24px;
+      }
     `;
   }
 }
@@ -1067,7 +1107,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.7.0  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.7.1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

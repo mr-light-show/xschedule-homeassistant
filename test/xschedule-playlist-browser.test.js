@@ -289,7 +289,7 @@ describe('XSchedulePlaylistBrowser', () => {
         'media_player.spotify',
         'playing',
         {
-          supported_features: 0x800, // BROWSE_MEDIA
+          supported_features: 0x20000, // 131072 - BROWSE_MEDIA
           source_list: ['My Playlist', 'Another Playlist']
         }
       );
@@ -307,7 +307,7 @@ describe('XSchedulePlaylistBrowser', () => {
         'media_player.basic',
         'playing',
         {
-          supported_features: 0x400, // SELECT_SOURCE only
+          supported_features: 0x800, // 2048 - SELECT_SOURCE only (no BROWSE_MEDIA)
           source_list: ['Station 1']
         }
       );
@@ -325,7 +325,7 @@ describe('XSchedulePlaylistBrowser', () => {
         'media_player.spotify',
         'playing',
         {
-          supported_features: 0x800, // BROWSE_MEDIA
+          supported_features: 0x20000, // 131072 - BROWSE_MEDIA
           source_list: ['My Playlist']
         }
       );
@@ -344,7 +344,7 @@ describe('XSchedulePlaylistBrowser', () => {
         'media_player.basic',
         'playing',
         {
-          supported_features: 0x400, // SELECT_SOURCE only
+          supported_features: 0x800, // 2048 - SELECT_SOURCE only (no BROWSE_MEDIA)
           source_list: ['Station 1']
         }
       );
@@ -384,7 +384,7 @@ describe('XSchedulePlaylistBrowser', () => {
         'media_player.spotify',
         'playing',
         {
-          supported_features: 0x800 | 0x200, // BROWSE_MEDIA + PLAY_MEDIA
+          supported_features: 0x20000 | 0x200, // BROWSE_MEDIA (0x20000) + PLAY_MEDIA (0x200)
           source_list: ['My Playlist']
         }
       );

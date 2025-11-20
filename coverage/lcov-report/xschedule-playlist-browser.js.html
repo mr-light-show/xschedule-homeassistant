@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">67.75% </span>
+                <span class="strong">68.44% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>744/1098</span>
+                <span class='fraction'>759/1109</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">67.75% </span>
+                <span class="strong">68.44% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>744/1098</span>
+                <span class='fraction'>759/1109</span>
             </div>
         
             
@@ -1161,7 +1161,34 @@
 <a name='L1096'></a><a href='#L1096'>1096</a>
 <a name='L1097'></a><a href='#L1097'>1097</a>
 <a name='L1098'></a><a href='#L1098'>1098</a>
-<a name='L1099'></a><a href='#L1099'>1099</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L1099'></a><a href='#L1099'>1099</a>
+<a name='L1100'></a><a href='#L1100'>1100</a>
+<a name='L1101'></a><a href='#L1101'>1101</a>
+<a name='L1102'></a><a href='#L1102'>1102</a>
+<a name='L1103'></a><a href='#L1103'>1103</a>
+<a name='L1104'></a><a href='#L1104'>1104</a>
+<a name='L1105'></a><a href='#L1105'>1105</a>
+<a name='L1106'></a><a href='#L1106'>1106</a>
+<a name='L1107'></a><a href='#L1107'>1107</a>
+<a name='L1108'></a><a href='#L1108'>1108</a>
+<a name='L1109'></a><a href='#L1109'>1109</a>
+<a name='L1110'></a><a href='#L1110'>1110</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1323,7 +1350,6 @@
 <span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-yes">20x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">10x</span>
@@ -1778,10 +1804,6 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2267,6 +2289,22 @@
 &nbsp;
 import { LitElement, html, css } from 'lit';
 &nbsp;
+// Home Assistant MediaPlayerEntityFeature standard values
+// Source: homeassistant.components.media_player.MediaPlayerEntityFeature
+const FEATURE_PAUSE = 0x1;           // MediaPlayerEntityFeature.PAUSE
+const FEATURE_SEEK = 0x2;            // MediaPlayerEntityFeature.SEEK
+const FEATURE_VOLUME_SET = 0x4;      // MediaPlayerEntityFeature.VOLUME_SET
+const FEATURE_VOLUME_MUTE = 0x8;     // MediaPlayerEntityFeature.VOLUME_MUTE
+const FEATURE_PREVIOUS = 0x10;       // MediaPlayerEntityFeature.PREVIOUS_TRACK
+const FEATURE_NEXT = 0x20;           // MediaPlayerEntityFeature.NEXT_TRACK
+const FEATURE_TURN_ON = 0x80;        // MediaPlayerEntityFeature.TURN_ON
+const FEATURE_TURN_OFF = 0x100;      // MediaPlayerEntityFeature.TURN_OFF
+const FEATURE_PLAY_MEDIA = 0x200;    // MediaPlayerEntityFeature.PLAY_MEDIA
+const FEATURE_SELECT_SOURCE = 0x800; // MediaPlayerEntityFeature.SELECT_SOURCE
+const FEATURE_STOP = 0x1000;         // MediaPlayerEntityFeature.STOP
+const FEATURE_PLAY = 0x4000;         // MediaPlayerEntityFeature.PLAY
+const FEATURE_BROWSE_MEDIA = 0x20000; // MediaPlayerEntityFeature.BROWSE_MEDIA
+&nbsp;
 class XSchedulePlaylistBrowser extends LitElement {
   static get properties() {
     return {
@@ -2419,8 +2457,7 @@ class XSchedulePlaylistBrowser extends LitElement {
   _supportsBrowseMedia() {
     if (!this._entity) <span class="branch-0 cbranch-no" title="branch not covered" >return false;</span>
     const features = this._entity.attributes.supported_features <span class="branch-0 cbranch-no" title="branch not covered" >|| 0;</span>
-    const SUPPORT_BROWSE_MEDIA = 0x800; // 2048
-    return (features &amp; SUPPORT_BROWSE_MEDIA) !== 0;
+    return (features &amp; FEATURE_BROWSE_MEDIA) !== 0;
   }
 &nbsp;
   async _fetchScheduleInfo(forceRefresh = false) {
@@ -2890,26 +2927,22 @@ class XSchedulePlaylistBrowser extends LitElement {
 <span class="cstat-no" title="statement not covered" >      const entity = this._hass.states[this.config.entity];</span>
 <span class="cstat-no" title="statement not covered" >      const features = entity?.attributes?.supported_features || 0;</span>
 <span class="cstat-no" title="statement not covered" >      </span>
-<span class="cstat-no" title="statement not covered" >      // Feature flags from Home Assistant</span>
-<span class="cstat-no" title="statement not covered" >      const SUPPORT_PLAY_MEDIA = 0x200;    // 512</span>
-<span class="cstat-no" title="statement not covered" >      const SUPPORT_SELECT_SOURCE = 0x400; // 1024</span>
-<span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      const isXSchedule = this._isXSchedulePlayer();</span>
 <span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      // For xSchedule, prefer PLAY_MEDIA</span>
 <span class="cstat-no" title="statement not covered" >      // For generic players, prefer SELECT_SOURCE (standard way to change source)</span>
-<span class="cstat-no" title="statement not covered" >      if (isXSchedule &amp;&amp; (features &amp; SUPPORT_PLAY_MEDIA)) {</span>
+<span class="cstat-no" title="statement not covered" >      if (isXSchedule &amp;&amp; (features &amp; FEATURE_PLAY_MEDIA)) {</span>
 <span class="cstat-no" title="statement not covered" >        await this._hass.callService('media_player', 'play_media', {</span>
 <span class="cstat-no" title="statement not covered" >          entity_id: this.config.entity,</span>
 <span class="cstat-no" title="statement not covered" >          media_content_type: 'playlist',</span>
 <span class="cstat-no" title="statement not covered" >          media_content_id: playlistName,</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
-<span class="cstat-no" title="statement not covered" >      } else if (features &amp; SUPPORT_SELECT_SOURCE) {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (features &amp; FEATURE_SELECT_SOURCE) {</span>
 <span class="cstat-no" title="statement not covered" >        await this._hass.callService('media_player', 'select_source', {</span>
 <span class="cstat-no" title="statement not covered" >          entity_id: this.config.entity,</span>
 <span class="cstat-no" title="statement not covered" >          source: playlistName,</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
-<span class="cstat-no" title="statement not covered" >      } else if (features &amp; SUPPORT_PLAY_MEDIA) {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (features &amp; FEATURE_PLAY_MEDIA) {</span>
 <span class="cstat-no" title="statement not covered" >        // Fallback to PLAY_MEDIA for players that only support that</span>
 <span class="cstat-no" title="statement not covered" >        await this._hass.callService('media_player', 'play_media', {</span>
 <span class="cstat-no" title="statement not covered" >          entity_id: this.config.entity,</span>
@@ -3328,7 +3361,7 @@ customElements.define('xschedule-playlist-browser', XSchedulePlaylistBrowser);
 &nbsp;
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.6.3-pre1  ',
+  '%c  XSCHEDULE-PLAYLIST-BROWSER  \n%c  Version 1.7.0  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
@@ -3364,7 +3397,7 @@ window.customCards.push({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-20T21:28:00.744Z
+                at 2025-11-20T22:00:54.054Z
             </div>
         <script src="prettify.js"></script>
         <script>

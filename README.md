@@ -313,7 +313,11 @@ entity: media_player.xschedule
 sort_by: schedule  # schedule (default) or alphabetical
 show_duration: true
 show_status: true
+expandable_playlists: true  # Enable/disable playlist expansion (default: true)
 ```
+
+**Configuration Options:**
+- `expandable_playlists` (boolean, default: `true`): Enable to show songs when expanding playlists. Set to `false` if your media player has broken browse_media implementation (e.g., shows playlists instead of songs when expanded).
 
 ## Advanced Features
 
