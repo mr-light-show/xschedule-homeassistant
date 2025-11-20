@@ -44,7 +44,7 @@ export function createMockHass(overrides = {}) {
         state: 'idle',
         attributes: {
           friendly_name: 'xSchedule',
-          supported_features: 0,
+          supported_features: 154431, // 0x25B3F = PAUSE|SEEK|VOLUME_SET|VOLUME_MUTE|PREV|NEXT|TURN_OFF|PLAY_MEDIA|SELECT_SOURCE|STOP|PLAY|BROWSE_MEDIA
         },
       },
     },
@@ -91,7 +91,8 @@ export function createMockEntityState(entityId, state, attributes = {}) {
     state: state,
     attributes: {
       friendly_name: entityId.split('.')[1],
-      ...attributes,
+      supported_features: 154431, // Default: 0x25B3F = PAUSE|SEEK|VOLUME_SET|VOLUME_MUTE|PREV|NEXT|TURN_OFF|PLAY_MEDIA|SELECT_SOURCE|STOP|PLAY|BROWSE_MEDIA
+      ...attributes, // Can override with specific features if needed
     },
     last_changed: new Date().toISOString(),
     last_updated: new Date().toISOString(),

@@ -957,4 +957,819 @@ describe('XScheduleCard', () => {
       expect(element._handlePowerOff).to.be.a('function');
     });
   });
+
+  describe('Browse Media Fallback', () => {
+    it('should use playlist_songs when available (xSchedule player)', async () => {
+      const config = createMockCardConfig();
+      const playlistSongs = [
+        { name: 'Song 1', duration: 180000 },
+        { name: 'Song 2', duration: 240000 }
+      ];
+      
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          playlist_songs: playlistSongs,
+          song: 'Song 1'
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Songs should come from playlist_songs attribute
+      expect(element._songs).to.deep.equal(playlistSongs);
+    });
+
+    it('should have _fetchSongsViaBrowse method', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      
+      // Method should exist
+      expect(element._fetchSongsViaBrowse).to.be.a('function');
+    });
+
+    it('should convert browse_media response to song format', async () => {
+      const config = createMockCardConfig();
+      
+      const browseSongs = [
+        { title: 'Song A', duration: 180 },
+        { title: 'Song B', duration: 240 }
+      ];
+      
+      mockHass.callWS = stub().resolves({
+        children: browseSongs
+      });
+      
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      
+      // Test the method directly
+      const songs = await element._fetchSongsViaBrowse('Test Playlist');
+      
+      // Should convert to song format
+      expect(songs).to.have.lengthOf(2);
+      expect(songs[0].name).to.equal('Song A');
+      expect(songs[0].duration).to.equal(180000); // converted to ms
+      expect(songs[1].name).to.equal('Song B');
+      expect(songs[1].duration).to.equal(240000);
+    });
+
+    it('should use media_playlist fallback to playlist attribute', async () => {
+      const config = createMockCardConfig();
+      
+      // Old-style xSchedule with only 'playlist' attribute
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          playlist: 'Test Playlist',
+          playlist_songs: [
+            { name: 'Song 1', duration: 180000 }
+          ]
+          // No media_playlist attribute
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Should use playlist attribute (check that songs are populated)
+      expect(element._songs).to.have.lengthOf(1);
+      expect(element._songs[0].name).to.equal('Song 1');
+    });
+
+    it('should handle browse_media fetch errors gracefully', async () => {
+      const config = createMockCardConfig();
+      
+      mockHass.callWS = stub().rejects(new Error('Browse failed'));
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle'
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      
+      // Test the method directly
+      const songs = await element._fetchSongsViaBrowse('Test Playlist');
+      
+      // Should return empty array on error
+      expect(songs).to.be.an('array');
+      expect(songs).to.have.lengthOf(0);
+    });
+  });
+
+  describe('Playlist Playback Compatibility', () => {
+    it('should use play_media when supported', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          supported_features: 0x200, // PLAY_MEDIA
+          source_list: ['Test Playlist', 'Another Playlist']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      element._selectPlaylist('Test Playlist');
+      
+      const lastCall = mockHass._getLastServiceCall('media_player', 'play_media');
+      expect(lastCall).to.exist;
+      expect(lastCall.media_content_id).to.equal('Test Playlist');
+    });
+    
+    it('should fall back to select_source when play_media not supported', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'idle',
+        {
+          supported_features: 0x400, // SELECT_SOURCE only
+          source_list: ['My Playlist', 'Another Playlist']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      element._selectPlaylist('My Playlist');
+      
+      const lastCall = mockHass._getLastServiceCall('media_player', 'select_source');
+      expect(lastCall).to.exist;
+      expect(lastCall.source).to.equal('My Playlist');
+    });
+    
+    it('should show error when neither method supported', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'idle',
+        {
+          supported_features: 0x0, // No playlist support
+          source_list: []
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      element._showToast = stub();
+      
+      element._selectPlaylist('Test');
+      
+      expect(element._showToast.called).to.be.true;
+      expect(element._showToast.getCall(0).args[0]).to.equal('error');
+    });
+    
+    it('should prefer play_media for xSchedule when both supported', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          integration: 'xschedule',  // Mark as xSchedule player
+          supported_features: 0x600, // BOTH (0x200 | 0x400)
+          source_list: ['Test Playlist']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      element._selectPlaylist('Test Playlist');
+      
+      // Should use play_media (preferred for xSchedule)
+      const playMediaCall = mockHass._getLastServiceCall('media_player', 'play_media');
+      expect(playMediaCall).to.exist;
+      expect(playMediaCall.media_content_id).to.equal('Test Playlist');
+    });
+    
+    it('should handle missing supported_features gracefully', async () => {
+      const config = createMockCardConfig();
+      const state = createMockEntityState(
+        'media_player.unknown',
+        'idle',
+        {
+          source_list: ['Test']
+        }
+      );
+      // Remove supported_features to test missing features handling
+      delete state.attributes.supported_features;
+      mockHass.states['media_player.unknown'] = state;
+      config.entity = 'media_player.unknown';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      element._showToast = stub();
+      
+      element._selectPlaylist('Test');
+      
+      // Should show error since features default to 0
+      expect(element._showToast.called).to.be.true;
+      expect(element._showToast.getCall(0).args[0]).to.equal('error');
+    });
+  });
+
+  describe('Universal Source Display', () => {
+    it('should show xSchedule playlists for xSchedule player', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          integration: 'xschedule',
+          supported_features: 0x200, // PLAY_MEDIA
+          source_list: ['Playlist 1', 'Playlist 2', 'Playlist 3']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Should have 3 playlists from source_list
+      expect(element._playlists).to.have.lengthOf(3);
+      expect(element._playlists).to.include('Playlist 1');
+      
+      // Should be detected as xSchedule player
+      expect(element._isXSchedulePlayer()).to.be.true;
+    });
+    
+    it('should show source_list for generic player', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x400, // SELECT_SOURCE only
+          source_list: ['Station 1', 'Station 2', 'Station 3'],
+          source: 'Station 1'
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Should have 3 sources from source_list
+      expect(element._playlists).to.have.lengthOf(3);
+      expect(element._playlists).to.include('Station 1');
+      
+      // Should NOT be detected as xSchedule player
+      expect(element._isXSchedulePlayer()).to.be.false;
+    });
+    
+    it('should display "Sources" label for generic player', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'expanded';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x400,
+          source_list: ['Station 1', 'Station 2'],
+          source: 'Station 1'
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Render the component
+      const rendered = element.shadowRoot.innerHTML;
+      
+      // Should show "Sources" instead of "Playlists"
+      expect(rendered).to.include('Sources');
+    });
+    
+    it('should display "Playlists" label for xSchedule player', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'expanded';
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          integration: 'xschedule',
+          supported_features: 0x200,
+          source_list: ['Playlist 1', 'Playlist 2']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Render the component
+      const rendered = element.shadowRoot.innerHTML;
+      
+      // Should show "Playlists"
+      expect(rendered).to.include('Playlists');
+    });
+    
+    it('should handle empty source_list gracefully', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'idle',
+        {
+          supported_features: 0x0,
+          source_list: []
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Should have empty playlists array
+      expect(element._playlists).to.be.an('array');
+      expect(element._playlists).to.have.lengthOf(0);
+    });
+    
+    it('should use source attribute for current source in generic player', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'expanded';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x400,
+          source_list: ['Station 1', 'Station 2'],
+          source: 'Station 1'
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Render and check that Station 1 is marked as active
+      const rendered = element.shadowRoot.innerHTML;
+      expect(rendered).to.include('Station 1');
+    });
+  });
+
+  describe('Generic Player Current Source Detection', () => {
+    it('should detect current source for generic player', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600, // Both PLAY_MEDIA and SELECT_SOURCE
+          source_list: ['Station 1', 'Station 2'],
+          source: 'Station 1'  // Currently playing
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const current = element._getCurrentPlaylistOrSource();
+      expect(current).to.equal('Station 1');
+    });
+    
+    it('should prefer media_playlist over source for xSchedule', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          integration: 'xschedule',
+          supported_features: 0x200,
+          source_list: ['Playlist 1'],
+          media_playlist: 'Playlist 1',
+          source: 'Something Else'  // Should be ignored
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const current = element._getCurrentPlaylistOrSource();
+      expect(current).to.equal('Playlist 1');
+    });
+    
+    it('should prefer SELECT_SOURCE for generic player playlist selection', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'idle',
+        {
+          supported_features: 0x600, // Both PLAY_MEDIA and SELECT_SOURCE
+          source_list: ['Station 1', 'Station 2']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Call _selectPlaylist
+      element._selectPlaylist('Station 1');
+      
+      // Should call select_source, not play_media
+      const selectSourceCall = mockHass._getLastServiceCall('media_player', 'select_source');
+      expect(selectSourceCall).to.exist;
+      expect(selectSourceCall.source).to.equal('Station 1');
+    });
+    
+    it('should use PLAY_MEDIA for xSchedule even with SELECT_SOURCE available', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        {
+          integration: 'xschedule',
+          supported_features: 0x600, // Both PLAY_MEDIA and SELECT_SOURCE
+          source_list: ['Playlist 1']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Call _selectPlaylist
+      element._selectPlaylist('Playlist 1');
+      
+      // Should call play_media for xSchedule
+      const playMediaCall = mockHass._getLastServiceCall('media_player', 'play_media');
+      expect(playMediaCall).to.exist;
+      expect(playMediaCall.media_content_id).to.equal('Playlist 1');
+      expect(playMediaCall.media_content_type).to.equal('playlist');
+    });
+    
+    it('should fallback to PLAY_MEDIA with music type for players without SELECT_SOURCE', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'idle',
+        {
+          supported_features: 0x200, // Only PLAY_MEDIA
+          source_list: ['Something']
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Call _selectPlaylist
+      element._selectPlaylist('Something');
+      
+      // Should call play_media with 'music' type
+      const playMediaCall = mockHass._getLastServiceCall('media_player', 'play_media');
+      expect(playMediaCall).to.exist;
+      expect(playMediaCall.media_content_id).to.equal('Something');
+      expect(playMediaCall.media_content_type).to.equal('music');
+    });
+  });
+
+  describe('Generic Player Now Playing Display', () => {
+    it('should show song name for generic player', async () => {
+      const config = createMockCardConfig();
+      config.showPlaylistName = true;
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600,
+          source: 'My Station',
+          media_title: 'Song Name by Artist',
+          source_list: ['My Station', 'Another Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const nowPlaying = element.shadowRoot.querySelector('.now-playing');
+      expect(nowPlaying).to.exist;
+      expect(nowPlaying.textContent).to.include('Song Name by Artist');
+    });
+    
+    it('should show playlist/source name for generic player', async () => {
+      const config = createMockCardConfig();
+      config.showPlaylistName = true;
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600,
+          source: 'My Station',
+          media_title: 'Song Name',
+          source_list: ['My Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const nowPlaying = element.shadowRoot.querySelector('.now-playing');
+      expect(nowPlaying).to.exist;
+      expect(nowPlaying.textContent).to.include('My Station');
+    });
+    
+    it('should show play controls for generic player when playing', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x4A01, // PLAY(0x4000)|PAUSE(0x1)|PLAY_MEDIA(0x200)|SELECT_SOURCE(0x800)
+          source: 'My Station',
+          media_title: 'Song Name',
+          source_list: ['My Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const playbackControls = element.shadowRoot.querySelector('.playback-controls');
+      expect(playbackControls).to.exist;
+      
+      // Should have play/pause button
+      const playButton = playbackControls.querySelector('.play-pause');
+      expect(playButton).to.exist;
+    });
+    
+    it('should hide play controls for generic player when idle with no source', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      config.playlistDisplay = 'expanded';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'idle',
+        {
+          supported_features: 0x600,
+          source: null,
+          source_list: ['Station 1', 'Station 2']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      // Should not have full playback controls when idle without source
+      const playbackControls = element.shadowRoot.querySelector('.playback-controls');
+      expect(playbackControls).to.not.exist;
+    });
+    
+    it('should not show now playing section when generic player is idle', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'idle',
+        {
+          supported_features: 0x600,
+          source: null,
+          source_list: ['My Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const nowPlaying = element.shadowRoot.querySelector('.now-playing');
+      expect(nowPlaying).to.not.exist;
+    });
+    
+    it('should recognize hasActivePlaylist for generic player with source', async () => {
+      const config = createMockCardConfig();
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600,
+          source: 'My Station',
+          source_list: ['My Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const hasActive = element._hasActivePlaylist();
+      expect(hasActive).to.be.true;
+    });
+  });
+
+  describe('Collapsed Source Selector Display', () => {
+    it('should show current source in collapsed dropdown for Pandora', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'collapsed';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600,
+          source: 'My Station',
+          source_list: ['My Station', 'Another Station']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const select = element.shadowRoot.querySelector('.playlist-select');
+      expect(select).to.exist;
+      expect(select.value).to.equal('My Station');
+      
+      // Check that the correct option is selected
+      const selectedOption = select.querySelector('option[selected]');
+      expect(selectedOption).to.exist;
+      expect(selectedOption.value).to.equal('My Station');
+    });
+    
+    it('should update dropdown when source changes', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'collapsed';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'playing',
+        {
+          supported_features: 0x600,
+          source: 'Station 1',
+          source_list: ['Station 1', 'Station 2']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      let select = element.shadowRoot.querySelector('.playlist-select');
+      expect(select.value).to.equal('Station 1');
+      
+      // Change source
+      mockHass.states['media_player.pandora'].attributes.source = 'Station 2';
+      element.hass = mockHass;
+      await element.updateComplete;
+      
+      select = element.shadowRoot.querySelector('.playlist-select');
+      expect(select.value).to.equal('Station 2');
+    });
+    
+    it('should show placeholder when no source is active', async () => {
+      const config = createMockCardConfig();
+      config.playlistDisplay = 'collapsed';
+      mockHass.states['media_player.pandora'] = createMockEntityState(
+        'media_player.pandora',
+        'idle',
+        {
+          supported_features: 0x600,
+          source: null,
+          source_list: ['Station 1', 'Station 2']
+        }
+      );
+      config.entity = 'media_player.pandora';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const select = element.shadowRoot.querySelector('.playlist-select');
+      expect(select.value).to.equal('');
+      
+      // Placeholder should be selected
+      const selectedOption = select.querySelector('option[selected]');
+      expect(selectedOption.textContent).to.include('Select source');
+    });
+  });
+
+  describe('Feature Detection', () => {
+    it('should hide previous button when not supported', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'playing',
+        {
+          supported_features: 0x4001, // Only PLAY (0x4000) and PAUSE (0x1) - no PREV/NEXT
+          source: 'Something'
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      expect(controls).to.exist;
+      
+      // Should not have previous/next buttons
+      expect(controls.querySelectorAll('ha-icon-button').length).to.equal(1); // Only play/pause
+    });
+    
+    it('should show all controls for xSchedule', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      config.showPowerOffButton = true;
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          integration: 'xschedule',
+          supported_features: 0x5131, // PREV(0x10)|NEXT(0x20)|TURN_OFF(0x100)|PLAY(0x4000)|PAUSE(0x1)|STOP(0x1000)
+          media_playlist: 'Test'
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      expect(controls.querySelectorAll('ha-icon-button').length).to.equal(5); // Power, Prev, Play, Stop, Next
+    });
+    
+    it('should hide power off button when not supported', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      config.showPowerOffButton = true; // Config says show it
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'playing',
+        {
+          supported_features: 0x4031, // PLAY(0x4000)|PAUSE(0x1)|PREV(0x10)|NEXT(0x20) - no TURN_OFF
+          source: 'Something'
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      const powerButton = controls.querySelector('.power-off-btn');
+      expect(powerButton).to.not.exist; // Should not show even though config says to
+    });
+    
+    it('should hide stop button when not supported', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'playing',
+        {
+          supported_features: 0x4031, // PLAY(0x4000)|PAUSE(0x1)|PREV(0x10)|NEXT(0x20) - no STOP
+          source: 'Something'
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      const buttons = controls.querySelectorAll('ha-icon-button');
+      
+      // Should have prev, play/pause, next (3 buttons, no stop)
+      expect(buttons.length).to.equal(3);
+    });
+    
+    it('should show play button in idle state only if supported', async () => {
+      const config = createMockCardConfig();
+      config.showPlaybackControls = true;
+      config.playlistDisplay = 'hidden';
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'idle',
+        {
+          supported_features: 0, // No features
+          source_list: ['Something']
+        }
+      );
+      config.entity = 'media_player.basic';
+      
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      
+      const controls = element.shadowRoot.querySelector('.playback-controls');
+      expect(controls).to.not.exist; // Should not show play button if not supported
+    });
+  });
 });

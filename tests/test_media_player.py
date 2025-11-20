@@ -414,3 +414,182 @@ class TestPowerOff:
         await media_player_entity.async_turn_off()
         
         mock_api_client.stop_all_now.assert_called_once()
+
+
+class TestBrowseMediaDuration:
+    """Test BROWSE_MEDIA duration support and edge cases."""
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_includes_duration(self, media_player_entity, mock_api_client):
+        """Test that browsing playlist songs includes duration."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Song 1", "lengthms": "180000"},  # 3 minutes
+            {"name": "Song 2", "lengthms": "240000"},  # 4 minutes
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert len(result.children) == 2
+        assert result.children[0].title == "Song 1"
+        assert result.children[0].duration == 180.0  # seconds
+        assert result.children[1].title == "Song 2"
+        assert result.children[1].duration == 240.0  # seconds
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_missing_duration(self, media_player_entity, mock_api_client):
+        """Test that missing duration field defaults to 0."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Song Without Duration"},  # No lengthms field
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert len(result.children) == 1
+        assert result.children[0].duration == 0.0
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_zero_duration(self, media_player_entity, mock_api_client):
+        """Test that zero duration is handled correctly."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Zero Duration Song", "lengthms": "0"},
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert len(result.children) == 1
+        assert result.children[0].duration == 0.0
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_none_duration(self, media_player_entity, mock_api_client):
+        """Test that None duration defaults to 0."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "None Duration Song", "lengthms": None},
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert len(result.children) == 1
+        assert result.children[0].duration == 0.0
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_empty_string_duration(self, media_player_entity, mock_api_client):
+        """Test that empty string duration defaults to 0."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "Empty String Duration", "lengthms": ""},
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert len(result.children) == 1
+        assert result.children[0].duration == 0.0
+    
+    @pytest.mark.asyncio
+    async def test_browse_media_converts_ms_to_seconds(self, media_player_entity, mock_api_client):
+        """Test that duration is correctly converted from ms to seconds."""
+        mock_api_client.get_playlist_steps.return_value = [
+            {"name": "1 Second Song", "lengthms": "1000"},
+            {"name": "30 Second Song", "lengthms": "30000"},
+            {"name": "5 Minute Song", "lengthms": "300000"},
+        ]
+        
+        result = await media_player_entity.async_browse_media(
+            media_content_type="playlist",
+            media_content_id="Test Playlist"
+        )
+        
+        assert result.children[0].duration == 1.0
+        assert result.children[1].duration == 30.0
+        assert result.children[2].duration == 300.0
+
+
+class TestMediaTrackAttribute:
+    """Test media_track attribute support."""
+    
+    @pytest.mark.asyncio
+    async def test_media_track_set_when_playing(self, media_player_entity):
+        """Test that media_track is set when a song is playing."""
+        # Setup: Playing song #3 in a playlist
+        media_player_entity._attr_media_title = "Song 3"
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "100000"},
+            {"name": "Song 2", "lengthms": "200000"},
+            {"name": "Song 3", "lengthms": "300000"},  # Currently playing
+            {"name": "Song 4", "lengthms": "400000"},
+        ]
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert attrs["media_track"] == 3
+    
+    @pytest.mark.asyncio
+    async def test_media_track_first_song(self, media_player_entity):
+        """Test that media_track is 1 for first song."""
+        media_player_entity._attr_media_title = "Song 1"
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "100000"},
+            {"name": "Song 2", "lengthms": "200000"},
+        ]
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert attrs["media_track"] == 1
+    
+    @pytest.mark.asyncio
+    async def test_media_track_last_song(self, media_player_entity):
+        """Test that media_track works for last song in playlist."""
+        media_player_entity._attr_media_title = "Song 5"
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "100000"},
+            {"name": "Song 2", "lengthms": "200000"},
+            {"name": "Song 3", "lengthms": "300000"},
+            {"name": "Song 4", "lengthms": "400000"},
+            {"name": "Song 5", "lengthms": "500000"},
+        ]
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert attrs["media_track"] == 5
+    
+    @pytest.mark.asyncio
+    async def test_media_track_missing_when_no_title(self, media_player_entity):
+        """Test that media_track is not set when no current song title."""
+        media_player_entity._attr_media_title = None
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "100000"},
+        ]
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert "media_track" not in attrs
+    
+    @pytest.mark.asyncio
+    async def test_media_track_missing_when_no_playlist_steps(self, media_player_entity):
+        """Test that media_track is not set when no playlist loaded."""
+        media_player_entity._attr_media_title = "Song 1"
+        media_player_entity._current_playlist_steps = None
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert "media_track" not in attrs
+    
+    @pytest.mark.asyncio
+    async def test_media_track_missing_when_step_not_found(self, media_player_entity):
+        """Test that media_track is not set if current step not in playlist."""
+        media_player_entity._attr_media_title = "Unknown Song"
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "100000"},
+            {"name": "Song 2", "lengthms": "200000"},
+        ]
+        
+        attrs = media_player_entity.extra_state_attributes
+        assert "media_track" not in attrs

@@ -38,6 +38,7 @@ class XScheduleCard extends LitElement {
     this._lastPlaylist = null;
     this._lastPlaylistSongs = [];
     this._forceExpandPlaylists = false;
+    this._lastFetchedPlaylist = null; // Track playlist fetched via browse
 
     // Track previous values for render optimization
     this._previousState = null;
@@ -124,7 +125,7 @@ class XScheduleCard extends LitElement {
       // Extract playlists from source_list and sort alphabetically
       this._playlists = (this._entity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
 
-      const currentPlaylist = this._entity.attributes.playlist;
+      const currentPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
       const playlistSongs = this._entity.attributes.playlist_songs || [];
       const isIdle = this._entity.state === 'idle' ||
                      this._entity.state === 'off' ||
@@ -172,16 +173,33 @@ class XScheduleCard extends LitElement {
 
       const stateChanged = this._entity.state !== this._previousState;
       const titleChanged = this._entity.attributes.media_title !== this._previousTitle;
-      const playlistChanged = this._entity.attributes.playlist !== this._previousPlaylist;
+      const playlistChanged = (this._entity.attributes.media_playlist || this._entity.attributes.playlist) !== this._previousPlaylist;
       const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
       const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
       const queueChanged = JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue;
       const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
 
+      // Check if we need to fetch songs via browse_media (for non-xSchedule players)
+      const currentPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
+      if (currentPlaylist && currentPlaylist !== this._lastFetchedPlaylist) {
+        // Use playlist_songs if available (xSchedule player)
+        if (this._entity.attributes.playlist_songs) {
+          // Songs are already in attributes, no need to fetch
+          this._lastFetchedPlaylist = currentPlaylist;
+        } else {
+          // Fallback to browse_media for non-xSchedule players
+          this._lastFetchedPlaylist = currentPlaylist;
+          this._fetchSongsViaBrowse(currentPlaylist).then(songs => {
+            this._songs = songs;
+            this.requestUpdate();
+          });
+        }
+      }
+
       // Update tracking variables
       this._previousState = this._entity.state;
       this._previousTitle = this._entity.attributes.media_title;
-      this._previousPlaylist = this._entity.attributes.playlist;
+      this._previousPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
       this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
       this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
       this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
@@ -255,8 +273,8 @@ class XScheduleCard extends LitElement {
 
   _renderNowPlaying() {
     // Get attributes without fallback text
-    const playlist = this._entity.attributes.playlist;
-    const song = this._entity.attributes.song;
+    const playlist = this._getCurrentPlaylistOrSource();
+    const song = this._entity.attributes.media_title || this._entity.attributes.song;
 
     // Check validity - hide "No playlist" and "No song" placeholders
     const hasValidPlaylist = playlist && playlist !== '' && playlist !== 'No playlist';
@@ -268,9 +286,9 @@ class XScheduleCard extends LitElement {
                    this._entity.state === 'unavailable' ||
                    this._entity.state === 'unknown';
 
-    // Hide entire section if idle OR (no valid content AND queue/songs are empty)
-    if (isIdle || (!hasValidPlaylist && !hasValidSong) ||
-        (this._queue.length === 0 && this._songs.length === 0)) {
+    // Hide entire section if idle OR (no valid content)
+    // Don't hide just because songs/queue are empty - that's normal for generic players
+    if (isIdle || (!hasValidPlaylist && !hasValidSong)) {
       return '';
     }
 
@@ -367,7 +385,7 @@ class XScheduleCard extends LitElement {
   }
 
   _hasActivePlaylist() {
-    const playlist = this._entity.attributes.playlist;
+    const playlist = this._getCurrentPlaylistOrSource();
     return playlist && playlist !== '' && playlist !== 'No playlist';
   }
 
@@ -377,12 +395,21 @@ class XScheduleCard extends LitElement {
     const isIdle = this._isIdle();
     const hasActivePlaylist = this._hasActivePlaylist();
     
+    // Home Assistant MediaPlayerEntityFeature standard values
+    // Source: homeassistant.components.media_player.MediaPlayerEntityFeature
+    const FEATURE_PAUSE = 0x1;          // MediaPlayerEntityFeature.PAUSE
+    const FEATURE_PREVIOUS = 0x10;      // MediaPlayerEntityFeature.PREVIOUS_TRACK
+    const FEATURE_NEXT = 0x20;          // MediaPlayerEntityFeature.NEXT_TRACK
+    const FEATURE_TURN_OFF = 0x100;     // MediaPlayerEntityFeature.TURN_OFF
+    const FEATURE_STOP = 0x1000;        // MediaPlayerEntityFeature.STOP
+    const FEATURE_PLAY = 0x4000;        // MediaPlayerEntityFeature.PLAY
+    
     // Idle state logic
     if (isIdle || !hasActivePlaylist) {
       const playlistHidden = this.config.playlistDisplay === 'hidden';
       
-      // Only show play button if playlists are hidden
-      if (playlistHidden) {
+      // Only show play button if playlists are hidden and play is supported
+      if (playlistHidden && this._supportsFeature(FEATURE_PLAY)) {
         return html`
           <div class="playback-controls">
             <ha-icon-button
@@ -405,7 +432,7 @@ class XScheduleCard extends LitElement {
 
     return html`
       <div class="playback-controls">
-        ${this.config.showPowerOffButton ? html`
+        ${this.config.showPowerOffButton && this._supportsFeature(FEATURE_TURN_OFF) ? html`
           <ha-icon-button
             @click=${this._handlePowerOff}
             title="Power Off (Stop All)"
@@ -415,34 +442,42 @@ class XScheduleCard extends LitElement {
           </ha-icon-button>
         ` : ''}
 
-        <ha-icon-button
-          @click=${this._handlePrevious}
-          title="Previous"
-        >
-          <ha-icon icon="mdi:skip-previous"></ha-icon>
-        </ha-icon-button>
+        ${this._supportsFeature(FEATURE_PREVIOUS) ? html`
+          <ha-icon-button
+            @click=${this._handlePrevious}
+            title="Previous"
+          >
+            <ha-icon icon="mdi:skip-previous"></ha-icon>
+          </ha-icon-button>
+        ` : ''}
 
-        <ha-icon-button
-          @click=${isPlaying ? this._handlePause : this._handlePlay}
-          class="play-pause"
-          title=${isPlaying ? 'Pause' : 'Play'}
-        >
-          <ha-icon icon=${isPlaying ? 'mdi:pause' : 'mdi:play'}></ha-icon>
-        </ha-icon-button>
+        ${this._supportsFeature(FEATURE_PLAY) || this._supportsFeature(FEATURE_PAUSE) ? html`
+          <ha-icon-button
+            @click=${isPlaying ? this._handlePause : this._handlePlay}
+            class="play-pause"
+            title=${isPlaying ? 'Pause' : 'Play'}
+          >
+            <ha-icon icon=${isPlaying ? 'mdi:pause' : 'mdi:play'}></ha-icon>
+          </ha-icon-button>
+        ` : ''}
 
-        <ha-icon-button
-          @click=${this._handleStop}
-          title="Stop"
-        >
-          <ha-icon icon="mdi:stop"></ha-icon>
-        </ha-icon-button>
+        ${this._supportsFeature(FEATURE_STOP) ? html`
+          <ha-icon-button
+            @click=${this._handleStop}
+            title="Stop"
+          >
+            <ha-icon icon="mdi:stop"></ha-icon>
+          </ha-icon-button>
+        ` : ''}
 
-        <ha-icon-button
-          @click=${this._handleNext}
-          title="Next"
-        >
-          <ha-icon icon="mdi:skip-next"></ha-icon>
-        </ha-icon-button>
+        ${this._supportsFeature(FEATURE_NEXT) ? html`
+          <ha-icon-button
+            @click=${this._handleNext}
+            title="Next"
+          >
+            <ha-icon icon="mdi:skip-next"></ha-icon>
+          </ha-icon-button>
+        ` : ''}
       </div>
     `;
   }
@@ -488,17 +523,19 @@ class XScheduleCard extends LitElement {
     
     if (displayMode === 'hidden') return '';
 
-    const currentPlaylist = this._entity.attributes.playlist;
+    const currentPlaylist = this._getCurrentPlaylistOrSource();
 
     if (displayMode === 'collapsed') {
+      const isXSchedule = this._isXSchedulePlayer();
+      const placeholder = isXSchedule ? 'Select playlist...' : 'Select source...';
+      
       return html`
         <div class="section playlist-section">
           <select
             @change=${this._handlePlaylistChange}
-            .value=${currentPlaylist || ''}
             class="playlist-select"
           >
-            <option value="">Select playlist...</option>
+            <option value="" ?selected=${!currentPlaylist}>${placeholder}</option>
             ${this._playlists.map(
               (playlist) => html`
                 <option value=${playlist} ?selected=${playlist === currentPlaylist}>
@@ -516,13 +553,15 @@ class XScheduleCard extends LitElement {
   }
 
   _renderExpandedPlaylists() {
-    const currentPlaylist = this._entity.attributes.playlist;
+    const currentItem = this._getCurrentPlaylistOrSource();
+    const isXSchedule = this._isXSchedulePlayer();
+    const label = isXSchedule ? 'Playlists' : 'Sources';
     
     return html`
       <div class="section playlist-section">
         <h3>
           <ha-icon icon="mdi:playlist-music"></ha-icon>
-          Playlists
+          ${label}
           ${this._forceExpandPlaylists ? html`
             <ha-icon-button
               class="playlist-close-btn"
@@ -537,10 +576,10 @@ class XScheduleCard extends LitElement {
           ${this._playlists.map(
             (playlist) => html`
               <div
-                class="playlist-item ${playlist === currentPlaylist ? 'active' : ''}"
+                class="playlist-item ${playlist === currentItem ? 'active' : ''}"
                 @click=${() => this._selectPlaylist(playlist)}
               >
-                <ha-icon icon=${playlist === currentPlaylist ? 'mdi:play-circle' : 'mdi:playlist-music'}></ha-icon>
+                <ha-icon icon=${playlist === currentItem ? 'mdi:play-circle' : 'mdi:playlist-music'}></ha-icon>
                 <span>${playlist}</span>
               </div>
             `
@@ -654,7 +693,7 @@ class XScheduleCard extends LitElement {
     }
 
     const isCollapsed = displayMode === 'collapsed' && !this._songsExpanded;
-    const currentSong = this._entity.attributes.song;
+    const currentSong = this._entity.attributes.media_title || this._entity.attributes.song;
 
     return html`
       <div class="section songs-section">
@@ -807,7 +846,7 @@ class XScheduleCard extends LitElement {
     }
 
     try {
-      await this.hass.callService('media_player', 'turn_off', {
+      await this._hass.callService('media_player', 'turn_off', {
         entity_id: this.config.entity,
       });
       this._showToast('success', 'mdi:power', 'All stopped');
@@ -867,13 +906,78 @@ class XScheduleCard extends LitElement {
     return this._isXSchedulePlayer();
   }
 
+  _getCurrentPlaylistOrSource() {
+    if (!this._entity) return null;
+    
+    // For xSchedule: use media_playlist or playlist
+    // For generic players: use source
+    return this._entity.attributes.media_playlist || 
+           this._entity.attributes.playlist ||
+           this._entity.attributes.source;
+  }
+
+  _supportsFeature(feature) {
+    const features = this._entity?.attributes?.supported_features || 0;
+    return (features & feature) !== 0;
+  }
+
+  async _fetchSongsViaBrowse(playlist) {
+    if (!playlist) return [];
+    
+    try {
+      const result = await this._hass.callWS({
+        type: 'media_player/browse_media',
+        entity_id: this.config.entity,
+        media_content_type: 'playlist',
+        media_content_id: playlist
+      });
+      
+      // Map browse_media children to song format
+      return result.children?.map(child => ({
+        name: child.title,
+        duration: child.duration ? Math.round(child.duration * 1000) : 0
+      })) || [];
+    } catch (err) {
+      console.error('Failed to fetch songs via browse:', err);
+      return [];
+    }
+  }
+
   _selectPlaylist(playlist) {
-    // Use standard media_player.play_media command
-    this._hass.callService('media_player', 'play_media', {
-      entity_id: this.config.entity,
-      media_content_type: 'playlist',
-      media_content_id: playlist,
-    });
+    const entity = this._entity;
+    const features = entity?.attributes?.supported_features || 0;
+    
+    // Feature flags from Home Assistant
+    const SUPPORT_PLAY_MEDIA = 0x200;    // 512
+    const SUPPORT_SELECT_SOURCE = 0x400; // 1024
+    
+    const isXSchedule = this._isXSchedulePlayer();
+    
+    // For xSchedule, prefer PLAY_MEDIA
+    // For generic players, prefer SELECT_SOURCE (standard way to change source)
+    if (isXSchedule && (features & SUPPORT_PLAY_MEDIA)) {
+      this._hass.callService('media_player', 'play_media', {
+        entity_id: this.config.entity,
+        media_content_type: 'playlist',
+        media_content_id: playlist,
+      });
+    } else if (features & SUPPORT_SELECT_SOURCE) {
+      this._hass.callService('media_player', 'select_source', {
+        entity_id: this.config.entity,
+        source: playlist,
+      });
+    } else if (features & SUPPORT_PLAY_MEDIA) {
+      // Fallback to PLAY_MEDIA for players that only support that
+      this._hass.callService('media_player', 'play_media', {
+        entity_id: this.config.entity,
+        media_content_type: 'music',
+        media_content_id: playlist,
+      });
+    } else {
+      console.warn('Player does not support playlist playback');
+      this._showToast('error', 'mdi:alert-circle', 'Player does not support playlists');
+      return;
+    }
     
     // Auto-collapse after selection
     if (this._forceExpandPlaylists) {
@@ -910,7 +1014,7 @@ class XScheduleCard extends LitElement {
   }
 
   async _playSong(songName) {
-    const playlist = this._entity.attributes.playlist || this._entity.attributes.source;
+    const playlist = this._entity.attributes.media_playlist || this._entity.attributes.playlist || this._entity.attributes.source;
     if (!playlist) {
       this._showToast('error', 'mdi:alert-circle', 'No playlist selected');
       return;

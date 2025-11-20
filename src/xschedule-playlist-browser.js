@@ -155,6 +155,13 @@ class XSchedulePlaylistBrowser extends LitElement {
     );
   }
 
+  _supportsBrowseMedia() {
+    if (!this._entity) return false;
+    const features = this._entity.attributes.supported_features || 0;
+    const SUPPORT_BROWSE_MEDIA = 0x800; // 2048
+    return (features & SUPPORT_BROWSE_MEDIA) !== 0;
+  }
+
   async _fetchScheduleInfo(forceRefresh = false) {
     // Don't fetch if already in progress
     if (this._loading) return;
@@ -162,6 +169,14 @@ class XSchedulePlaylistBrowser extends LitElement {
     this._loading = true;
 
     try {
+      // For non-xSchedule players, skip fetching schedule info
+      if (!this._isXSchedulePlayer()) {
+        this._playlistSchedules = {}; // Clear any existing schedules
+        this._loading = false;
+        this.requestUpdate();
+        return;
+      }
+
       const newSchedules = {};
 
       // Fetch playlist metadata (including durations) once for all playlists
@@ -340,7 +355,9 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     const sortedPlaylists = this._getSortedPlaylists();
-    const currentPlaylist = this._entity.attributes.playlist;
+    const currentPlaylist = this._entity.attributes.media_playlist || 
+                           this._entity.attributes.playlist ||
+                           this._entity.attributes.source;
 
     return html`
       <div class="playlist-list">
@@ -355,30 +372,34 @@ class XSchedulePlaylistBrowser extends LitElement {
     const scheduleInfo = this._playlistSchedules[playlistName];
     const hasSchedule = scheduleInfo && scheduleInfo.nextActiveTime;
     const isExpanded = this._expandedPlaylist === playlistName;
+    const isXSchedule = this._isXSchedulePlayer();
+    const canExpand = isXSchedule || this._supportsBrowseMedia();
 
     return html`
       <div class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''} ${isExpanded ? 'expanded' : ''}">
-        <div class="playlist-header" @click=${() => this._togglePlaylist(playlistName)}>
+        <div class="playlist-header" @click=${canExpand ? () => this._togglePlaylist(playlistName) : null}>
           <ha-icon
             icon=${isPlaying ? 'mdi:play-circle' : hasSchedule ? 'mdi:clock-outline' : 'mdi:playlist-music'}
             class="playlist-icon"
           ></ha-icon>
           <div class="playlist-name">${playlistName}</div>
-          ${this._renderScheduleInfo(isPlaying, scheduleInfo)}
+          ${isXSchedule ? this._renderScheduleInfo(isPlaying, scheduleInfo) : ''}
           <button
             class="play-btn"
             @click=${(e) => this._playPlaylist(e, playlistName)}
-            title="Play playlist"
+            title=${isXSchedule ? 'Play playlist' : 'Play source'}
           >
             <ha-icon icon="mdi:play-outline"></ha-icon>
           </button>
-          <ha-icon
-            icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
-            class="expand-icon"
-          ></ha-icon>
+          ${canExpand ? html`
+            <ha-icon
+              icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+              class="expand-icon"
+            ></ha-icon>
+          ` : ''}
         </div>
 
-        ${isExpanded ? this._renderSongList(playlistName) : ''}
+        ${canExpand && isExpanded ? this._renderSongList(playlistName) : ''}
       </div>
     `;
   }
@@ -412,7 +433,9 @@ class XSchedulePlaylistBrowser extends LitElement {
 
   _getSortedPlaylists() {
     const playlists = [...this._playlists];
-    const currentPlaylist = this._entity.attributes.playlist;
+    const currentPlaylist = this._entity.attributes.media_playlist || 
+                           this._entity.attributes.playlist ||
+                           this._entity.attributes.source;
 
     if (this.config.sort_by === 'schedule') {
       // Sort by schedule:
@@ -539,22 +562,21 @@ class XSchedulePlaylistBrowser extends LitElement {
 
   async _fetchPlaylistSongs(playlistName, forceRefresh = false) {
     try {
-      const response = await this._hass.callWS({
-        type: 'call_service',
-        domain: 'xschedule',
-        service: 'get_playlist_steps',
-        service_data: {
-          entity_id: this.config.entity,
-          playlist: playlistName,
-          force_refresh: forceRefresh,
-        },
-        return_response: true,
+      const result = await this._hass.callWS({
+        type: 'media_player/browse_media',
+        entity_id: this.config.entity,
+        media_content_type: 'playlist',
+        media_content_id: playlistName
       });
-
-      if (response && response.response && response.response.steps) {
-        this._playlistSongs[playlistName] = response.response.steps;
-        this.requestUpdate();
-      }
+      
+      // Map browse_media children to song format (matching xSchedule format)
+      const songs = result.children?.map(child => ({
+        name: child.title,
+        lengthms: child.duration ? Math.round(child.duration * 1000) : 0
+      })) || [];
+      
+      this._playlistSongs[playlistName] = songs;
+      this.requestUpdate();
     } catch (err) {
       console.error(`Failed to fetch songs for ${playlistName}:`, err);
       this._playlistSongs[playlistName] = [];
@@ -604,12 +626,39 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     try {
-      // Use standard media_player.play_media command
-      await this._hass.callService('media_player', 'play_media', {
-        entity_id: this.config.entity,
-        media_content_type: 'playlist',
-        media_content_id: playlistName,
-      });
+      const entity = this._hass.states[this.config.entity];
+      const features = entity?.attributes?.supported_features || 0;
+      
+      // Feature flags from Home Assistant
+      const SUPPORT_PLAY_MEDIA = 0x200;    // 512
+      const SUPPORT_SELECT_SOURCE = 0x400; // 1024
+      
+      const isXSchedule = this._isXSchedulePlayer();
+      
+      // For xSchedule, prefer PLAY_MEDIA
+      // For generic players, prefer SELECT_SOURCE (standard way to change source)
+      if (isXSchedule && (features & SUPPORT_PLAY_MEDIA)) {
+        await this._hass.callService('media_player', 'play_media', {
+          entity_id: this.config.entity,
+          media_content_type: 'playlist',
+          media_content_id: playlistName,
+        });
+      } else if (features & SUPPORT_SELECT_SOURCE) {
+        await this._hass.callService('media_player', 'select_source', {
+          entity_id: this.config.entity,
+          source: playlistName,
+        });
+      } else if (features & SUPPORT_PLAY_MEDIA) {
+        // Fallback to PLAY_MEDIA for players that only support that
+        await this._hass.callService('media_player', 'play_media', {
+          entity_id: this.config.entity,
+          media_content_type: 'music',
+          media_content_id: playlistName,
+        });
+      } else {
+        console.warn('Player does not support playlist playback');
+        throw new Error('Player does not support playlists');
+      }
     } catch (err) {
       console.error('Failed to play playlist:', err);
     }
