@@ -281,4 +281,136 @@ describe('XSchedulePlaylistBrowser', () => {
       expect(renderCount).to.be.greaterThan(0);
     });
   });
+
+  describe('Browse Media Song Expansion', () => {
+    it('should detect BROWSE_MEDIA support for capable players', async () => {
+      const config = { entity: 'media_player.spotify' };
+      mockHass.states['media_player.spotify'] = createMockEntityState(
+        'media_player.spotify',
+        'playing',
+        {
+          supported_features: 0x800, // BROWSE_MEDIA
+          source_list: ['My Playlist', 'Another Playlist']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should detect BROWSE_MEDIA support
+      expect(element._supportsBrowseMedia()).to.be.true;
+    });
+    
+    it('should not detect BROWSE_MEDIA for players without support', async () => {
+      const config = { entity: 'media_player.basic' };
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'playing',
+        {
+          supported_features: 0x400, // SELECT_SOURCE only
+          source_list: ['Station 1']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should not detect BROWSE_MEDIA support
+      expect(element._supportsBrowseMedia()).to.be.false;
+    });
+    
+    it('should show expand icon for generic player with BROWSE_MEDIA', async () => {
+      const config = { entity: 'media_player.spotify' };
+      mockHass.states['media_player.spotify'] = createMockEntityState(
+        'media_player.spotify',
+        'playing',
+        {
+          supported_features: 0x800, // BROWSE_MEDIA
+          source_list: ['My Playlist']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should show expand icon
+      const rendered = element.shadowRoot.innerHTML;
+      expect(rendered).to.include('chevron');
+    });
+    
+    it('should not show expand icon for generic player without BROWSE_MEDIA', async () => {
+      const config = { entity: 'media_player.basic' };
+      mockHass.states['media_player.basic'] = createMockEntityState(
+        'media_player.basic',
+        'playing',
+        {
+          supported_features: 0x400, // SELECT_SOURCE only
+          source_list: ['Station 1']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should not show expand icon
+      const rendered = element.shadowRoot.innerHTML;
+      expect(rendered).to.not.include('chevron-up');
+      expect(rendered).to.not.include('chevron-down');
+    });
+    
+    it('should allow expansion for xSchedule player', async () => {
+      const config = { entity: 'media_player.xschedule' };
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          integration: 'xschedule',
+          supported_features: 0x200, // PLAY_MEDIA
+          source_list: ['Playlist 1']
+        }
+      );
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should show expand icon for xSchedule player
+      const rendered = element.shadowRoot.innerHTML;
+      expect(rendered).to.include('chevron');
+    });
+    
+    it('should allow expansion for generic player with BROWSE_MEDIA', async () => {
+      const config = { entity: 'media_player.spotify' };
+      mockHass.states['media_player.spotify'] = createMockEntityState(
+        'media_player.spotify',
+        'playing',
+        {
+          supported_features: 0x800 | 0x200, // BROWSE_MEDIA + PLAY_MEDIA
+          source_list: ['My Playlist']
+        }
+      );
+      
+      // Mock browse_media response
+      mockHass.callWS = stub().resolves({
+        children: [
+          { title: 'Song 1', duration: 180 },
+          { title: 'Song 2', duration: 200 }
+        ]
+      });
+      
+      element = await createConfiguredElement('xschedule-playlist-browser', config, mockHass);
+      await element.updateComplete;
+      
+      // Should be able to expand (canExpand should be true)
+      expect(element._supportsBrowseMedia()).to.be.true;
+      
+      // Toggle playlist to expand
+      await element._togglePlaylist('My Playlist');
+      await element.updateComplete;
+      
+      // Should have fetched songs
+      expect(element._playlistSongs['My Playlist']).to.exist;
+      expect(element._playlistSongs['My Playlist']).to.have.lengthOf(2);
+      expect(element._playlistSongs['My Playlist'][0].name).to.equal('Song 1');
+    });
+  });
 });

@@ -419,6 +419,13 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             for step in (self._current_playlist_steps or [])
         ]
 
+        # Track current song position in playlist (1-indexed)
+        if self._attr_media_title and self._current_playlist_steps:
+            for idx, step in enumerate(self._current_playlist_steps, 1):
+                if step.get("name") == self._attr_media_title:
+                    attributes["media_track"] = idx
+                    break
+
         # Add internal queue (in-memory, managed by integration)
         attributes["internal_queue"] = [
             {
@@ -884,18 +891,21 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         children = []
         for step in steps_data:
             step_name = step.get("name", "Unknown")
+            duration_ms = int(step.get("lengthms") or 0)
 
-            children.append(
-                BrowseMedia(
-                    can_expand=False,
-                    can_play=True,
-                    media_class=MediaType.MUSIC,
-                    media_content_id=f"{playlist_name}|||{step_name}",  # delimiter
-                    media_content_type=MediaType.MUSIC,
-                    title=step_name,
-                    thumbnail=None,
-                )
+            browse_item = BrowseMedia(
+                can_expand=False,
+                can_play=True,
+                media_class=MediaType.MUSIC,
+                media_content_id=f"{playlist_name}|||{step_name}",  # delimiter
+                media_content_type=MediaType.MUSIC,
+                title=step_name,
+                thumbnail=None,
             )
+            # Set duration as attribute (may not be supported in older HA versions)
+            # This will be included in future HA versions that support duration
+            browse_item.duration = duration_ms / 1000  # Convert ms to seconds
+            children.append(browse_item)
 
         return BrowseMedia(
             can_expand=True,

@@ -156,3 +156,7 @@ ENHANCEMENTS_SUMMARY.md
 IMPLEMENTATION_SUMMARY.md
 BACKEND_TESTS_TODO.md
 TEST_*.md
+
+# Deployment scripts (local development)
+deploy.sh
+deploy-restart.sh
