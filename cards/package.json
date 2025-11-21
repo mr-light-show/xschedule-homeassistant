@@ -6,19 +6,29 @@
   "scripts": {
     "build": "rollup -c && npm run copy-to-www",
     "copy-to-www": "mkdir -p ../custom_components/xschedule/www && cp dist/*.js ../custom_components/xschedule/www/",
+    "watch": "rollup -c -w",
+    "lint": "eslint src",
+    "format": "prettier --write src/**/*.js",
     "test": "web-test-runner \"test/**/*.test.js\" --node-resolve",
-    "test:watch": "web-test-runner \"test/**/*.test.js\" --node-resolve --watch"
+    "test:watch": "npm test -- --watch",
+    "test:coverage": "npm test -- --coverage"
   },
   "dependencies": {
     "lit": "^3.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "@open-wc/testing": "^4.0.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@web/test-runner": "^0.18.0",
-    "@web/test-runner-playwright": "^0.11.0",
-    "rollup": "^4.9.4",
-    "sinon": "^17.0.1"
+    "@web/test-runner-playwright": "^0.11.1",
+    "eslint": "^9.17.0",
+    "globals": "^15.13.0",
+    "prettier": "^3.0.3",
+    "rollup": "^4.1.4",
+    "sinon": "^17.0.0"
   }
 }
 
