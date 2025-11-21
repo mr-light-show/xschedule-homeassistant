@@ -17,23 +17,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'cards/package-lock.json'
 
       - name: Install dependencies
-        run: npm install
+        run: cd cards && npm ci
 
       - name: Build cards
-        run: npm run build
+        run: cd cards && npm run build
 
       - name: Verify built files
         run: |
           echo "Checking for built card files..."
-          ls -lh dist/
-          if [ ! -f "dist/xschedule-card.js" ]; then
-            echo "ERROR: xschedule-card.js not found!"
+          ls -lh cards/dist/
+          ls -lh custom_components/xschedule/www/
+          if [ ! -f "cards/dist/xschedule-card.js" ]; then
+            echo "ERROR: xschedule-card.js not found in cards/dist/!"
             exit 1
           fi
-          if [ ! -f "dist/xschedule-playlist-browser.js" ]; then
-            echo "ERROR: xschedule-playlist-browser.js not found!"
+          if [ ! -f "cards/dist/xschedule-playlist-browser.js" ]; then
+            echo "ERROR: xschedule-playlist-browser.js not found in cards/dist/!"
+            exit 1
+          fi
+          if [ ! -f "custom_components/xschedule/www/xschedule-card.js" ]; then
+            echo "ERROR: xschedule-card.js not found in www/!"
+            exit 1
+          fi
+          if [ ! -f "custom_components/xschedule/www/xschedule-playlist-browser.js" ]; then
+            echo "ERROR: xschedule-playlist-browser.js not found in www/!"
             exit 1
           fi
           echo "✓ All card files built successfully"
@@ -42,7 +53,7 @@ jobs:
         run: |
           mkdir -p release
           cp -r custom_components release/
-          cp -r dist release/
+          cp -r cards/dist release/dist
           cp hacs.json release/
           cp README.md release/
           cp LICENSE release/
@@ -60,8 +71,8 @@ jobs:
           files: |
             xschedule-homeassistant.zip
             xschedule-homeassistant.tar.gz
-            dist/xschedule-card.js
-            dist/xschedule-playlist-browser.js
+            cards/dist/xschedule-card.js
+            cards/dist/xschedule-playlist-browser.js
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
