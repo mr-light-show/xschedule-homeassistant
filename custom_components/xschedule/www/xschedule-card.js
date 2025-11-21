@@ -1516,11 +1516,6 @@ class XScheduleCard extends i {
         --mdc-icon-size: 24px;
       }
 
-      .playback-controls .play-pause {
-        --mdc-icon-button-size: 48px;
-        --mdc-icon-size: 34px;
-      }
-
       .playback-controls .power-off-btn {
         color: var(--error-color);
       }
