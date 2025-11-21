@@ -848,35 +848,22 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         raise ValueError(f"Unsupported media type: {media_content_type}")
 
     async def _async_build_playlists_browser(self) -> BrowseMedia:
-        """Build root level showing all playlists with duration."""
+        """Build root level showing all playlists."""
         children = []
-        
-        # Fetch full playlist metadata (includes duration)
-        try:
-            playlists_metadata = await self._api_client.get_playlists_with_metadata()
-            metadata_map = {p['name']: p for p in playlists_metadata}
-        except Exception as err:
-            _LOGGER.warning("Failed to fetch playlist metadata for browse: %s", err)
-            metadata_map = {}
 
         for playlist_name in self._playlists:
-            browse_item = BrowseMedia(
-                can_expand=True,
-                can_play=True,  # Can play entire playlist
-                children_media_class=MediaType.MUSIC,
-                media_class=MediaType.PLAYLIST,
-                media_content_id=playlist_name,
-                media_content_type="playlist",
-                title=playlist_name,
-                thumbnail=None,
+            children.append(
+                BrowseMedia(
+                    can_expand=True,
+                    can_play=True,  # Can play entire playlist
+                    children_media_class=MediaType.MUSIC,
+                    media_class=MediaType.PLAYLIST,
+                    media_content_id=playlist_name,
+                    media_content_type="playlist",
+                    title=playlist_name,
+                    thumbnail=None,
+                )
             )
-            
-            # Add duration if available (convert ms to seconds)
-            if playlist_name in metadata_map and 'lengthms' in metadata_map[playlist_name]:
-                duration_ms = metadata_map[playlist_name]['lengthms']
-                browse_item.duration = int(duration_ms) / 1000
-            
-            children.append(browse_item)
 
         return BrowseMedia(
             can_expand=True,

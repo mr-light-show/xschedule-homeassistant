@@ -200,27 +200,52 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       const newSchedules = {};
 
-      // Fetch playlist metadata (including durations) via browse_media
+      // Fetch playlist metadata (including durations)
+      // Try xSchedule service first (has duration), fall back to browse_media (no duration)
       let playlistsMetadata = {};
       try {
-        const browseResult = await this._hass.callWS({
-          type: 'media_player/browse_media',
-          entity_id: this.config.entity,
-          media_content_type: '',
-          media_content_id: '',
+        // First try xSchedule-specific service (includes duration)
+        const metadataResponse = await this._hass.callWS({
+          type: 'call_service',
+          domain: 'xschedule',
+          service: 'get_playlists_with_metadata',
+          service_data: {
+            entity_id: this.config.entity,
+            force_refresh: forceRefresh,
+          },
+          return_response: true,
         });
 
-        // Map browse_media response to same format for compatibility
-        if (browseResult && browseResult.children) {
-          browseResult.children.forEach(child => {
-            playlistsMetadata[child.title] = {
-              name: child.title,
-              lengthms: child.duration ? child.duration * 1000 : 0
-            };
-          });
+        if (metadataResponse && metadataResponse.response && metadataResponse.response.playlists) {
+          // Convert array to map by playlist name
+          playlistsMetadata = metadataResponse.response.playlists.reduce((acc, playlist) => {
+            acc[playlist.name] = playlist;
+            return acc;
+          }, {});
         }
       } catch (err) {
-        console.error('Failed to fetch playlists metadata via browse_media:', err);
+        // Service not available (non-xSchedule player) - try browse_media fallback
+        console.log('xSchedule service not available, falling back to browse_media (no duration)');
+        try {
+          const browseResult = await this._hass.callWS({
+            type: 'media_player/browse_media',
+            entity_id: this.config.entity,
+            media_content_type: '',
+            media_content_id: '',
+          });
+
+          // Map browse_media response (no duration field available)
+          if (browseResult && browseResult.children) {
+            browseResult.children.forEach(child => {
+              playlistsMetadata[child.title] = {
+                name: child.title,
+                lengthms: 0  // Duration not available via browse_media
+              };
+            });
+          }
+        } catch (browseErr) {
+          console.error('Failed to fetch playlists metadata:', browseErr);
+        }
       }
 
       // Fetch schedule info for each playlist
