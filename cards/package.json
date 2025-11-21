@@ -1,6 +1,6 @@
 {
   "name": "@mr-light-show/xschedule-cards",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "Lovelace cards for xSchedule Home Assistant integration",
   "main": "dist/xschedule-card.js",
   "scripts": {
