@@ -59,24 +59,25 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'cards/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: cd cards && npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: cd cards && npx playwright install --with-deps chromium
 
       - name: Run frontend tests
-        run: npm test
+        run: cd cards && npm test
 
       - name: Build project
-        run: npm run build
+        run: cd cards && npm run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: cards/dist/
 
   lint:
     name: Linting
@@ -91,12 +92,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'cards/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: cd cards && npm ci
 
       - name: Run ESLint
-        run: npm run lint || echo "ESLint not configured, skipping..."
+        run: cd cards && npm run lint || echo "ESLint not configured, skipping..."
 
   quality-gate:
     name: Quality Gate
