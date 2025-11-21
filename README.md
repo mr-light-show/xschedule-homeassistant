@@ -34,6 +34,50 @@ Home Assistant integration and custom dashboard card for [xSchedule](https://git
 - **Two Sort Modes**: By schedule (next to play) or alphabetical
 - **Status Badges**: Visual indicators for playing and scheduled playlists
 
+## Repository Structure
+
+This repository contains both the Home Assistant integration (Python) and the Lovelace custom cards (JavaScript):
+
+```
+xschedule-homeassistant/
+├── custom_components/xschedule/  # Integration (HACS installation path)
+│   ├── __init__.py               # Integration setup
+│   ├── media_player.py           # Media player entity
+│   ├── api_client.py             # xSchedule API client
+│   ├── binary_sensor.py          # Output status sensors
+│   ├── websocket.py              # WebSocket connection
+│   ├── manifest.json             # Integration metadata
+│   ├── services.yaml             # Custom services
+│   └── www/                      # Built cards (auto-registered)
+│       ├── xschedule-card.js
+│       ├── xschedule-card-editor.js
+│       └── xschedule-playlist-browser.js
+│
+├── cards/                        # Card development
+│   ├── src/                      # Source files
+│   ├── test/                     # Frontend tests
+│   ├── dist/                     # Build output (gitignored)
+│   ├── package.json              # Card dependencies
+│   └── rollup.config.mjs         # Build configuration
+│
+├── tests/                        # Integration tests (Python)
+├── scripts/                      # Development scripts
+│   ├── update-version.sh         # Version management
+│   ├── deploy.sh                 # Deploy to HA (local dev)
+│   └── deploy-restart.sh         # Deploy + restart (local dev)
+│
+├── docs/                         # Additional documentation
+│   ├── DEVELOPMENT.md            # Development setup
+│   ├── standardization.md        # Standards compliance plan
+│   └── queue_standardization.md  # Queue implementation plan
+│
+└── README.md                     # This file
+```
+
+### For Developers
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for development setup, testing, and contribution guidelines.
+
 ## Installation
 
 ### HACS (Recommended)

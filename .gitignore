@@ -139,7 +139,16 @@ yarn-error.log*
 
 # Build artifacts
 *.js.map
-dist/
+
+# Card build output
+cards/dist/
+cards/coverage/
+cards/node_modules/
+
+# Old locations (can be removed after migration cleanup)
+/dist/
+/coverage/
+/node_modules/
 
 # Package lock files
 # package-lock.json - now tracked for CI/CD reproducibility
@@ -157,6 +166,8 @@ IMPLEMENTATION_SUMMARY.md
 BACKEND_TESTS_TODO.md
 TEST_*.md
 
-# Deployment scripts (local development)
+# Deployment scripts (local development - contain credentials)
 deploy.sh
 deploy-restart.sh
+scripts/deploy.sh
+scripts/deploy-restart.sh
