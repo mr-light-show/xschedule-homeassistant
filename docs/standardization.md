@@ -248,6 +248,10 @@ Replace non-standard interfaces with standard Home Assistant conventions where p
 2. ✅ **Second:** Add `media_track` support (backend) - **COMPLETED**
 3. ✅ **Third:** Update cards to support browse fallback (frontend) - **COMPLETED**
 4. ✅ **Fourth:** Migrate attribute reads in cards (frontend) - **COMPLETED**
-5. **Fifth:** Test thoroughly with and without `playlist_songs`
-6. **Last:** Remove deprecated services and attributes (cleanup)
+5. ✅ **Fifth:** Test thoroughly with and without `playlist_songs` - **COMPLETED**
+6. ✅ **Last:** Remove deprecated services and attributes (cleanup) - **COMPLETED**
+   - Enhanced `browse_media` root to include playlist duration
+   - Migrated playlist browser card from `get_playlists_with_metadata` service to `browse_media`
+   - Removed deprecated services: `get_playlist_steps` and `get_playlists_with_metadata`
+   - Note: API methods retained for internal backend use (still called by media_player.py)
 

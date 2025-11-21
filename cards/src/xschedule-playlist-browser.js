@@ -200,29 +200,27 @@ class XSchedulePlaylistBrowser extends LitElement {
 
       const newSchedules = {};
 
-      // Fetch playlist metadata (including durations) once for all playlists
+      // Fetch playlist metadata (including durations) via browse_media
       let playlistsMetadata = {};
       try {
-        const metadataResponse = await this._hass.callWS({
-          type: 'call_service',
-          domain: 'xschedule',
-          service: 'get_playlists_with_metadata',
-          service_data: {
-            entity_id: this.config.entity,
-            force_refresh: forceRefresh,
-          },
-          return_response: true,
+        const browseResult = await this._hass.callWS({
+          type: 'media_player/browse_media',
+          entity_id: this.config.entity,
+          media_content_type: '',
+          media_content_id: '',
         });
 
-        if (metadataResponse && metadataResponse.response && metadataResponse.response.playlists) {
-          // Convert array to map by playlist name
-          playlistsMetadata = metadataResponse.response.playlists.reduce((acc, playlist) => {
-            acc[playlist.name] = playlist;
-            return acc;
-          }, {});
+        // Map browse_media response to same format for compatibility
+        if (browseResult && browseResult.children) {
+          browseResult.children.forEach(child => {
+            playlistsMetadata[child.title] = {
+              name: child.title,
+              lengthms: child.duration ? child.duration * 1000 : 0
+            };
+          });
         }
       } catch (err) {
-        console.error('Failed to fetch playlists metadata:', err);
+        console.error('Failed to fetch playlists metadata via browse_media:', err);
       }
 
       // Fetch schedule info for each playlist
