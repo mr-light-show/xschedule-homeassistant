@@ -212,9 +212,11 @@ class XSchedulePlaylistBrowser extends i {
 
       const newSchedules = {};
 
-      // Fetch playlist metadata (including durations) once for all playlists
+      // Fetch playlist metadata (including durations)
+      // Try xSchedule service first (has duration), fall back to browse_media (no duration)
       let playlistsMetadata = {};
       try {
+        // First try xSchedule-specific service (includes duration)
         const metadataResponse = await this._hass.callWS({
           type: 'call_service',
           domain: 'xschedule',
@@ -234,7 +236,28 @@ class XSchedulePlaylistBrowser extends i {
           }, {});
         }
       } catch (err) {
-        console.error('Failed to fetch playlists metadata:', err);
+        // Service not available (non-xSchedule player) - try browse_media fallback
+        console.log('xSchedule service not available, falling back to browse_media (no duration)');
+        try {
+          const browseResult = await this._hass.callWS({
+            type: 'media_player/browse_media',
+            entity_id: this.config.entity,
+            media_content_type: '',
+            media_content_id: '',
+          });
+
+          // Map browse_media response (no duration field available)
+          if (browseResult && browseResult.children) {
+            browseResult.children.forEach(child => {
+              playlistsMetadata[child.title] = {
+                name: child.title,
+                lengthms: 0  // Duration not available via browse_media
+              };
+            });
+          }
+        } catch (browseErr) {
+          console.error('Failed to fetch playlists metadata:', browseErr);
+        }
       }
 
       // Fetch schedule info for each playlist

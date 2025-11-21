@@ -35,8 +35,8 @@ Replace non-standard interfaces with standard Home Assistant conventions where p
 |---------------|------------------------|---------|
 | `xschedule.jump_to_step` | N/A (Playlist navigation) | Keep - xSchedule-specific |
 | `xschedule.get_playlist_schedules` | N/A (Schedule info) | Keep - xSchedule-specific |
-| `xschedule.get_playlist_steps` | `media_player.browse_media` | Deprecate - Use browse |
-| `xschedule.get_playlists_with_metadata` | `media_player.browse_media` | Deprecate - Use browse |
+| `xschedule.get_playlist_steps` | `media_player.browse_media` | Removed - Unused by cards |
+| `xschedule.get_playlists_with_metadata` | `media_player.browse_media` | Keep - browse_media lacks duration |
 | (none) | `media_player.select_source` | Already implemented ✓ |
 
 **Note:** Queue services are handled separately in `queue_standardization.md`
@@ -45,7 +45,8 @@ Replace non-standard interfaces with standard Home Assistant conventions where p
 
 - **Keep** `jump_to_step` - xSchedule-specific extended functionality
 - **Keep** `get_playlist_schedules` - xSchedule-specific schedule info
-- **Deprecate** `get_playlist_steps` and `get_playlists_with_metadata` - Use `BROWSE_MEDIA` instead
+- **Keep** `get_playlists_with_metadata` - Provides playlist duration (browse_media doesn't support duration field)
+- **Remove** `get_playlist_steps` - Unused by cards, browse_media provides same data
 - **No backward compatibility needed** - Cards and integration are distributed together
 
 ---
@@ -248,6 +249,10 @@ Replace non-standard interfaces with standard Home Assistant conventions where p
 2. ✅ **Second:** Add `media_track` support (backend) - **COMPLETED**
 3. ✅ **Third:** Update cards to support browse fallback (frontend) - **COMPLETED**
 4. ✅ **Fourth:** Migrate attribute reads in cards (frontend) - **COMPLETED**
-5. **Fifth:** Test thoroughly with and without `playlist_songs`
-6. **Last:** Remove deprecated services and attributes (cleanup)
+5. ✅ **Fifth:** Test thoroughly with and without `playlist_songs` - **COMPLETED**
+6. ✅ **Last:** Remove deprecated services and attributes (cleanup) - **PARTIALLY COMPLETED**
+   - **Kept:** `get_playlists_with_metadata` service - `browse_media` doesn't support duration field
+   - Frontend uses smart fallback: tries service first (xSchedule with duration), falls back to browse_media (generic players without duration)
+   - This provides xSchedule-specific functionality while maintaining generic player compatibility
+   - Note: `get_playlist_steps` service was never used by cards and has been removed
 

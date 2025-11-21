@@ -10,9 +10,6 @@ jobs:
   backend-tests:
     name: Backend Tests (Python)
     runs-on: ubuntu-latest
-    # Note: Many tests still need Phase 2 & 3 fixes (see BACKEND_TESTS_TODO.md)
-    # Currently passing: ~23-26 tests (Phase 1 fixes applied)
-    continue-on-error: true  # Don't fail CI while tests are being fixed
 
     steps:
       - name: Checkout code
@@ -59,24 +56,25 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'cards/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: cd cards && npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: cd cards && npx playwright install --with-deps chromium
 
       - name: Run frontend tests
-        run: npm test
+        run: cd cards && npm test
 
       - name: Build project
-        run: npm run build
+        run: cd cards && npm run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: cards/dist/
 
   lint:
     name: Linting
@@ -91,30 +89,32 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'cards/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: cd cards && npm ci
 
       - name: Run ESLint
-        run: npm run lint || echo "ESLint not configured, skipping..."
+        run: cd cards && npm run lint || echo "ESLint not configured, skipping..."
 
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [frontend-tests, lint]
+    needs: [backend-tests, frontend-tests, lint]
     if: always()
 
     steps:
       - name: Check job results
         run: |
-          echo "Backend tests: ${{ needs.backend-tests.result }} (continue-on-error, Phase 1 applied)"
+          echo "Backend tests: ${{ needs.backend-tests.result }}"
           echo "Frontend tests: ${{ needs.frontend-tests.result }}"
           echo "Lint: ${{ needs.lint.result }}"
 
-          if [ "${{ needs.frontend-tests.result }}" != "success" ] || \
+          if [ "${{ needs.backend-tests.result }}" != "success" ] || \
+             [ "${{ needs.frontend-tests.result }}" != "success" ] || \
              [ "${{ needs.lint.result }}" != "success" ]; then
             echo "Quality gate failed"
             exit 1
           fi
 
-          echo "Quality gate passed (backend tests informational only)"
+          echo "Quality gate passed"
