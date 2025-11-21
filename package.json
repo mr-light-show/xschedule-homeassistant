@@ -1,6 +1,6 @@
 {
   "name": "xschedule-homeassistant",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "xSchedule integration and cards for Home Assistant",
   "private": true,
   "scripts": {
