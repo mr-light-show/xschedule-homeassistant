@@ -31,12 +31,13 @@ print_info() {
     echo -e "${YELLOW}→ $1${NC}"
 }
 
-# Get script directory (repository root)
+# Get script directory and repository root
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 # Function to get current version from manifest.json
 get_current_version_from_manifest() {
-    local manifest="$SCRIPT_DIR/custom_components/xschedule/manifest.json"
+    local manifest="$REPO_ROOT/custom_components/xschedule/manifest.json"
     if [ ! -f "$manifest" ]; then
         print_error "manifest.json not found at: $manifest"
         exit 1
@@ -154,14 +155,15 @@ else
 fi
 
 # Define files to update
-MANIFEST_FILE="$SCRIPT_DIR/custom_components/xschedule/manifest.json"
-PACKAGE_FILE="$SCRIPT_DIR/package.json"
-CARD_FILE="$SCRIPT_DIR/src/xschedule-card.js"
-BROWSER_FILE="$SCRIPT_DIR/src/xschedule-playlist-browser.js"
+MANIFEST_FILE="$REPO_ROOT/custom_components/xschedule/manifest.json"
+ROOT_PACKAGE_FILE="$REPO_ROOT/package.json"
+CARDS_PACKAGE_FILE="$REPO_ROOT/cards/package.json"
+CARD_FILE="$REPO_ROOT/cards/src/xschedule-card.js"
+BROWSER_FILE="$REPO_ROOT/cards/src/xschedule-playlist-browser.js"
 
 # Check if all files exist
 MISSING_FILES=0
-for file in "$MANIFEST_FILE" "$PACKAGE_FILE" "$CARD_FILE" "$BROWSER_FILE"; do
+for file in "$MANIFEST_FILE" "$ROOT_PACKAGE_FILE" "$CARDS_PACKAGE_FILE" "$CARD_FILE" "$BROWSER_FILE"; do
     if [ ! -f "$file" ]; then
         print_error "File not found: $file"
         MISSING_FILES=$((MISSING_FILES + 1))
@@ -200,18 +202,32 @@ echo "  Updated: $NEW_MANIFEST"
 print_success "manifest.json updated"
 echo ""
 
-# Update package.json
-CURRENT_PACKAGE=$(get_current_version "$PACKAGE_FILE" '"version": "[^"]*"')
-print_info "Updating package.json..."
-echo "  Current: $CURRENT_PACKAGE"
+# Update root package.json
+CURRENT_ROOT_PACKAGE=$(get_current_version "$ROOT_PACKAGE_FILE" '"version": "[^"]*"')
+print_info "Updating root package.json..."
+echo "  Current: $CURRENT_ROOT_PACKAGE"
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$PACKAGE_FILE"
+    sed -i '' 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$ROOT_PACKAGE_FILE"
 else
-    sed -i 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$PACKAGE_FILE"
+    sed -i 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$ROOT_PACKAGE_FILE"
 fi
-NEW_PACKAGE=$(get_current_version "$PACKAGE_FILE" '"version": "[^"]*"')
-echo "  Updated: $NEW_PACKAGE"
-print_success "package.json updated"
+NEW_ROOT_PACKAGE=$(get_current_version "$ROOT_PACKAGE_FILE" '"version": "[^"]*"')
+echo "  Updated: $NEW_ROOT_PACKAGE"
+print_success "Root package.json updated"
+echo ""
+
+# Update cards/package.json
+CURRENT_CARDS_PACKAGE=$(get_current_version "$CARDS_PACKAGE_FILE" '"version": "[^"]*"')
+print_info "Updating cards/package.json..."
+echo "  Current: $CURRENT_CARDS_PACKAGE"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$CARDS_PACKAGE_FILE"
+else
+    sed -i 's/"version": "[^"]*"/"version": "'"$NEW_VERSION"'"/' "$CARDS_PACKAGE_FILE"
+fi
+NEW_CARDS_PACKAGE=$(get_current_version "$CARDS_PACKAGE_FILE" '"version": "[^"]*"')
+echo "  Updated: $NEW_CARDS_PACKAGE"
+print_success "Cards package.json updated"
 echo ""
 
 # Update xschedule-card.js
@@ -247,14 +263,15 @@ print_success "All version numbers updated to: $NEW_VERSION"
 echo ""
 echo "Files modified:"
 echo "  - custom_components/xschedule/manifest.json"
-echo "  - package.json"
-echo "  - src/xschedule-card.js"
-echo "  - src/xschedule-playlist-browser.js"
+echo "  - package.json (root)"
+echo "  - cards/package.json"
+echo "  - cards/src/xschedule-card.js"
+echo "  - cards/src/xschedule-playlist-browser.js"
 echo ""
 
 # Build minified files
 print_info "Building minified files..."
-if npm run build; then
+if npm run build --prefix cards; then
     print_success "Minified files built successfully"
 else
     print_error "Failed to build minified files"
