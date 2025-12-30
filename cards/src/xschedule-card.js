@@ -304,16 +304,11 @@ class XScheduleCard extends LitElement {
   _renderProgressBar() {
     if (!this.config.showProgressBar) return '';
 
-    // Don't show progress bar if player is idle or no content available
-    const isIdle = this._entity.state === 'idle' ||
-                   this._entity.state === 'off' ||
-                   this._entity.state === 'unavailable' ||
-                   this._entity.state === 'unknown';
-
-    // Hide if idle or both queue and songs are empty
-    if (isIdle || (this._queue.length === 0 && this._songs.length === 0)) {
-      return '';
-    }
+    // Standard HA behavior: show progress bar if playing/paused with valid duration
+    const state = this._entity.state;
+    const isActive = state === 'playing' || state === 'paused';
+    
+    if (!isActive) return '';
 
     const duration = this._entity.attributes.media_duration;
     const basePosition = this._entity.attributes.media_position;

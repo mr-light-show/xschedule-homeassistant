@@ -166,8 +166,5 @@ IMPLEMENTATION_SUMMARY.md
 BACKEND_TESTS_TODO.md
 TEST_*.md
 
-# Deployment scripts (local development - contain credentials)
-deploy.sh
-deploy-restart.sh
-scripts/deploy.sh
-scripts/deploy-restart.sh
+# Deployment secrets (local development)
+scripts/HA_TOKEN
