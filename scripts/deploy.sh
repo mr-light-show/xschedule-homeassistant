@@ -1,9 +1,12 @@
 #!/bin/bash
 set -e
 
-# xSchedule Development Deployment Script
+# Development Deployment Script
 # Copies custom component files to Home Assistant using rsync
-# Usage: ./deploy.sh [--restart]
+# Usage: ./deploy.sh [--norestart | --restart]
+#   (default)    - restart HA if changes detected
+#   --norestart  - never restart HA
+#   --restart    - always restart HA (even if no changes)
 
 # Configuration
 HA_HOST="homeassistant.local"
@@ -11,7 +14,7 @@ HA_USER="$USER"
 HA_CONFIG_DIR="/config"
 COMPONENT_NAME="xschedule"
 
-# Restart configuration (used with --restart flag)
+# Restart configuration (restarts by default if changes, use flags to override)
 HA_PORT="8123"
 # Load HA token from file (create scripts/HA_TOKEN with your long-lived access token)
 # Generate one at: Profile -> Security -> Long-Lived Access Tokens -> Create Token
@@ -23,11 +26,15 @@ else
 fi
 
 # Parse arguments
-DO_RESTART=false
+DO_RESTART=true
+FORCE_RESTART=false
 for arg in "$@"; do
     case $arg in
+        --norestart|-n)
+            DO_RESTART=false
+            ;;
         --restart|-r)
-            DO_RESTART=true
+            FORCE_RESTART=true
             ;;
     esac
 done
@@ -38,14 +45,48 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+DIVIDER="════════════════════════════════════════════════════════════════"
 
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-if [ "$DO_RESTART" = true ]; then
-    echo -e "${BLUE}  xSchedule Deploy + Restart${NC}"
+# Function to restart Home Assistant
+do_restart() {
+    local message="${1:-Restarting Home Assistant...}"
+    
+    if [ -z "$HA_TOKEN" ]; then
+        echo ""
+        echo -e "${RED}Error: No HA token found. Create scripts/HA_TOKEN with your token.${NC}"
+        echo "Generate one at: Profile -> Security -> Long-Lived Access Tokens -> Create Token"
+        exit 1
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}${message}${NC}"
+    curl -X POST \
+      -H "Authorization: Bearer ${HA_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -s \
+      "http://${HA_HOST}:${HA_PORT}/api/services/homeassistant/restart" \
+      > /dev/null
+    
+    echo -e "${GREEN}✓ Home Assistant restart initiated${NC}"
+    echo ""
+    echo -e "${YELLOW}Note:${NC} Home Assistant is restarting. This may take 30-60 seconds."
+    echo "      Clear browser cache (Ctrl+Shift+R) if needed."
+    echo ""
+    echo "View logs:"
+    echo -e "  ${YELLOW}HA OS/Supervised:${NC} ha core logs -f"
+    echo -e "  ${YELLOW}Docker:${NC}          docker logs -f homeassistant"
+    echo -e "  ${YELLOW}Log file:${NC}        tail -f /config/home-assistant.log"
+}
+
+echo -e "${BLUE}${DIVIDER}${NC}"
+if [ "$FORCE_RESTART" = true ]; then
+    echo -e "${BLUE}  ${COMPONENT_NAME} Deploy + Restart (forced)${NC}"
+elif [ "$DO_RESTART" = true ]; then
+    echo -e "${BLUE}  ${COMPONENT_NAME} Deploy + Restart${NC}"
 else
-    echo -e "${BLUE}  xSchedule Development Deployment${NC}"
+    echo -e "${BLUE}  ${COMPONENT_NAME} Deploy (no restart)${NC}"
 fi
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}${DIVIDER}${NC}"
 
 # Check for SSH key authentication
 echo -e "${YELLOW}Checking SSH connection...${NC}"
@@ -133,53 +174,39 @@ done < "$CHANGES_FILE"
 
 echo ""
 
-# Summary and restart logic
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+# Summary
+echo -e "${BLUE}${DIVIDER}${NC}"
 if [ "$CHANGES_MADE" = true ]; then
     echo -e "${GREEN}Deployment complete!${NC}"
-    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-    
-    # Restart if requested
-    if [ "$DO_RESTART" = true ]; then
-        if [ -z "$HA_TOKEN" ]; then
-            echo ""
-            echo -e "${RED}Error: No HA token found. Create scripts/HA_TOKEN with your token.${NC}"
-            echo "Generate one at: Profile -> Security -> Long-Lived Access Tokens -> Create Token"
-            exit 1
-        fi
-        
-        echo ""
-        echo -e "${YELLOW}Restarting Home Assistant...${NC}"
-        curl -X POST \
-          -H "Authorization: Bearer ${HA_TOKEN}" \
-          -H "Content-Type: application/json" \
-          -s \
-          "http://${HA_HOST}:${HA_PORT}/api/services/homeassistant/restart" \
-          > /dev/null
-        
-        echo -e "${GREEN}✓ Home Assistant restart initiated${NC}"
-        echo ""
-        echo -e "${YELLOW}Note:${NC} Home Assistant is restarting. This may take 30-60 seconds."
-        echo "      Clear browser cache (Ctrl+Shift+R) if needed."
-    else
-        echo ""
-        echo "Next steps:"
-        echo "  1. Restart Home Assistant to load changes"
-        echo "  2. Clear browser cache (Ctrl+Shift+R) if needed"
-        echo ""
-        echo "Quick commands:"
-        echo -e "  ${YELLOW}Restart HA:${NC} ssh ${HA_USER}@${HA_HOST} 'ha core restart'"
-        echo -e "  ${YELLOW}Check logs:${NC} ssh ${HA_USER}@${HA_HOST} 'tail -f /config/home-assistant.log'"
-    fi
-    echo ""
-    exit 0
 else
     echo -e "${GREEN}Already up to date!${NC}"
-    echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-    if [ "$DO_RESTART" = true ]; then
+fi
+echo -e "${BLUE}${DIVIDER}${NC}"
+
+# Determine if restart should happen
+SHOULD_RESTART=false
+RESTART_MSG="Restarting Home Assistant..."
+if [ "$CHANGES_MADE" = true ] && [ "$DO_RESTART" = true ]; then
+    SHOULD_RESTART=true
+elif [ "$FORCE_RESTART" = true ]; then
+    SHOULD_RESTART=true
+    RESTART_MSG="Restarting Home Assistant (forced)..."
+fi
+
+# Restart or skip
+if [ "$SHOULD_RESTART" = true ]; then
+    do_restart "$RESTART_MSG"
+else
+    echo ""
+    if [ "$CHANGES_MADE" = true ]; then
+        echo -e "${YELLOW}Restart skipped (--norestart flag used)${NC}"
         echo ""
+        echo "To apply changes, restart Home Assistant:"
+        echo -e "  ${YELLOW}Restart HA:${NC} ssh ${HA_USER}@${HA_HOST} 'ha core restart'"
+    else
         echo -e "${YELLOW}Skipping restart - no changes detected${NC}"
     fi
-    echo ""
-    exit 0
 fi
+
+echo ""
+exit 0
