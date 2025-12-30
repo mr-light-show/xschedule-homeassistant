@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow()
+        return OptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -113,6 +113,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class OptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for xSchedule."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
+        """Initialize options flow.
+        
+        Note: In HA 2024.4+, config_entry is automatically set by the flow manager.
+        The parameter is accepted for backwards compatibility but not stored explicitly
+        to avoid the deprecation warning.
+        """
+        # Don't store config_entry - HA sets it automatically before calling steps
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
