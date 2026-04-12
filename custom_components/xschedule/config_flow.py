@@ -115,11 +115,22 @@ class OptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for xSchedule."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        # Note: Explicitly setting config_entry is deprecated in HA 2025.12+
-        # but required for compatibility with current test frameworks.
-        # TODO: Remove when pytest-homeassistant-custom-component updates to HA 2025.12+
-        self.config_entry = config_entry
+        """Initialize options flow.
+
+        Home Assistant 2025.12+ sets ``config_entry`` on the base class and does
+        not allow assigning it here. Older HA versions do not set it; we keep
+        ``_config_entry`` for those releases (e.g. CI).
+        """
+        super().__init__()
+        self._config_entry = config_entry
+
+    @property
+    def _entry(self) -> config_entries.ConfigEntry:
+        """Current config entry (works on HA 2025.12+ and older)."""
+        entry = getattr(self, "config_entry", None)
+        if entry is not None:
+            return entry
+        return self._config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -134,7 +145,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 # Update the config entry with new data
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry,
+                    self._entry,
                     data=user_input,
                 )
                 return self.async_create_entry(title="", data={})
@@ -146,15 +157,15 @@ class OptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self.config_entry.data.get(CONF_HOST),
+                        default=self._entry.data.get(CONF_HOST),
                     ): cv.string,
                     vol.Required(
                         CONF_PORT,
-                        default=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                        default=self._entry.data.get(CONF_PORT, DEFAULT_PORT),
                     ): cv.port,
                     vol.Optional(
                         CONF_PASSWORD,
-                        default=self.config_entry.data.get(CONF_PASSWORD, ""),
+                        default=self._entry.data.get(CONF_PASSWORD, ""),
                     ): cv.string,
                 }
             ),
