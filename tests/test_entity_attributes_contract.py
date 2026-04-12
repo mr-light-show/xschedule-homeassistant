@@ -144,6 +144,27 @@ class TestEntityAttributesPlaying:
         assert song1["duration"] == 185750  # Milliseconds
 
     @pytest.mark.asyncio
+    async def test_extra_state_attributes_malformed_lengthms(self, media_player_entity):
+        """Non-numeric lengthms (e.g. '{}') must not raise when building attributes."""
+        media_player_entity._current_playlist_steps = [
+            {"name": "Bad Step", "lengthms": "{}"},
+            {"name": "Good Step", "lengthms": "1000"},
+        ]
+        media_player_entity._internal_queue = [
+            {
+                "id": "q1",
+                "name": "Queued",
+                "playlist": "P",
+                "priority": 1,
+                "lengthms": "{}",
+            }
+        ]
+        attrs = media_player_entity.extra_state_attributes
+        assert attrs["playlist_songs"][0]["duration"] == 0
+        assert attrs["playlist_songs"][1]["duration"] == 1000
+        assert attrs["internal_queue"][0]["duration"] == 0
+
+    @pytest.mark.asyncio
     async def test_source_list_attribute(self, media_player_entity):
         """Verify source_list attribute (available playlists).
 

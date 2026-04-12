@@ -42,6 +42,17 @@ from .websocket import XScheduleWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _parse_length_ms(value: Any) -> int:
+    """Parse lengthms from API payloads; return 0 if missing or invalid."""
+    if value is None or value == "":
+        return 0
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
+
 # Define custom TRACE level for very verbose logging
 TRACE_LEVEL = 5
 logging.addLevelName(TRACE_LEVEL, "TRACE")
@@ -414,7 +425,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         attributes["playlist_songs"] = [
             {
                 "name": step.get("name"),
-                "duration": int(step.get("lengthms") or 0),  # Convert string to int milliseconds
+                "duration": _parse_length_ms(step.get("lengthms")),
             }
             for step in (self._current_playlist_steps or [])
         ]
@@ -433,7 +444,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 "name": item["name"],
                 "playlist": item["playlist"],
                 "priority": item["priority"],
-                "duration": int(item.get("lengthms") or 0),  # Convert string to int milliseconds
+                "duration": _parse_length_ms(item.get("lengthms")),
             }
             for item in (self._internal_queue or [])
         ]
@@ -891,7 +902,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         children = []
         for step in steps_data:
             step_name = step.get("name", "Unknown")
-            duration_ms = int(step.get("lengthms") or 0)
+            duration_ms = _parse_length_ms(step.get("lengthms"))
 
             browse_item = BrowseMedia(
                 can_expand=False,
