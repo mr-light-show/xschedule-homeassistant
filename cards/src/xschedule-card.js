@@ -87,20 +87,44 @@ class XScheduleCard extends LitElement {
     }
   }
 
+  /**
+   * Total duration in seconds. Uses entity media_duration, or current step
+   * duration from playlist_songs (ms) when the API omits/invalidates lengthms.
+   */
+  _resolveMediaDurationSec() {
+    if (!this._entity?.attributes) return null;
+    const d = this._entity.attributes.media_duration;
+    if (typeof d === 'number' && d > 0) return d;
+
+    const title = this._entity.attributes.media_title;
+    const songs = this._entity.attributes.playlist_songs;
+    if (!title || !Array.isArray(songs)) return null;
+    const item = songs.find((s) => s && s.name === title);
+    if (item == null || item.duration == null) return null;
+    const ms = Number(item.duration);
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return ms / 1000;
+  }
+
   _calculateProgress() {
     if (!this._entity?.attributes) return 0;
 
-    const duration = this._entity.attributes.media_duration;
+    const duration = this._resolveMediaDurationSec();
     const position = this._entity.attributes.media_position;
     const updatedAt = this._entity.attributes.media_position_updated_at;
 
-    if (!duration || !position || !updatedAt) return 0;
+    if (!duration || duration <= 0) return 0;
+    // position 0 is valid; !position was wrong in JS (0 is falsy)
+    if (position == null || !Number.isFinite(Number(position))) return 0;
 
-    // Calculate current position based on when it was last updated
+    const pos = Number(position);
+    if (!updatedAt) {
+      return Math.min(100, (pos / duration) * 100);
+    }
     const lastUpdate = new Date(updatedAt);
     const now = new Date();
     const elapsed = (now - lastUpdate) / 1000;
-    const currentPosition = position + elapsed;
+    const currentPosition = pos + elapsed;
 
     return Math.min(100, (currentPosition / duration) * 100);
   }
@@ -310,7 +334,7 @@ class XScheduleCard extends LitElement {
     
     if (!isActive) return '';
 
-    const duration = this._entity.attributes.media_duration;
+    const duration = this._resolveMediaDurationSec();
     const basePosition = this._entity.attributes.media_position;
 
     // Don't show progress bar if we don't have valid duration data
@@ -319,8 +343,11 @@ class XScheduleCard extends LitElement {
     // Use shared calculation method
     const progress = this._calculateProgress();
 
-    // Calculate position for time display
-    let position = basePosition || 0;
+    // Calculate position for time display (0 is valid; avoid basePosition || 0 bug)
+    let position =
+      basePosition != null && Number.isFinite(Number(basePosition))
+        ? Number(basePosition)
+        : 0;
     if (this._entity.state === 'playing') {
       const updatedAt = this._entity.attributes.media_position_updated_at;
       if (updatedAt) {
@@ -863,7 +890,7 @@ class XScheduleCard extends LitElement {
     const progressBar = e.currentTarget;
     const rect = progressBar.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    const duration = this._entity.attributes.media_duration || 0;
+    const duration = this._resolveMediaDurationSec() || 0;
     const position = duration * percent;
 
     this._callService('media_seek', { seek_position: position });

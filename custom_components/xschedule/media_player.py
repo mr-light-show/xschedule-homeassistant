@@ -265,6 +265,18 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             except (ValueError, TypeError):
                 self._attr_media_duration = 0
 
+        if (
+            (not self._attr_media_duration or self._attr_media_duration <= 0)
+            and self._attr_media_title
+            and self._current_playlist_steps
+        ):
+            for step in self._current_playlist_steps:
+                if step.get("name") == self._attr_media_title:
+                    ms = _parse_length_ms(step.get("lengthms"))
+                    if ms > 0:
+                        self._attr_media_duration = ms / 1000.0
+                    break
+
         if "leftms" in data:
             # Convert milliseconds to seconds (handle both int and string)
             try:
