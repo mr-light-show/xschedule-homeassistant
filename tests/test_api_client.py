@@ -9,8 +9,10 @@ from custom_components.xschedule.api_client import (
     XScheduleAPIError,
     XScheduleConnectionError,
     XScheduleAuthError,
+    X_SCHEDULE_NO_FAILURE_DETAIL,
     _command_status,
     format_command_failure,
+    is_xschedule_no_detail_jump_error,
 )
 
 
@@ -287,4 +289,16 @@ class TestCommandResultHelpers:
             {"result": "failed", "message": "", "reference": ""}
         )
         assert out
-        assert "no details" in out
+        assert out == X_SCHEDULE_NO_FAILURE_DETAIL
+
+    def test_is_xschedule_no_detail_jump_error_true(self) -> None:
+        """Jump exception with only the no-details detail is detectable."""
+        err = XScheduleAPIError(f"Jump failed: {X_SCHEDULE_NO_FAILURE_DETAIL}")
+        assert is_xschedule_no_detail_jump_error(err) is True
+
+    def test_is_xschedule_no_detail_jump_error_false_with_message(self) -> None:
+        err = XScheduleAPIError("Jump failed: output not ready")
+        assert is_xschedule_no_detail_jump_error(err) is False
+
+    def test_is_xschedule_no_detail_jump_error_false_unrelated(self) -> None:
+        assert is_xschedule_no_detail_jump_error(XScheduleAPIError("connection failed")) is False

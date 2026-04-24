@@ -34,6 +34,13 @@ def _command_status(result: Any) -> str | None:
     return raw if raw else None
 
 
+# User-facing line when xSchedule returns failed with no message/reference (keep in sync with format_command_failure).
+X_SCHEDULE_NO_FAILURE_DETAIL = (
+    "xSchedule reported failure with no details (see Home Assistant log for full response)"
+)
+_JUMP_FAILED_PREFIX = "Jump failed: "
+
+
 def format_command_failure(result: dict[str, Any]) -> str:
     """Build non-empty user-facing text when xSchedule returns result failed with empty message."""
     msg = str(result.get("message", "")).strip()
@@ -45,7 +52,15 @@ def format_command_failure(result: dict[str, Any]) -> str:
     if ref:
         return ref
     _LOGGER.warning("xSchedule command failed with no message or reference: %s", result)
-    return "xSchedule reported failure with no details (see Home Assistant log for full response)"
+    return X_SCHEDULE_NO_FAILURE_DETAIL
+
+
+def is_xschedule_no_detail_jump_error(exc: BaseException) -> bool:
+    """True if this is a jump API failure with no message/reference (benign in many cases)."""
+    s = str(exc)
+    if not s.startswith(_JUMP_FAILED_PREFIX):
+        return False
+    return s[len(_JUMP_FAILED_PREFIX) :] == X_SCHEDULE_NO_FAILURE_DETAIL
 
 
 class XScheduleAPIClient:

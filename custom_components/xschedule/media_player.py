@@ -26,6 +26,7 @@ from .api_client import (
     XScheduleAPIError,
     _command_status,
     format_command_failure,
+    is_xschedule_no_detail_jump_error,
 )
 from .const import (
     CONF_PASSWORD,
@@ -739,9 +740,17 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 _LOGGER.info("Issuing jump command for '%s' (top of queue)", song_name)
                 await self.async_jump_to_step(song_name)
             except XScheduleAPIError as err:
-                _LOGGER.error("Failed to jump to '%s': %s", song_name, err)
-                # Don't remove from queue - let user retry or remove manually
-                raise
+                if is_xschedule_no_detail_jump_error(err):
+                    _LOGGER.warning(
+                        "Jump to '%s' returned failed with no reason from xSchedule; "
+                        "internal queue is unchanged. Retry or check xSchedule if the next "
+                        "track does not follow the queue.",
+                        song_name,
+                    )
+                else:
+                    _LOGGER.error("Failed to jump to '%s': %s", song_name, err)
+                    # Don't remove from queue - let user retry or remove manually
+                    raise
         
         # 6. Update state (triggers state change event)
         if self.hass is not None:
@@ -794,9 +803,16 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 _LOGGER.info("First item changed to '%s', issuing jump command", new_first_song)
                 await self.async_jump_to_step(new_first_song)
             except XScheduleAPIError as err:
-                _LOGGER.error("Failed to jump to '%s': %s", new_first_song, err)
-                # Don't revert reorder - let user fix manually
-                raise
+                if is_xschedule_no_detail_jump_error(err):
+                    _LOGGER.warning(
+                        "Jump to '%s' returned failed with no reason after reorder; "
+                        "queue order is kept. Retry or check xSchedule if playback does not match.",
+                        new_first_song,
+                    )
+                else:
+                    _LOGGER.error("Failed to jump to '%s': %s", new_first_song, err)
+                    # Don't revert reorder - let user fix manually
+                    raise
         
         # Update state
         if self.hass is not None:
