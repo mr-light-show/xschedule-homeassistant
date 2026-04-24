@@ -21,7 +21,12 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .api_client import XScheduleAPIClient, XScheduleAPIError
+from .api_client import (
+    XScheduleAPIClient,
+    XScheduleAPIError,
+    _command_status,
+    format_command_failure,
+)
 from .const import (
     CONF_PASSWORD,
     DEFAULT_NAME,
@@ -662,19 +667,22 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             # WebSocket was returning: {'result': 'failed', 'reference': '', 'message': 'Empty request.'}
             _LOGGER.debug("Sending via REST API: step='%s'", step)
             result = await self._api_client.jump_to_step_at_end(step)
-            
-            # Check if command succeeded
-            if isinstance(result, dict):
-                if result.get("result") == "ok":
-                    _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
-                elif result.get("result") == "failed":
-                    error_msg = result.get("message", "Unknown error")
-                    _LOGGER.error("Jump to step '%s' failed: %s", step, error_msg)
-                    raise XScheduleAPIError(f"Jump failed: {error_msg}")
-                else:
-                    _LOGGER.warning("Jump to step '%s' returned unexpected response: %s", step, result)
-            else:
+
+            if not isinstance(result, dict):
                 _LOGGER.info("Jump to step '%s' sent (response: %s)", step, result)
+                return
+
+            status = _command_status(result)
+            if status in ("ok", "success"):
+                _LOGGER.info("Successfully jumped to step '%s' at end of current step", step)
+            elif status == "failed":
+                error_msg = format_command_failure(result)
+                _LOGGER.error("Jump to step '%s' failed: %s", step, error_msg)
+                raise XScheduleAPIError(f"Jump failed: {error_msg}")
+            else:
+                _LOGGER.warning(
+                    "Jump to step '%s' returned unexpected response: %s", step, result
+                )
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error jumping to step '%s': %s", step, err)
@@ -733,7 +741,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             except XScheduleAPIError as err:
                 _LOGGER.error("Failed to jump to '%s': %s", song_name, err)
                 # Don't remove from queue - let user retry or remove manually
-                raise XScheduleAPIError(f"Failed to jump to song: {err}")
+                raise
         
         # 6. Update state (triggers state change event)
         if self.hass is not None:
@@ -788,7 +796,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             except XScheduleAPIError as err:
                 _LOGGER.error("Failed to jump to '%s': %s", new_first_song, err)
                 # Don't revert reorder - let user fix manually
-                raise XScheduleAPIError(f"Reordered but failed to jump: {err}")
+                raise
         
         # Update state
         if self.hass is not None:

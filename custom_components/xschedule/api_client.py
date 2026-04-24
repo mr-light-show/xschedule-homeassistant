@@ -26,6 +26,28 @@ class XScheduleAuthError(XScheduleAPIError):
     """Exception for authentication errors."""
 
 
+def _command_status(result: Any) -> str | None:
+    """Return normalized `result` field from a command response dict, or None if missing."""
+    if not isinstance(result, dict):
+        return None
+    raw = str(result.get("result", "")).strip().lower()
+    return raw if raw else None
+
+
+def format_command_failure(result: dict[str, Any]) -> str:
+    """Build non-empty user-facing text when xSchedule returns result failed with empty message."""
+    msg = str(result.get("message", "")).strip()
+    ref = str(result.get("reference", "")).strip()
+    if msg and ref and ref not in msg:
+        return f"{msg} (reference: {ref})"
+    if msg:
+        return msg
+    if ref:
+        return ref
+    _LOGGER.warning("xSchedule command failed with no message or reference: %s", result)
+    return "xSchedule reported failure with no details (see Home Assistant log for full response)"
+
+
 class XScheduleAPIClient:
     """Client for interacting with xSchedule API."""
 

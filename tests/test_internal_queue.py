@@ -162,12 +162,25 @@ class TestInternalQueueAddition:
         """Test that song remains in queue if jump command fails."""
         media_player_entity._api_client.jump_to_step_at_end.side_effect = XScheduleAPIError("Jump failed")
         
-        with pytest.raises(XScheduleAPIError, match="Failed to jump to song"):
+        with pytest.raises(XScheduleAPIError, match="Jump failed"):
             await media_player_entity.async_add_to_internal_queue("Song 1")
         
         # Verify song is still in queue for manual retry
         assert len(media_player_entity._internal_queue) == 1
         assert media_player_entity._internal_queue[0]["name"] == "Song 1"
+
+    @pytest.mark.asyncio
+    async def test_add_song_jump_api_failed_empty_message(self, media_player_entity):
+        """REST returns failed with empty message; error text must not be 'Jump failed: ' only."""
+        media_player_entity._api_client.jump_to_step_at_end = AsyncMock(
+            return_value={"result": "failed", "message": "", "reference": ""}
+        )
+        with pytest.raises(XScheduleAPIError) as exc_info:
+            await media_player_entity.async_add_to_internal_queue("Song 1")
+        msg = str(exc_info.value)
+        assert "Jump failed:" in msg
+        assert len(msg) > len("Jump failed: ")
+        assert "no details" in msg
 
 
 class TestInternalQueueRemoval:
