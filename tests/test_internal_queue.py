@@ -31,6 +31,9 @@ def mock_api_client():
         {"name": "Song 3", "lengthms": "190000"},
     ])
     client.jump_to_step_at_end = AsyncMock(return_value={"result": "ok"})
+    client.play_playlist_starting_at_step = AsyncMock(return_value={"result": "ok"})
+    client.enqueue_step = AsyncMock(return_value={"result": "ok"})
+    client.stop_playlist_at_end = AsyncMock(return_value={"result": "ok"})
     return client
 
 
@@ -140,7 +143,7 @@ class TestInternalQueueAddition:
     @pytest.mark.asyncio
     async def test_add_song_not_in_playlist(self, media_player_entity):
         """Test adding song not in current playlist raises error."""
-        with pytest.raises(XScheduleAPIError, match="not found in current playlist"):
+        with pytest.raises(XScheduleAPIError, match="not found in playlist"):
             await media_player_entity.async_add_to_internal_queue("Nonexistent Song")
         
         # Verify queue is empty

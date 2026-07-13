@@ -361,6 +361,21 @@ class XScheduleAPIClient:
         self.invalidate_cache(playlist_name)
         return result
 
+    async def play_playlist_starting_at_step(
+        self, playlist_name: str, step_name: str
+    ) -> dict[str, Any]:
+        """Start playlist at a step and continue through remaining steps."""
+        params = f"{playlist_name},{step_name}"
+        result = await self.command("Play playlist starting at step", params)
+        self.invalidate_cache(playlist_name)
+        return result
+
+    async def stop_playlist_at_end(self) -> dict[str, Any]:
+        """Stop playlist after current step so queued songs can play."""
+        result = await self.command("Stop playlist at end of current step")
+        self.invalidate_cache()
+        return result
+
     async def set_step_position(self, position_ms: int) -> dict[str, Any]:
         """Set playback position in current step (seek)."""
         return await self.command("Set step position ms", str(position_ms))

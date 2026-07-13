@@ -32,6 +32,7 @@ def mock_api_client():
     # Control methods
     client.play_playlist = AsyncMock(return_value={"result": "success"})
     client.play_playlist_step = AsyncMock(return_value={"result": "success"})
+    client.play_playlist_starting_at_step = AsyncMock(return_value={"result": "success"})
     client.pause = AsyncMock(return_value={"result": "success"})
     client.stop = AsyncMock(return_value={"result": "success"})
     client.stop_all_now = AsyncMock(return_value={"result": "success"})
@@ -39,6 +40,9 @@ def mock_api_client():
     client.previous_step = AsyncMock(return_value={"result": "success"})
     client.set_volume = AsyncMock(return_value={"result": "success"})
     client.adjust_volume = AsyncMock(return_value={"result": "success"})
+    client.jump_to_step_at_end = AsyncMock(return_value={"result": "ok"})
+    client.enqueue_step = AsyncMock(return_value={"result": "success"})
+    client.stop_playlist_at_end = AsyncMock(return_value={"result": "success"})
 
     # Cache management
     client.invalidate_cache = MagicMock()
@@ -324,26 +328,27 @@ class TestMediaPlayerServices:
 
     @pytest.mark.asyncio
     async def test_play_song(self, media_player_entity, mock_api_client, mock_websocket):
-        """Test playing a specific song from a playlist."""
-        # Reset mocks to ignore setup calls
-        mock_api_client.play_playlist_step.reset_mock()
+        """Test playing a specific song queues it and starts via starting-at-step."""
+        mock_api_client.play_playlist_starting_at_step.reset_mock()
         mock_api_client.invalidate_cache.reset_mock()
-        
-        # Simulate WebSocket disconnection so API client is used
         mock_websocket.connected = False
+        media_player_entity._attr_media_playlist = "Test Playlist"
+        media_player_entity._current_playlist_steps = [
+            {"name": "Test Song", "lengthms": "180000"},
+        ]
 
         await media_player_entity.async_play_song(
             playlist="Test Playlist",
             song="Test Song"
         )
 
-        # Verify API client was called to play the song
-        mock_api_client.play_playlist_step.assert_called_once_with(
+        mock_api_client.play_playlist_starting_at_step.assert_called_once_with(
             "Test Playlist",
             "Test Song",
         )
-        # Verify cache was invalidated
-        mock_api_client.invalidate_cache.assert_called_once_with("Test Playlist")
+        assert len(media_player_entity._internal_queue) == 1
+        assert media_player_entity._internal_queue[0]["name"] == "Test Song"
+        mock_api_client.invalidate_cache.assert_called_with("Test Playlist")
 
     @pytest.mark.asyncio
     async def test_update_fetches_status(self, media_player_entity, mock_api_client, mock_websocket):
@@ -357,6 +362,161 @@ class TestMediaPlayerServices:
         await media_player_entity.async_update()
 
         mock_api_client.get_playing_status.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_media_play_when_paused_toggles_pause_not_playlist(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Resume from pause must send Pause toggle, not Play specified playlist."""
+        mock_websocket.send_command.reset_mock()
+        mock_api_client.play_playlist.reset_mock()
+        mock_api_client.pause.reset_mock()
+        mock_websocket.connected = True
+
+        media_player_entity._attr_state = MediaPlayerState.PAUSED
+        media_player_entity._attr_media_playlist = "Test Playlist"
+
+        await media_player_entity.async_media_play()
+
+        mock_websocket.send_command.assert_awaited_once_with("Pause")
+        mock_api_client.play_playlist.assert_not_called()
+        mock_api_client.pause.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_media_play_when_playing_uses_specified_playlist(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Unpaused + playlist still starts via Play specified playlist (start/re-press semantics)."""
+        mock_websocket.send_command.reset_mock()
+        mock_api_client.play_playlist.reset_mock()
+        mock_websocket.connected = True
+
+        media_player_entity._attr_state = MediaPlayerState.PLAYING
+        media_player_entity._attr_media_playlist = "Test Playlist"
+
+        await media_player_entity.async_media_play()
+
+        mock_websocket.send_command.assert_awaited_once_with(
+            "Play specified playlist", "Test Playlist"
+        )
+        mock_api_client.play_playlist.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_media_play_when_paused_rest_uses_api_pause(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """When WebSocket is disconnected, resume uses API pause (toggle) not play_playlist."""
+        mock_websocket.connected = False
+        mock_api_client.play_playlist.reset_mock()
+        mock_api_client.pause.reset_mock()
+
+        media_player_entity._attr_state = MediaPlayerState.PAUSED
+        media_player_entity._attr_media_playlist = "Test Playlist"
+
+        await media_player_entity.async_media_play()
+
+        mock_api_client.pause.assert_awaited_once()
+        mock_api_client.play_playlist.assert_not_called()
+
+
+class TestQueueDrivenPlayback:
+    """Test queue-driven next and play-from-list behavior."""
+
+    @pytest.mark.asyncio
+    async def test_next_track_plays_queue_head(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Next should play the internal queue head instead of native next."""
+        mock_websocket.connected = False
+        media_player_entity._internal_queue = [
+            {
+                "id": "q1",
+                "name": "Queued Song",
+                "playlist": "Test Playlist",
+                "priority": 1,
+                "lengthms": "180000",
+            }
+        ]
+
+        await media_player_entity.async_media_next_track()
+
+        mock_api_client.play_playlist_starting_at_step.assert_called_once_with(
+            "Test Playlist", "Queued Song"
+        )
+        mock_api_client.next_step.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_next_track_falls_back_without_queue(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Next uses native xSchedule next when the internal queue is empty."""
+        mock_websocket.connected = True
+        media_player_entity._internal_queue = []
+
+        await media_player_entity.async_media_next_track()
+
+        mock_websocket.send_command.assert_awaited_once_with(
+            "Next step in current playlist"
+        )
+        mock_api_client.play_playlist_starting_at_step.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_play_media_song_prepends_and_starts(
+        self, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Play from list prepends to queue and starts via starting-at-step."""
+        mock_websocket.connected = False
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "180000"},
+            {"name": "Song 2", "lengthms": "210000"},
+        ]
+        media_player_entity._internal_queue = [
+            {
+                "id": "existing",
+                "name": "Song 1",
+                "playlist": "Test Playlist",
+                "priority": 1,
+                "lengthms": "180000",
+            }
+        ]
+
+        await media_player_entity.async_play_media(
+            "music",
+            "Test Playlist|||Song 2",
+        )
+
+        assert media_player_entity._internal_queue[0]["name"] == "Song 2"
+        mock_api_client.play_playlist_starting_at_step.assert_called_once_with(
+            "Test Playlist", "Song 2"
+        )
+
+    @pytest.mark.asyncio
+    async def test_idle_with_queue_advances_playback(
+        self, hass: HomeAssistant, media_player_entity, mock_api_client, mock_websocket
+    ):
+        """Idle transition with queued songs should start the queue head."""
+        mock_api_client.play_playlist_starting_at_step.reset_mock()
+        mock_websocket.connected = False
+        media_player_entity._attr_state = MediaPlayerState.PLAYING
+        media_player_entity._internal_queue = [
+            {
+                "id": "q1",
+                "name": "Song 1",
+                "playlist": "Test Playlist",
+                "priority": 1,
+                "lengthms": "180000",
+            }
+        ]
+        media_player_entity._current_playlist_steps = [
+            {"name": "Song 1", "lengthms": "180000"},
+        ]
+
+        media_player_entity._handle_websocket_update({"status": "idle"})
+        await hass.async_block_till_done()
+
+        mock_api_client.play_playlist_starting_at_step.assert_called_once_with(
+            "Test Playlist", "Song 1"
+        )
 
 
 class TestEntityAttributes:
