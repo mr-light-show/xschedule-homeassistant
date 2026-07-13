@@ -26,6 +26,43 @@ class XScheduleAuthError(XScheduleAPIError):
     """Exception for authentication errors."""
 
 
+def _command_status(result: Any) -> str | None:
+    """Return normalized `result` field from a command response dict, or None if missing."""
+    if not isinstance(result, dict):
+        return None
+    raw = str(result.get("result", "")).strip().lower()
+    return raw if raw else None
+
+
+# User-facing line when xSchedule returns failed with no message/reference (keep in sync with format_command_failure).
+X_SCHEDULE_NO_FAILURE_DETAIL = (
+    "xSchedule reported failure with no details (see Home Assistant log for full response)"
+)
+_JUMP_FAILED_PREFIX = "Jump failed: "
+
+
+def format_command_failure(result: dict[str, Any]) -> str:
+    """Build non-empty user-facing text when xSchedule returns result failed with empty message."""
+    msg = str(result.get("message", "")).strip()
+    ref = str(result.get("reference", "")).strip()
+    if msg and ref and ref not in msg:
+        return f"{msg} (reference: {ref})"
+    if msg:
+        return msg
+    if ref:
+        return ref
+    _LOGGER.warning("xSchedule command failed with no message or reference: %s", result)
+    return X_SCHEDULE_NO_FAILURE_DETAIL
+
+
+def is_xschedule_no_detail_jump_error(exc: BaseException) -> bool:
+    """True if this is a jump API failure with no message/reference (benign in many cases)."""
+    s = str(exc)
+    if not s.startswith(_JUMP_FAILED_PREFIX):
+        return False
+    return s[len(_JUMP_FAILED_PREFIX) :] == X_SCHEDULE_NO_FAILURE_DETAIL
+
+
 class XScheduleAPIClient:
     """Client for interacting with xSchedule API."""
 
@@ -322,6 +359,21 @@ class XScheduleAPIClient:
         params = f"{playlist_name},{step_name}"
         result = await self.command("Play playlist step", params)
         self.invalidate_cache(playlist_name)
+        return result
+
+    async def play_playlist_starting_at_step(
+        self, playlist_name: str, step_name: str
+    ) -> dict[str, Any]:
+        """Start playlist at a step and continue through remaining steps."""
+        params = f"{playlist_name},{step_name}"
+        result = await self.command("Play playlist starting at step", params)
+        self.invalidate_cache(playlist_name)
+        return result
+
+    async def stop_playlist_at_end(self) -> dict[str, Any]:
+        """Stop playlist after current step so queued songs can play."""
+        result = await self.command("Stop playlist at end of current step")
+        self.invalidate_cache()
         return result
 
     async def set_step_position(self, position_ms: int) -> dict[str, Any]:

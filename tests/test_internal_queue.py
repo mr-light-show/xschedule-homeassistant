@@ -31,6 +31,9 @@ def mock_api_client():
         {"name": "Song 3", "lengthms": "190000"},
     ])
     client.jump_to_step_at_end = AsyncMock(return_value={"result": "ok"})
+    client.play_playlist_starting_at_step = AsyncMock(return_value={"result": "ok"})
+    client.enqueue_step = AsyncMock(return_value={"result": "ok"})
+    client.stop_playlist_at_end = AsyncMock(return_value={"result": "ok"})
     return client
 
 
@@ -140,7 +143,7 @@ class TestInternalQueueAddition:
     @pytest.mark.asyncio
     async def test_add_song_not_in_playlist(self, media_player_entity):
         """Test adding song not in current playlist raises error."""
-        with pytest.raises(XScheduleAPIError, match="not found in current playlist"):
+        with pytest.raises(XScheduleAPIError, match="not found in playlist"):
             await media_player_entity.async_add_to_internal_queue("Nonexistent Song")
         
         # Verify queue is empty
@@ -162,12 +165,37 @@ class TestInternalQueueAddition:
         """Test that song remains in queue if jump command fails."""
         media_player_entity._api_client.jump_to_step_at_end.side_effect = XScheduleAPIError("Jump failed")
         
-        with pytest.raises(XScheduleAPIError, match="Failed to jump to song"):
+        with pytest.raises(XScheduleAPIError, match="Jump failed"):
             await media_player_entity.async_add_to_internal_queue("Song 1")
         
         # Verify song is still in queue for manual retry
         assert len(media_player_entity._internal_queue) == 1
         assert media_player_entity._internal_queue[0]["name"] == "Song 1"
+
+    @pytest.mark.asyncio
+    async def test_add_song_jump_api_failed_empty_message(self, media_player_entity):
+        """REST returns failed with no message; service succeeds, song stays in queue (soft-fail)."""
+        media_player_entity._api_client.jump_to_step_at_end = AsyncMock(
+            return_value={"result": "failed", "message": "", "reference": ""}
+        )
+        await media_player_entity.async_add_to_internal_queue("Song 1")
+        assert len(media_player_entity._internal_queue) == 1
+        assert media_player_entity._internal_queue[0]["name"] == "Song 1"
+
+    @pytest.mark.asyncio
+    async def test_add_song_jump_api_failed_with_message_still_raises(
+        self, media_player_entity
+    ):
+        """When xSchedule returns a real failure message, add_to_internal_queue still errors."""
+        media_player_entity._api_client.jump_to_step_at_end = AsyncMock(
+            return_value={
+                "result": "failed",
+                "message": "not allowed",
+                "reference": "",
+            }
+        )
+        with pytest.raises(XScheduleAPIError, match="not allowed"):
+            await media_player_entity.async_add_to_internal_queue("Song 1")
 
 
 class TestInternalQueueRemoval:
@@ -226,6 +254,24 @@ class TestInternalQueueReordering:
         
         # Verify jump command was issued for new first song
         media_player_entity._api_client.jump_to_step_at_end.assert_called_once_with("Song 3")
+
+    @pytest.mark.asyncio
+    async def test_reorder_jump_no_detail_failure_does_not_raise(
+        self, media_player_entity
+    ):
+        """Failed jump with no API message after reorder should not fail the service."""
+        await media_player_entity.async_add_to_internal_queue("Song 1")
+        await media_player_entity.async_add_to_internal_queue("Song 2")
+        await media_player_entity.async_add_to_internal_queue("Song 3")
+        ids = [item["id"] for item in media_player_entity._internal_queue]
+        new_order = [ids[2], ids[0], ids[1]]
+
+        media_player_entity._api_client.jump_to_step_at_end = AsyncMock(
+            return_value={"result": "failed", "message": "", "reference": ""}
+        )
+
+        await media_player_entity.async_reorder_internal_queue(new_order)
+        assert media_player_entity._internal_queue[0]["name"] == "Song 3"
 
     @pytest.mark.asyncio
     async def test_reorder_no_jump_if_first_unchanged(self, media_player_entity):

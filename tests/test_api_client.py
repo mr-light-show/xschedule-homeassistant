@@ -9,6 +9,10 @@ from custom_components.xschedule.api_client import (
     XScheduleAPIError,
     XScheduleConnectionError,
     XScheduleAuthError,
+    X_SCHEDULE_NO_FAILURE_DETAIL,
+    _command_status,
+    format_command_failure,
+    is_xschedule_no_detail_jump_error,
 )
 
 
@@ -244,3 +248,57 @@ class TestErrorHandling:
 
             assert result["status"] == "idle"
             assert "playlist" not in result
+
+
+class TestCommandResultHelpers:
+    """Tests for _command_status and format_command_failure."""
+
+    def test_command_status_dict_ok_variants(self) -> None:
+        """Result field is normalized case-insensitively."""
+        assert _command_status({"result": "ok"}) == "ok"
+        assert _command_status({"result": "OK"}) == "ok"
+        assert _command_status({"result": " Ok "}) == "ok"
+        assert _command_status({"result": "Failed"}) == "failed"
+        assert _command_status({}) is None
+        assert _command_status("not a dict") is None
+
+    def test_format_command_failure_message_only(self) -> None:
+        """Message text is used when present."""
+        assert "cannot jump" in format_command_failure(
+            {"result": "failed", "message": "cannot jump", "reference": ""}
+        )
+
+    def test_format_command_failure_empty_message_uses_reference(self) -> None:
+        """Empty message still yields detail from reference when present."""
+        out = format_command_failure(
+            {"result": "failed", "message": "", "reference": "step1"}
+        )
+        assert "step1" in out
+
+    def test_format_command_failure_whitespace_message_uses_reference(
+        self,
+    ) -> None:
+        out = format_command_failure(
+            {"result": "failed", "message": "   ", "reference": "ref2"}
+        )
+        assert "ref2" in out
+
+    def test_format_command_failure_empty_message_and_reference(self) -> None:
+        """No message and no reference still returns a non-empty explanation."""
+        out = format_command_failure(
+            {"result": "failed", "message": "", "reference": ""}
+        )
+        assert out
+        assert out == X_SCHEDULE_NO_FAILURE_DETAIL
+
+    def test_is_xschedule_no_detail_jump_error_true(self) -> None:
+        """Jump exception with only the no-details detail is detectable."""
+        err = XScheduleAPIError(f"Jump failed: {X_SCHEDULE_NO_FAILURE_DETAIL}")
+        assert is_xschedule_no_detail_jump_error(err) is True
+
+    def test_is_xschedule_no_detail_jump_error_false_with_message(self) -> None:
+        err = XScheduleAPIError("Jump failed: output not ready")
+        assert is_xschedule_no_detail_jump_error(err) is False
+
+    def test_is_xschedule_no_detail_jump_error_false_unrelated(self) -> None:
+        assert is_xschedule_no_detail_jump_error(XScheduleAPIError("connection failed")) is False
