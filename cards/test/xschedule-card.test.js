@@ -663,20 +663,24 @@ describe('XScheduleCard', () => {
 
   describe('Render Optimization', () => {
     it('should not re-render when only media_position_updated_at changes', async () => {
+      const now = new Date();
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'playing',
         {
           media_title: 'Test Song',
+          media_duration: 120,
           media_position: 30,
-          media_position_updated_at: '2024-01-01T12:00:00Z',
+          media_position_updated_at: now.toISOString(),
         }
       );
 
-      const config = createMockCardConfig();
+      const config = createMockCardConfig({ enableSeek: true, showProgressBar: true });
       element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+      await new Promise((resolve) => queueMicrotask(resolve));
 
-      // Track render count
+      // Track render count after initial render and pending microtasks have settled
       let renderCount = 0;
       const originalRender = element.render.bind(element);
       element.render = function() {
@@ -684,23 +688,77 @@ describe('XScheduleCard', () => {
         return originalRender();
       };
 
-      // Update only the timestamp (simulates backend polling update)
+      // Update only position/timestamp (simulates backend position update during playback)
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
         'playing',
         {
           media_title: 'Test Song',
-          media_position: 30,
-          media_position_updated_at: '2024-01-01T12:00:30Z',
+          media_duration: 120,
+          media_position: 45,
+          media_position_updated_at: new Date().toISOString(),
         }
       );
 
       element.hass = mockHass;
       await element.updateComplete;
+      await new Promise((resolve) => queueMicrotask(resolve));
 
-      // Should trigger a re-render because media_position_updated_at changed (fix from pre12)
-      // This allows the media position display to update during playback
-      expect(renderCount).to.equal(1);
+      // Should not re-render — position updates use direct DOM sync
+      expect(renderCount).to.equal(0);
+
+      const timeCurrent = element.shadowRoot.querySelector('.time-current');
+      expect(timeCurrent).to.exist;
+      expect(timeCurrent.textContent).to.equal('0:45');
+    });
+
+    it('should not re-render on seek click (optimistic DOM update)', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          media_duration: 100,
+          media_position: 10,
+          media_position_updated_at: new Date().toISOString(),
+        }
+      );
+
+      const config = createMockCardConfig({ enableSeek: true, showProgressBar: true });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      const progressBar = element.shadowRoot.querySelector('.progress-bar.seekable');
+      expect(progressBar).to.exist;
+
+      progressBar.getBoundingClientRect = () => ({
+        left: 0,
+        width: 200,
+        top: 0,
+        height: 10,
+        right: 200,
+        bottom: 10,
+      });
+
+      progressBar.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 100 })
+      );
+      await element.updateComplete;
+
+      expect(renderCount).to.equal(0);
+
+      const progressFill = element.shadowRoot.querySelector('.progress-fill');
+      expect(progressFill.style.width).to.equal('50%');
+
+      const timeCurrent = element.shadowRoot.querySelector('.time-current');
+      expect(timeCurrent.textContent).to.equal('0:50');
     });
 
     it('should re-render when media title changes', async () => {

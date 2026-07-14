@@ -12,10 +12,6 @@ class XScheduleCard extends LitElement {
     return {
       hass: { type: Object },
       config: { type: Object },
-      _entity: { type: Object },
-      _playlists: { type: Array },
-      _songs: { type: Array },
-      _queue: { type: Array },
       _songsExpanded: { type: Boolean },
       _queueExpanded: { type: Boolean },
       _toast: { type: Object },
@@ -26,6 +22,7 @@ class XScheduleCard extends LitElement {
 
   constructor() {
     super();
+    this._entity = null;
     this._playlists = [];
     this._songs = [];
     this._queue = [];
@@ -47,7 +44,6 @@ class XScheduleCard extends LitElement {
     this._previousPlaylists = null;
     this._previousSongs = null;
     this._previousQueue = null;
-    this._previousMediaPositionUpdatedAt = null;
   }
 
   setConfig(config) {
@@ -78,12 +74,51 @@ class XScheduleCard extends LitElement {
     }, 1000);
   }
 
+  _getPlaybackPositionSec() {
+    if (!this._entity?.attributes) return 0;
+
+    const duration = this._resolveMediaDurationSec();
+    const basePosition = this._entity.attributes.media_position;
+    let position =
+      basePosition != null && Number.isFinite(Number(basePosition))
+        ? Number(basePosition)
+        : 0;
+
+    if (this._entity.state === 'playing') {
+      const updatedAt = this._entity.attributes.media_position_updated_at;
+      if (updatedAt) {
+        const elapsed = (Date.now() - new Date(updatedAt).getTime()) / 1000;
+        position = duration ? Math.min(duration, position + elapsed) : position + elapsed;
+      }
+    }
+
+    return position;
+  }
+
   _updateProgressBar() {
-    // Update progress bar directly without triggering full re-render
+    // Update progress bar and time display directly without triggering full re-render
+    if (!this._entity || !this.config?.showProgressBar) return;
+
+    const state = this._entity.state;
+    if (state !== 'playing' && state !== 'paused') return;
+
+    const duration = this._resolveMediaDurationSec();
+    if (!duration || duration <= 0) return;
+
     const progressFill = this.shadowRoot?.querySelector('.progress-fill');
-    if (progressFill && this._entity) {
-      const percentage = this._calculateProgress();
-      progressFill.style.width = `${percentage}%`;
+    const timeCurrent = this.shadowRoot?.querySelector('.time-current');
+    const timeDuration = this.shadowRoot?.querySelector('.time-duration');
+    if (!progressFill) return;
+
+    const position = this._getPlaybackPositionSec();
+    const percentage = Math.min(100, (position / duration) * 100);
+    progressFill.style.width = `${percentage}%`;
+
+    if (timeCurrent) {
+      timeCurrent.textContent = this._formatTime(position);
+    }
+    if (timeDuration) {
+      timeDuration.textContent = this._formatTime(duration);
     }
   }
 
@@ -107,26 +142,13 @@ class XScheduleCard extends LitElement {
   }
 
   _calculateProgress() {
-    if (!this._entity?.attributes) return 0;
-
     const duration = this._resolveMediaDurationSec();
-    const position = this._entity.attributes.media_position;
-    const updatedAt = this._entity.attributes.media_position_updated_at;
-
     if (!duration || duration <= 0) return 0;
-    // position 0 is valid; !position was wrong in JS (0 is falsy)
+
+    const position = this._entity?.attributes?.media_position;
     if (position == null || !Number.isFinite(Number(position))) return 0;
 
-    const pos = Number(position);
-    if (!updatedAt) {
-      return Math.min(100, (pos / duration) * 100);
-    }
-    const lastUpdate = new Date(updatedAt);
-    const now = new Date();
-    const elapsed = (now - lastUpdate) / 1000;
-    const currentPosition = pos + elapsed;
-
-    return Math.min(100, (currentPosition / duration) * 100);
+    return Math.min(100, (this._getPlaybackPositionSec() / duration) * 100);
   }
 
   disconnectedCallback() {
@@ -174,67 +196,100 @@ class XScheduleCard extends LitElement {
       this._queue = this._entity.attributes.internal_queue || [];
     }
 
-    // Trigger update check
-    this.requestUpdate();
+    this._maybeFetchSongsForPlaylist();
+
+    // Only re-render when meaningful entity data changed; position uses DOM sync
+    if (this._entityHasMeaningfulChange()) {
+      this.requestUpdate();
+    }
+
+    // Keep progress bar in sync when only position/timestamp changed (no full re-render)
+    if (this.isConnected && this.config?.showProgressBar) {
+      queueMicrotask(() => this._updateProgressBar());
+    }
+  }
+
+  _maybeFetchSongsForPlaylist() {
+    if (!this._entity) return;
+
+    const currentPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
+    if (!currentPlaylist || currentPlaylist === this._lastFetchedPlaylist) return;
+
+    if (this._entity.attributes.playlist_songs) {
+      this._lastFetchedPlaylist = currentPlaylist;
+      return;
+    }
+
+    this._lastFetchedPlaylist = currentPlaylist;
+    this._fetchSongsViaBrowse(currentPlaylist).then((songs) => {
+      this._songs = songs;
+      this.requestUpdate();
+    });
+  }
+
+  _getTrackedPlaylistOrSource() {
+    if (!this._entity?.attributes) return null;
+    return (
+      this._entity.attributes.media_playlist ||
+      this._entity.attributes.playlist ||
+      this._entity.attributes.source
+    );
+  }
+
+  _entityHasMeaningfulChange() {
+    if (!this._entity) return true;
+    if (this._previousState === null) return true;
+
+    return (
+      this._entity.state !== this._previousState ||
+      this._entity.attributes.media_title !== this._previousTitle ||
+      this._getTrackedPlaylistOrSource() !== this._previousPlaylist ||
+      JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists ||
+      JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs ||
+      JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue
+    );
+  }
+
+  _syncEntityTracking() {
+    if (!this._entity) return;
+
+    this._previousState = this._entity.state;
+    this._previousTitle = this._entity.attributes.media_title;
+    this._previousPlaylist = this._getTrackedPlaylistOrSource();
+    this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+    this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
+    this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
   }
 
   shouldUpdate(changedProperties) {
     // Always update if config changed (mode or display settings)
     // This ensures all mode preset values are reflected when switching modes
     if (changedProperties.has('config')) {
+      this._syncEntityTracking();
       return true;
     }
 
     // Always update when force expand changes (for idle play button behavior)
     if (changedProperties.has('_forceExpandPlaylists')) {
+      this._syncEntityTracking();
       return true;
     }
 
     // If entity exists, check if meaningful data changed
     if (this._entity) {
-      // Check if this is the first time we have entity data
-      const isFirstRender = this._previousState === null;
+      const needsRender = this._entityHasMeaningfulChange();
+      this._syncEntityTracking();
 
-      const stateChanged = this._entity.state !== this._previousState;
-      const titleChanged = this._entity.attributes.media_title !== this._previousTitle;
-      const playlistChanged = (this._entity.attributes.media_playlist || this._entity.attributes.playlist) !== this._previousPlaylist;
-      const playlistsChanged = JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists;
-      const songsChanged = JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs;
-      const queueChanged = JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue;
-      const mediaPositionUpdatedAtChanged = this._entity.attributes.media_position_updated_at !== this._previousMediaPositionUpdatedAt;
-
-      // Check if we need to fetch songs via browse_media (for non-xSchedule players)
-      const currentPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
-      if (currentPlaylist && currentPlaylist !== this._lastFetchedPlaylist) {
-        // Use playlist_songs if available (xSchedule player)
-        if (this._entity.attributes.playlist_songs) {
-          // Songs are already in attributes, no need to fetch
-          this._lastFetchedPlaylist = currentPlaylist;
-        } else {
-          // Fallback to browse_media for non-xSchedule players
-          this._lastFetchedPlaylist = currentPlaylist;
-          this._fetchSongsViaBrowse(currentPlaylist).then(songs => {
-            this._songs = songs;
-            this.requestUpdate();
-          });
-        }
-      }
-
-      // Update tracking variables
-      this._previousState = this._entity.state;
-      this._previousTitle = this._entity.attributes.media_title;
-      this._previousPlaylist = this._entity.attributes.media_playlist || this._entity.attributes.playlist;
-      this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
-      this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
-      this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
-      this._previousMediaPositionUpdatedAt = this._entity.attributes.media_position_updated_at;
-
-      // Allow first render, or only if something meaningful changed
-      return isFirstRender || stateChanged || titleChanged || playlistChanged ||
-             playlistsChanged || songsChanged || queueChanged || mediaPositionUpdatedAtChanged;
+      // Position updates are handled via direct DOM updates (_updateProgressBar)
+      return needsRender;
     }
 
     return super.shouldUpdate(changedProperties);
+  }
+
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    this._updateProgressBar();
   }
 
   render() {
@@ -335,28 +390,11 @@ class XScheduleCard extends LitElement {
     if (!isActive) return '';
 
     const duration = this._resolveMediaDurationSec();
-    const basePosition = this._entity.attributes.media_position;
 
     // Don't show progress bar if we don't have valid duration data
     if (!duration || duration <= 0) return '';
 
-    // Use shared calculation method
     const progress = this._calculateProgress();
-
-    // Calculate position for time display (0 is valid; avoid basePosition || 0 bug)
-    let position =
-      basePosition != null && Number.isFinite(Number(basePosition))
-        ? Number(basePosition)
-        : 0;
-    if (this._entity.state === 'playing') {
-      const updatedAt = this._entity.attributes.media_position_updated_at;
-      if (updatedAt) {
-        const lastUpdate = new Date(updatedAt);
-        const now = new Date();
-        const elapsed = (now - lastUpdate) / 1000;
-        position = Math.min(duration, position + elapsed);
-      }
-    }
 
     return html`
       <div class="progress-container">
@@ -367,8 +405,8 @@ class XScheduleCard extends LitElement {
           <div class="progress-fill" style="width: ${progress}%"></div>
         </div>
         <div class="time-display">
-          <span>${this._formatTime(position)}</span>
-          <span>${this._formatTime(duration)}</span>
+          <span class="time-current"></span>
+          <span class="time-duration"></span>
         </div>
       </div>
     `;
@@ -892,6 +930,17 @@ class XScheduleCard extends LitElement {
     const percent = (e.clientX - rect.left) / rect.width;
     const duration = this._resolveMediaDurationSec() || 0;
     const position = duration * percent;
+    const percentage = Math.min(100, percent * 100);
+
+    // Optimistic DOM update — avoid waiting for backend state round-trip
+    const progressFill = this.shadowRoot?.querySelector('.progress-fill');
+    const timeCurrent = this.shadowRoot?.querySelector('.time-current');
+    if (progressFill) {
+      progressFill.style.width = `${percentage}%`;
+    }
+    if (timeCurrent) {
+      timeCurrent.textContent = this._formatTime(position);
+    }
 
     this._callService('media_seek', { seek_position: position });
   }
@@ -1882,7 +1931,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.7  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8.dev.1  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
