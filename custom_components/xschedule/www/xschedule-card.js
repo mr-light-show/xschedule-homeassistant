@@ -129,6 +129,7 @@ class XScheduleCard extends i {
       config: { type: Object },
       _songsExpanded: { type: Boolean },
       _queueExpanded: { type: Boolean },
+      _toast: { type: Object },
       _contextMenu: { type: Object },
       _forceExpandPlaylists: { type: Boolean },
     };
@@ -146,8 +147,8 @@ class XScheduleCard extends i {
     this._queue = [];
     this._songsExpanded = false;
     this._queueExpanded = false;
+    this._toast = null;
     this._contextMenu = null;
-    this._toastTimeout = null;
     this._longPressTimer = null;
     this._progressInterval = null;
     this._lastPlaylist = null;
@@ -166,7 +167,6 @@ class XScheduleCard extends i {
     this._seekDisplayUntil = 0;
     this._seekSuppressRenderUntil = 0;
     this._entityRenderCoalescePending = false;
-    this._configFingerprint = null;
   }
 
   setConfig(config) {
@@ -184,12 +184,6 @@ class XScheduleCard extends i {
       ...modePreset,
       ...config, // User config overrides preset
     };
-    this._configFingerprint = this._computeConfigFingerprint(this.config);
-  }
-
-  _computeConfigFingerprint(config) {
-    if (!config) return '';
-    return JSON.stringify(config);
   }
 
   connectedCallback() {
@@ -406,19 +400,9 @@ class XScheduleCard extends i {
     return songs.map((song) => song?.name ?? '').join('\0');
   }
 
-  _normalizeSourceList(sourceList) {
-    if (!Array.isArray(sourceList)) return '';
-    return [...sourceList].sort().join('\0');
-  }
-
   _normalizeQueueIds(queue) {
     if (!Array.isArray(queue)) return '';
     return queue.map((item) => item?.id ?? '').join('\0');
-  }
-
-  _getMediaTitle() {
-    if (!this._entity?.attributes) return null;
-    return this._entity.attributes.media_title || this._entity.attributes.song || null;
   }
 
   _getTrackedPlaylistOrSource() {
@@ -431,58 +415,25 @@ class XScheduleCard extends i {
     );
   }
 
-  _isActivePlaybackState() {
-    return this._entity?.state === 'playing' || this._entity?.state === 'paused';
-  }
-
   _entityHasMeaningfulChange() {
     if (!this._entity) {
       return this._previousState === null;
     }
     if (this._previousState === null) return true;
 
-    const newTitle = this._getMediaTitle();
-    const titleChanged = newTitle !== this._previousTitle;
-    const transientEmptyTitle =
-      titleChanged &&
-      !newTitle &&
-      this._previousTitle &&
-      this._isActivePlaybackState();
-
-    const newPlaylist = this._getTrackedPlaylistOrSource();
-    const playlistChanged = newPlaylist !== this._previousPlaylist;
-    const transientEmptyPlaylist =
-      playlistChanged &&
-      !newPlaylist &&
-      this._previousPlaylist &&
-      this._isActivePlaybackState();
-
     const newSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
     const songsChanged = newSongs !== this._previousSongs;
-    const transientEmptySongs =
-      songsChanged &&
-      newSongs === '' &&
-      this._previousSongs &&
-      this._isActivePlaybackState();
 
     const newQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
     const queueChanged = newQueue !== this._previousQueue;
-    const transientEmptyQueue =
-      queueChanged &&
-      newQueue === '' &&
-      this._previousQueue &&
-      this._isActivePlaybackState();
-
-    const newPlaylists = this._normalizeSourceList(this._entity.attributes.source_list);
-    const playlistsChanged = newPlaylists !== this._previousPlaylists;
 
     return (
       this._entity.state !== this._previousState ||
-      (titleChanged && !transientEmptyTitle) ||
-      (playlistChanged && !transientEmptyPlaylist) ||
-      playlistsChanged ||
-      (songsChanged && !transientEmptySongs) ||
-      (queueChanged && !transientEmptyQueue)
+      this._entity.attributes.media_title !== this._previousTitle ||
+      this._getTrackedPlaylistOrSource() !== this._previousPlaylist ||
+      JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists ||
+      songsChanged ||
+      queueChanged
     );
   }
 
@@ -490,9 +441,9 @@ class XScheduleCard extends i {
     if (!this._entity) return;
 
     this._previousState = this._entity.state;
-    this._previousTitle = this._getMediaTitle();
+    this._previousTitle = this._entity.attributes.media_title;
     this._previousPlaylist = this._getTrackedPlaylistOrSource();
-    this._previousPlaylists = this._normalizeSourceList(this._entity.attributes.source_list);
+    this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
     this._previousSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
     this._previousQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
 
@@ -509,13 +460,7 @@ class XScheduleCard extends i {
 
   shouldUpdate(changedProperties) {
     if (changedProperties.has('config')) {
-      const oldConfig = changedProperties.get('config');
-      if (
-        this._computeConfigFingerprint(oldConfig) !==
-        this._computeConfigFingerprint(this.config)
-      ) {
-        return true;
-      }
+      return true;
     }
 
     if (changedProperties.has('_forceExpandPlaylists')) {
@@ -525,6 +470,7 @@ class XScheduleCard extends i {
     if (
       changedProperties.has('_songsExpanded') ||
       changedProperties.has('_queueExpanded') ||
+      changedProperties.has('_toast') ||
       changedProperties.has('_contextMenu')
     ) {
       return true;
@@ -543,9 +489,6 @@ class XScheduleCard extends i {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    if (changedProperties.has('config')) {
-      this._configFingerprint = this._computeConfigFingerprint(this.config);
-    }
     this._syncEntityTracking();
     this._updateProgressBar();
   }
@@ -585,7 +528,7 @@ class XScheduleCard extends i {
           ${this._supportsQueue() ? this._renderQueue() : ''}
           ${this._renderSongs()}
         </div>
-        <div class="toast-slot" hidden></div>
+        ${this._toast ? this._renderToast() : ''}
         ${this._contextMenu ? this._renderContextMenu() : ''}
       </ha-card>
     `;
@@ -1080,6 +1023,15 @@ class XScheduleCard extends i {
     `;
   }
 
+  _renderToast() {
+    return x`
+      <div class="toast ${this._toast.type}">
+        <ha-icon icon=${this._toast.icon}></ha-icon>
+        <span>${this._toast.message}</span>
+      </div>
+    `;
+  }
+
   _renderContextMenu() {
     return x`
       <div class="context-menu-overlay" @click=${this._closeContextMenu}>
@@ -1544,27 +1496,10 @@ class XScheduleCard extends i {
   }
 
   _showToast(type, icon, message) {
-    const slot = this.shadowRoot?.querySelector('.toast-slot');
-    if (!slot) return;
+    this._toast = { type, icon, message };
 
-    slot.hidden = false;
-    slot.className = `toast-slot toast ${type}`;
-    slot.replaceChildren();
-
-    const iconEl = document.createElement('ha-icon');
-    iconEl.setAttribute('icon', icon);
-    const span = document.createElement('span');
-    span.textContent = message;
-    slot.append(iconEl, span);
-
-    if (this._toastTimeout) {
-      clearTimeout(this._toastTimeout);
-    }
-    this._toastTimeout = setTimeout(() => {
-      slot.hidden = true;
-      slot.className = 'toast-slot';
-      slot.replaceChildren();
-      this._toastTimeout = null;
+    setTimeout(() => {
+      this._toast = null;
     }, 2000);
   }
 
@@ -2054,11 +1989,7 @@ class XScheduleCard extends i {
         display: none;
       }
 
-      .toast-slot[hidden] {
-        display: none;
-      }
-
-      .toast-slot.toast {
+      .toast {
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -2197,7 +2128,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.8  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.9  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

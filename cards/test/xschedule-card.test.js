@@ -712,31 +712,6 @@ describe('XScheduleCard', () => {
       expect(timeCurrent.textContent).to.equal('0:45');
     });
 
-    it('should not re-render when showing and hiding toast', async () => {
-      const config = createMockCardConfig();
-      element = await createConfiguredElement('xschedule-card', config, mockHass);
-      await element.updateComplete;
-
-      let renderCount = 0;
-      const originalRender = element.render.bind(element);
-      element.render = function() {
-        renderCount++;
-        return originalRender();
-      };
-
-      element._showToast('success', 'mdi:check', 'Playlist started');
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(renderCount).to.equal(0);
-
-      const toast = element.shadowRoot.querySelector('.toast-slot.toast.success');
-      expect(toast).to.exist;
-      expect(toast.textContent).to.include('Playlist started');
-
-      await new Promise((resolve) => setTimeout(resolve, 2100));
-      expect(renderCount).to.equal(0);
-      expect(element.shadowRoot.querySelector('.toast-slot[hidden]')).to.exist;
-    });
-
     it('should not re-render on seek click (optimistic DOM update)', async () => {
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
@@ -1058,46 +1033,6 @@ describe('XScheduleCard', () => {
       await new Promise((resolve) => queueMicrotask(resolve));
 
       expect(renderCount).to.equal(1);
-    });
-
-    it('should not re-render when only source_list order changes', async () => {
-      mockHass.states['media_player.xschedule'] = createMockEntityState(
-        'media_player.xschedule',
-        'playing',
-        {
-          media_title: 'Test Song',
-          media_duration: 120,
-          media_position: 30,
-          source_list: ['Zebra', 'Alpha'],
-        }
-      );
-
-      const config = createMockCardConfig({ showProgressBar: true });
-      element = await createConfiguredElement('xschedule-card', config, mockHass);
-      await element.updateComplete;
-
-      let renderCount = 0;
-      const originalRender = element.render.bind(element);
-      element.render = function() {
-        renderCount++;
-        return originalRender();
-      };
-
-      mockHass.states['media_player.xschedule'] = createMockEntityState(
-        'media_player.xschedule',
-        'playing',
-        {
-          media_title: 'Test Song',
-          media_duration: 120,
-          media_position: 30,
-          source_list: ['Alpha', 'Zebra'],
-        }
-      );
-
-      element.hass = mockHass;
-      await element.updateComplete;
-
-      expect(renderCount).to.equal(0);
     });
 
     it('should not re-render when only playlist song durations change', async () => {
