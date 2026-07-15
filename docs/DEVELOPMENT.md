@@ -254,7 +254,7 @@ Use the version update script to bump versions consistently:
 ./update-version.sh patch   # 1.0.0 -> 1.0.1
 ./update-version.sh minor   # 1.0.1 -> 1.1.0
 ./update-version.sh major   # 1.1.0 -> 2.0.0
-./update-version.sh pre     # 1.0.0 -> 1.0.1-pre1
+./update-version.sh dev     # 1.0.0 -> 1.0.1-dev.1
 ```
 
 This updates:
@@ -271,7 +271,7 @@ This updates:
 
 2. Update version:
    ```bash
-   ./update-version.sh minor  # or patch/major
+   ./update-version.sh minor  # or patch/major/dev
    ```
 
 3. Build frontend:
