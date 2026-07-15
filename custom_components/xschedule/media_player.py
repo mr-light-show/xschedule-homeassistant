@@ -210,7 +210,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             return
 
         self._last_published_snapshot = snapshot
-        if self.hass is not None:
+        if self._hass is not None:
             self.async_write_ha_state()
 
     def _request_state_publish(self, *, immediate: bool = False) -> None:

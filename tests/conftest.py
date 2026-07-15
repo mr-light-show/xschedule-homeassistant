@@ -96,6 +96,7 @@ async def media_player_entity(hass: HomeAssistant, mock_api_client, mock_websock
         )
 
     entity.entity_id = "media_player.xschedule_test"
+    entity.hass = hass
     await entity.async_added_to_hass()
 
     if entity._update_debounce_task and not entity._update_debounce_task.done():
