@@ -167,13 +167,15 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         """Return True when a non-playing status means playback truly stopped.
 
         xSchedule often reports brief idle gaps during seek or between steps.
-        Those messages still have outputtolights active or omit a full stop signal.
+        Those messages omit outputtolights; real stops include it explicitly.
         """
         if data.get("playlist"):
             return False
         if data.get("step"):
             return False
-        return data.get("outputtolights", "false") == "false"
+        if "outputtolights" not in data:
+            return False
+        return data.get("outputtolights") == "false"
 
     def _build_publish_snapshot(self) -> tuple[Any, ...]:
         """Build a comparable snapshot of entity state exposed to Home Assistant."""

@@ -34,6 +34,22 @@ class TestTransientIdleHandling:
         assert media_player_entity.media_duration == 180.0
 
     @pytest.mark.asyncio
+    async def test_bare_idle_during_pause_preserves_media(self, media_player_entity):
+        """Seek gaps send idle without outputtolights; playback attrs must persist."""
+        media_player_entity._attr_state = MediaPlayerState.PAUSED
+        media_player_entity._attr_media_playlist = "Hanau Pa"
+        media_player_entity._attr_media_title = "The Tiki Tiki Tiki Room"
+        media_player_entity._attr_media_position = 90.349
+        media_player_entity._attr_media_duration = 180.0
+
+        media_player_entity._handle_websocket_update({"status": "idle"})
+
+        assert media_player_entity.state == MediaPlayerState.PAUSED
+        assert media_player_entity.media_playlist == "Hanau Pa"
+        assert media_player_entity.media_title == "The Tiki Tiki Tiki Room"
+        assert media_player_entity.media_position == 90.349
+
+    @pytest.mark.asyncio
     async def test_confirmed_stop_still_clears_media_attributes(self, media_player_entity):
         """A true stop should still clear media attributes."""
         media_player_entity._attr_state = MediaPlayerState.PLAYING

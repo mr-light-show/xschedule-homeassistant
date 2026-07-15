@@ -141,8 +141,8 @@ class TestMediaPlayerStateTransitions:
         media_player_entity._time_remaining = 150.0
         media_player_entity._attr_state = MediaPlayerState.PLAYING
 
-        # Now transition to idle
-        data = {"status": "idle"}
+        # Now transition to idle (explicit stop signal from xSchedule)
+        data = {"status": "idle", "outputtolights": "false"}
         media_player_entity._handle_websocket_update(data)
 
         # Verify ALL attributes are cleared
@@ -236,6 +236,7 @@ class TestCacheInvalidation:
         # Change state
         data = {
             "status": "idle",
+            "outputtolights": "false",
         }
         media_player_entity._handle_websocket_update(data)
 
@@ -508,7 +509,7 @@ class TestQueueDrivenPlayback:
             {"name": "Song 1", "lengthms": "180000"},
         ]
 
-        media_player_entity._handle_websocket_update({"status": "idle"})
+        media_player_entity._handle_websocket_update({"status": "idle", "outputtolights": "false"})
         await hass.async_block_till_done()
 
         mock_api_client.play_playlist_starting_at_step.assert_called_once_with(

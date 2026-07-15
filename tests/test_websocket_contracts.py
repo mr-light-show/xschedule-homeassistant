@@ -395,7 +395,7 @@ class TestCacheInvalidation:
         mock_api_client.invalidate_cache.reset_mock()
 
         # Change state
-        idle_message = {"status": "idle"}
+        idle_message = {"status": "idle", "outputtolights": "false"}
         media_player_entity._handle_websocket_update(idle_message)
 
         # Cache should be invalidated
