@@ -7,7 +7,7 @@
 #   ./update-version.sh major    # 1.3.0 -> 2.0.0
 #   ./update-version.sh minor    # 1.3.0 -> 1.4.0
 #   ./update-version.sh patch    # 1.3.0 -> 1.3.1
-#   ./update-version.sh dev      # 1.3.0 -> 1.3.1.dev.1
+#   ./update-version.sh dev      # 1.3.0 -> 1.3.1-dev.1
 #   ./update-version.sh 1.2.2    # Explicit version (backward compatible)
 
 set -e  # Exit on error
@@ -50,13 +50,13 @@ calculate_next_version() {
     local current="$1"
     local action="$2"
 
-    # Parse version: extract major, minor, patch, and optional dev release
-    if [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(\.dev\.([0-9]+))?$ ]]; then
+    # Parse version: major.minor.patch with optional -dev.N prerelease
+    if [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-dev\.([0-9]+)|\.dev\.([0-9]+))?$ ]]; then
         local major="${BASH_REMATCH[1]}"
         local minor="${BASH_REMATCH[2]}"
         local patch="${BASH_REMATCH[3]}"
         local has_dev="${BASH_REMATCH[4]}"
-        local dev_num="${BASH_REMATCH[5]}"
+        local dev_num="${BASH_REMATCH[5]}${BASH_REMATCH[6]}"
     else
         print_error "Cannot parse current version: $current"
         exit 1
@@ -87,11 +87,11 @@ calculate_next_version() {
             if [ -n "$has_dev" ]; then
                 # Already a dev release - increment dev number
                 dev_num=$((dev_num + 1))
-                new_version="${major}.${minor}.${patch}.dev.${dev_num}"
+                new_version="${major}.${minor}.${patch}-dev.${dev_num}"
             else
-                # Not a dev release - increment patch and add .dev.1
+                # Not a dev release - increment patch and add -dev.1
                 patch=$((patch + 1))
-                new_version="${major}.${minor}.${patch}.dev.1"
+                new_version="${major}.${minor}.${patch}-dev.1"
             fi
             ;;
         *)
@@ -112,14 +112,14 @@ if [ -z "$1" ]; then
     echo "  major    Increment major version (X.0.0)"
     echo "  minor    Increment minor version (x.Y.0)"
     echo "  patch    Increment patch version (x.y.Z)"
-    echo "  dev      Create or increment dev release (x.y.Z.dev.N)"
+    echo "  dev      Create or increment dev release (x.y.Z-dev.N)"
     echo ""
     echo "Examples:"
     echo "  $0 major      # 1.3.0 -> 2.0.0"
     echo "  $0 minor      # 1.3.0 -> 1.4.0"
     echo "  $0 patch      # 1.3.0 -> 1.3.1"
-    echo "  $0 dev        # 1.3.0 -> 1.3.1.dev.1"
-    echo "  $0 dev        # 1.3.1.dev.1 -> 1.3.1.dev.2"
+    echo "  $0 dev        # 1.3.0 -> 1.3.1-dev.1"
+    echo "  $0 dev        # 1.3.1-dev.1 -> 1.3.1-dev.2"
     echo "  $0 1.5.0      # Explicit version (backward compatible)"
     exit 1
 fi
@@ -141,11 +141,11 @@ else
     # It's an explicit version - use it directly (backward compatibility)
     NEW_VERSION="$ACTION_OR_VERSION"
 
-    # Validate version format (basic semantic versioning with optional dev release)
-    if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.dev\.[0-9]+|-[a-zA-Z0-9]+)?$ ]]; then
+    # Validate version format (semver with optional -dev.N prerelease for HA manifest)
+    if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-dev\.[0-9]+|-[a-zA-Z0-9]+)?$ ]]; then
         print_error "Invalid version format: $NEW_VERSION"
-        echo "Version must follow format: X.Y.Z or X.Y.Z.dev.N"
-        echo "Examples: 1.2.2, 1.2.2.dev.1, 1.2.2-alpha"
+        echo "Version must follow format: X.Y.Z or X.Y.Z-dev.N"
+        echo "Examples: 1.2.2, 1.2.2-dev.1, 1.2.2-alpha"
         exit 1
     fi
 
