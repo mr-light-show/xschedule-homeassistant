@@ -139,7 +139,7 @@ If you prefer manual control:
 
 2. Run tests locally:
    ```bash
-   pytest tests/
+   ./scripts/run-tests.sh
    ```
 
 3. Deploy and restart:
@@ -166,18 +166,33 @@ This runs the Web Test Runner suite for frontend components.
 
 #### Backend Tests
 
+Requires Python 3.11+. One-time setup:
+
 ```bash
-pytest
+python3.11 -m venv .test-venv
+.test-venv/bin/pip install -r requirements_test.txt
+```
+
+Run all backend tests:
+
+```bash
+./scripts/run-tests.sh
+```
+
+Or directly:
+
+```bash
+.test-venv/bin/python -m pytest tests/
 ```
 
 Run specific test file:
 ```bash
-pytest tests/test_media_player.py
+.test-venv/bin/python -m pytest tests/test_media_player.py
 ```
 
 Run with verbose output:
 ```bash
-pytest -v
+.test-venv/bin/python -m pytest tests/ -v
 ```
 
 Run with coverage:

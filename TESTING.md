@@ -12,31 +12,39 @@ The project uses a dual testing approach:
 
 ### Setup
 
-Install test dependencies:
+Backend tests require **Python 3.11+** and Home Assistant test dependencies.
+
+One-time setup:
 ```bash
-pip install -r requirements_test.txt
+python3.11 -m venv .test-venv
+.test-venv/bin/pip install -r requirements_test.txt
+```
+
+Or use the convenience script (creates the venv if missing):
+```bash
+./scripts/run-tests.sh
 ```
 
 ### Running Tests
 
 Run all backend tests:
 ```bash
-pytest
+.test-venv/bin/python -m pytest tests/
 ```
 
 Run with coverage:
 ```bash
-pytest --cov=custom_components.xschedule --cov-report=html
+.test-venv/bin/python -m pytest tests/ --cov=custom_components.xschedule --cov-report=html
 ```
 
 Run specific test file:
 ```bash
-pytest tests/test_media_player.py
+.test-venv/bin/python -m pytest tests/test_media_player.py
 ```
 
 Run specific test:
 ```bash
-pytest tests/test_media_player.py::TestMediaPlayerStateTransitions::test_idle_state_clears_attributes
+.test-venv/bin/python -m pytest tests/test_media_player.py::TestMediaPlayerStateTransitions::test_idle_state_clears_attributes
 ```
 
 ### Test Structure
@@ -245,16 +253,20 @@ it('displays custom name', async () => {
 
 ### Backend Tests Fail
 
-**Issue**: Module import errors
+**Issue**: `ModuleNotFoundError: No module named 'homeassistant'`
+
+Use Python 3.11+ in a virtualenv (system Python is often too old):
+
 ```bash
-# Solution: Install in development mode
-pip install -e .
+python3.11 -m venv .test-venv
+.test-venv/bin/pip install -r requirements_test.txt
+.test-venv/bin/python -m pytest tests/
 ```
 
 **Issue**: Async test warnings
 ```bash
-# Solution: Ensure pytest-asyncio is installed
-pip install pytest-asyncio
+# Solution: Ensure pytest-asyncio is installed (included in requirements_test.txt)
+.test-venv/bin/pip install -r requirements_test.txt
 ```
 
 ### Frontend Tests Fail

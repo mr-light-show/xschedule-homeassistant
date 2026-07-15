@@ -87,6 +87,7 @@ async def media_player_entity(hass: HomeAssistant, mock_api_client, mock_websock
         )
 
     entity.entity_id = "media_player.xschedule_test"
+    entity.hass = hass
 
     # Add entity to hass so it can fire events and use hass services
     await entity.async_added_to_hass()
@@ -218,13 +219,9 @@ class TestCacheInvalidation:
         # Cache should not be invalidated for song-only changes
         mock_api_client.invalidate_cache.assert_not_called()
 
-    @pytest.mark.skip(reason="Event firing requires entity to be properly registered with platform")
     @pytest.mark.asyncio
     async def test_cache_invalidation_event_fired(self, hass: HomeAssistant, media_player_entity):
         """Test cache invalidation event is fired (bug fix verification)."""
-        # NOTE: This test is skipped because the entity.hass property requires
-        # proper entity platform registration which is complex to set up in unit tests.
-        # The event firing logic works in production when entity is properly added to platform.
         events = []
 
         def capture_event(event):
