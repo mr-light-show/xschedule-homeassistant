@@ -149,14 +149,12 @@ class TestRegressionV122Pre1:
         - Playlist Browser card worked correctly
         - Root cause: should_poll=False + no async_update call = no playlist_songs
 
-        Fix: media_player.py:291-298
-        - Added: asyncio.create_task(fetch_playlist_steps())
-        - Triggers async_update when playlist changes to fetch songs immediately
+        Fix: debounced publish fetches playlist steps before writing state
 
         Test verifies:
         1. Entity is idle (no playlist)
         2. WebSocket message: playlist starts playing
-        3. Verify async task created to fetch playlist steps
+        3. Debounced publish fetches playlist steps
         4. Verify playlist_songs populated after fetch
         """
         # Setup: Entity is idle
@@ -182,14 +180,13 @@ class TestRegressionV122Pre1:
         # Disconnect websocket so async_update fetches playlist steps
         mock_websocket.connected = False
 
-        # The _handle_websocket_update should trigger async_update
+        # Wait for debounced publish after playlist starts
         media_player_entity._handle_websocket_update(data)
 
-        # Wait for async tasks to complete, then manually call async_update to ensure playlist steps are fetched
+        await asyncio.sleep(0.25)
         await hass.async_block_till_done()
-        await media_player_entity.async_update()
 
-        # Verify playlist steps were fetched
+        # Verify playlist steps were fetched during debounced publish
         mock_api_client.get_playlist_steps.assert_called_once_with("Halloween")
         
         # Verify songs populated
@@ -386,16 +383,16 @@ class TestRegressionV121CPUOptimizations:
         2. Only one debounced state update scheduled
         3. State update occurs after 200ms delay
         """
-        # Track state updates scheduled
+        # Track state updates published to Home Assistant
         update_calls = []
 
-        original_schedule = media_player_entity.schedule_update_ha_state
+        original_write = media_player_entity.async_write_ha_state
 
-        def track_schedule(*args, **kwargs):
+        def track_write(*args, **kwargs):
             update_calls.append(asyncio.get_event_loop().time())
-            return original_schedule(*args, **kwargs)
+            return original_write(*args, **kwargs)
 
-        media_player_entity.schedule_update_ha_state = track_schedule
+        media_player_entity.async_write_ha_state = track_write
 
         # Send 5 rapid WebSocket updates (simulate real playback)
         for i in range(5):

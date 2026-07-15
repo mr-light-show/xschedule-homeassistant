@@ -161,6 +161,86 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         # Debouncing for WebSocket updates
         self._update_debounce_task: asyncio.Task | None = None
         self._update_debounce_delay = 0.2  # 200ms debounce window
+        self._last_published_snapshot: tuple[Any, ...] | None = None
+
+    def _is_confirmed_playback_stop(self, data: dict[str, Any]) -> bool:
+        """Return True when a non-playing status means playback truly stopped.
+
+        xSchedule often reports brief idle gaps during seek or between steps.
+        Those messages still have outputtolights active or omit a full stop signal.
+        """
+        if data.get("playlist"):
+            return False
+        if data.get("step"):
+            return False
+        return data.get("outputtolights", "false") == "false"
+
+    def _build_publish_snapshot(self) -> tuple[Any, ...]:
+        """Build a comparable snapshot of entity state exposed to Home Assistant."""
+        attrs = self.extra_state_attributes
+        return (
+            str(self._attr_state),
+            self._attr_media_title,
+            self._attr_media_playlist,
+            round(self._attr_media_position, 2)
+            if self._attr_media_position is not None
+            else None,
+            round(self._attr_media_duration, 2)
+            if self._attr_media_duration is not None
+            else None,
+            self._attr_volume_level,
+            self._attr_is_volume_muted,
+            self._time_remaining,
+            tuple(
+                (item["id"], item["name"], item["priority"])
+                for item in self._internal_queue
+            ),
+            tuple(
+                (song["name"], song["duration"])
+                for song in attrs.get("playlist_songs", [])
+            ),
+            tuple(self._playlists or []),
+        )
+
+    def _publish_state_if_changed(self) -> None:
+        """Publish entity state only when meaningful fields changed."""
+        snapshot = self._build_publish_snapshot()
+        if snapshot == self._last_published_snapshot:
+            _LOGGER.log(TRACE_LEVEL, "Skipping duplicate state publish")
+            return
+
+        self._last_published_snapshot = snapshot
+        if self.hass is not None:
+            self.async_write_ha_state()
+
+    def _request_state_publish(self, *, immediate: bool = False) -> None:
+        """Schedule a debounced publish, or publish immediately after preparing data."""
+        if self.hass is None:
+            return
+
+        if immediate:
+            self.hass.async_create_task(self._async_publish_after_ready())
+            return
+
+        self._schedule_debounced_update()
+
+    async def _async_fetch_playlist_steps_if_needed(self) -> None:
+        """Fetch playlist steps when a playlist is active but songs are not cached."""
+        if not self._attr_media_playlist or self._current_playlist_steps:
+            return
+
+        self._current_playlist_steps = await self._api_client.get_playlist_steps(
+            self._attr_media_playlist
+        )
+
+    async def _async_publish_after_ready(self) -> None:
+        """Fetch any missing playlist data, then publish if state changed."""
+        try:
+            await self._async_fetch_playlist_steps_if_needed()
+        except XScheduleAPIError as err:
+            _LOGGER.error("Error fetching playlist steps before publish: %s", err)
+
+        self._publish_state_if_changed()
 
     def _setup_websocket(self) -> None:
         """Set up WebSocket connection."""
@@ -222,19 +302,21 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PLAYING
         elif status == "paused":
             self._attr_state = MediaPlayerState.PAUSED
-        else:
-            became_idle = old_state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED)
+        elif self._is_confirmed_playback_stop(data):
+            became_idle = self._attr_state in (
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.PAUSED,
+            )
             self._attr_state = MediaPlayerState.IDLE
-            # Clear media attributes when idle to prevent stale data
+            # Clear media attributes when playback truly stopped
             self._attr_media_title = None
             self._attr_media_playlist = None
             self._attr_media_position = None
             self._attr_media_duration = None
             self._time_remaining = None
-            # Also clear playlist/queue data if truly stopped (not just between songs)
-            # Check: no playlist field AND outputtolights is false
-            if "playlist" not in data and data.get("outputtolights", "false") == "false":
-                self._current_playlist_steps = []
+            self._current_playlist_steps = []
+        else:
+            _LOGGER.debug("Ignoring transient non-playing status: %s", status)
 
         # Update current media info
         if "playlist" in data:
@@ -332,22 +414,9 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._api_client.invalidate_cache()
 
             # Clear entity-level cached playlist steps when playlist changes
-            # This ensures fresh data is fetched for the new playlist
+            # Debounced publish will fetch new steps before writing state
             if old_playlist != self._attr_media_playlist:
                 self._current_playlist_steps = []
-
-                # Trigger async update to fetch new playlist steps immediately
-                # This prevents the card from showing blank when playlist starts
-                async def fetch_playlist_steps():
-                    """Fetch playlist steps and notify Home Assistant."""
-                    await self.async_update()
-                    # Only schedule state update if entity is still attached to hass
-                    if self.hass is not None:
-                        self.schedule_update_ha_state()
-
-                # Use hass.async_create_task to tie task to HA lifecycle
-                if self.hass is not None:
-                    self.hass.async_create_task(fetch_playlist_steps())
 
             # Fire event to notify frontend of cache invalidation
             if self.hass and self.entity_id:
@@ -371,7 +440,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         # Schedule entity update with debouncing (only if entity has been added to hass)
         if self.hass and self.entity_id:
-            self._schedule_debounced_update()
+            self._request_state_publish()
 
     def _schedule_debounced_update(self) -> None:
         """Schedule a debounced update to avoid excessive state updates.
@@ -389,12 +458,11 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
 
         # Create new debounce task
         async def debounced_update():
-            """Wait for debounce delay, then update state."""
+            """Wait for debounce delay, then publish once if needed."""
             try:
                 await asyncio.sleep(self._update_debounce_delay)
-                # Only schedule state update if entity is still attached to hass
                 if self.hass is not None:
-                    self.schedule_update_ha_state()
+                    await self._async_publish_after_ready()
             except asyncio.CancelledError:
                 pass  # Task was cancelled, another update is coming
 
@@ -688,7 +756,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                 },
             )
             if self.hass is not None:
-                self.async_write_ha_state()
+                self._request_state_publish(immediate=True)
 
         except XScheduleAPIError as err:
             _LOGGER.error("Error playing song: %s", err)
@@ -841,7 +909,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             await self._api_client.stop_playlist_at_end()
             self._internal_queue.pop(0)
             if self.hass is not None:
-                self.async_write_ha_state()
+                self._request_state_publish(immediate=True)
 
         return True
 
@@ -876,7 +944,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     raise
 
         if self.hass is not None:
-            self.async_write_ha_state()
+            self._request_state_publish(immediate=True)
 
     async def async_remove_from_internal_queue(self, queue_item_id: str) -> None:
         """Remove specific item from internal queue by UUID."""
@@ -892,7 +960,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         
         # Update state
         if self.hass is not None:
-            self.async_write_ha_state()
+            self._request_state_publish(immediate=True)
 
     async def async_reorder_internal_queue(self, queue_item_ids: list[str]) -> None:
         """Reorder internal queue items."""
@@ -943,14 +1011,14 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         
         # Update state
         if self.hass is not None:
-            self.async_write_ha_state()
+            self._request_state_publish(immediate=True)
 
     async def async_clear_internal_queue(self) -> None:
         """Clear entire internal queue."""
         _LOGGER.info("Clearing internal queue (%d items)", len(self._internal_queue))
         self._internal_queue = []
         if self.hass is not None:
-            self.async_write_ha_state()
+            self._request_state_publish(immediate=True)
 
     def _handle_song_started(self, song_name: str) -> None:
         """Handle song start - remove from queue and advance if needed."""
@@ -976,10 +1044,6 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
             self._hass.async_create_task(self._async_play_queue_head(immediate=False))
         else:
             _LOGGER.info("Queue is now empty")
-        
-        # Update state
-        if self.hass is not None:
-            self.async_write_ha_state()
 
     async def async_browse_media(
         self,
@@ -1107,7 +1171,7 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     },
                 )
                 if self.hass is not None:
-                    self.async_write_ha_state()
+                    self._request_state_publish(immediate=True)
 
             except XScheduleAPIError as err:
                 _LOGGER.error("Error playing media: %s", err)
