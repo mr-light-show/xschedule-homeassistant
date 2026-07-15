@@ -126,7 +126,6 @@ const MODE_PRESETS = {
 class XScheduleCard extends i {
   static get properties() {
     return {
-      hass: { type: Object },
       config: { type: Object },
       _songsExpanded: { type: Boolean },
       _queueExpanded: { type: Boolean },
@@ -134,6 +133,10 @@ class XScheduleCard extends i {
       _contextMenu: { type: Object },
       _forceExpandPlaylists: { type: Boolean },
     };
+  }
+
+  get hass() {
+    return this._hass;
   }
 
   constructor() {
@@ -160,6 +163,8 @@ class XScheduleCard extends i {
     this._previousPlaylists = null;
     this._previousSongs = null;
     this._previousQueue = null;
+    this._seekDisplayPosition = null;
+    this._seekDisplayUntil = 0;
   }
 
   setConfig(config) {
@@ -191,6 +196,10 @@ class XScheduleCard extends i {
   }
 
   _getPlaybackPositionSec() {
+    if (this._seekDisplayPosition != null && Date.now() < this._seekDisplayUntil) {
+      return this._seekDisplayPosition;
+    }
+
     if (!this._entity?.attributes) return 0;
 
     const duration = this._resolveMediaDurationSec();
@@ -317,11 +326,11 @@ class XScheduleCard extends i {
     // Only re-render when meaningful entity data changed; position uses DOM sync
     if (this._entityHasMeaningfulChange()) {
       this.requestUpdate();
-    }
-
-    // Keep progress bar in sync when only position/timestamp changed (no full re-render)
-    if (this.isConnected && this.config?.showProgressBar) {
-      queueMicrotask(() => this._updateProgressBar());
+    } else if (this.isConnected && this.config?.showProgressBar) {
+      queueMicrotask(() => {
+        this._syncEntityTracking();
+        this._updateProgressBar();
+      });
     }
   }
 
@@ -343,6 +352,16 @@ class XScheduleCard extends i {
     });
   }
 
+  _normalizeSongNames(songs) {
+    if (!Array.isArray(songs)) return '';
+    return songs.map((song) => song?.name ?? '').join('\0');
+  }
+
+  _normalizeQueueIds(queue) {
+    if (!Array.isArray(queue)) return '';
+    return queue.map((item) => item?.id ?? '').join('\0');
+  }
+
   _getTrackedPlaylistOrSource() {
     if (!this._entity?.attributes) return null;
     return (
@@ -361,8 +380,8 @@ class XScheduleCard extends i {
       this._entity.attributes.media_title !== this._previousTitle ||
       this._getTrackedPlaylistOrSource() !== this._previousPlaylist ||
       JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists ||
-      JSON.stringify(this._entity.attributes.playlist_songs) !== this._previousSongs ||
-      JSON.stringify(this._entity.attributes.internal_queue) !== this._previousQueue
+      this._normalizeSongNames(this._entity.attributes.playlist_songs) !== this._previousSongs ||
+      this._normalizeQueueIds(this._entity.attributes.internal_queue) !== this._previousQueue
     );
   }
 
@@ -373,31 +392,41 @@ class XScheduleCard extends i {
     this._previousTitle = this._entity.attributes.media_title;
     this._previousPlaylist = this._getTrackedPlaylistOrSource();
     this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
-    this._previousSongs = JSON.stringify(this._entity.attributes.playlist_songs);
-    this._previousQueue = JSON.stringify(this._entity.attributes.internal_queue);
+    this._previousSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
+    this._previousQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
+
+    const entityPosition = this._entity.attributes.media_position;
+    if (
+      this._seekDisplayPosition != null &&
+      entityPosition != null &&
+      Math.abs(Number(entityPosition) - this._seekDisplayPosition) < 2
+    ) {
+      this._seekDisplayPosition = null;
+      this._seekDisplayUntil = 0;
+    }
   }
 
   shouldUpdate(changedProperties) {
-    // Always update if config changed (mode or display settings)
-    // This ensures all mode preset values are reflected when switching modes
     if (changedProperties.has('config')) {
-      this._syncEntityTracking();
       return true;
     }
 
-    // Always update when force expand changes (for idle play button behavior)
     if (changedProperties.has('_forceExpandPlaylists')) {
-      this._syncEntityTracking();
       return true;
     }
 
-    // If entity exists, check if meaningful data changed
-    if (this._entity) {
-      const needsRender = this._entityHasMeaningfulChange();
-      this._syncEntityTracking();
+    if (
+      changedProperties.has('_songsExpanded') ||
+      changedProperties.has('_queueExpanded') ||
+      changedProperties.has('_toast') ||
+      changedProperties.has('_contextMenu')
+    ) {
+      return true;
+    }
 
-      // Position updates are handled via direct DOM updates (_updateProgressBar)
-      return needsRender;
+    // Entity updates are handled in set hass; ignore stray Lit property churn
+    if (this._entity) {
+      return this._entityHasMeaningfulChange();
     }
 
     return super.shouldUpdate(changedProperties);
@@ -405,6 +434,7 @@ class XScheduleCard extends i {
 
   updated(changedProperties) {
     super.updated(changedProperties);
+    this._syncEntityTracking();
     this._updateProgressBar();
   }
 
@@ -510,15 +540,14 @@ class XScheduleCard extends i {
     // Don't show progress bar if we don't have valid duration data
     if (!duration || duration <= 0) return '';
 
-    const progress = this._calculateProgress();
-
+    // Width and times are updated imperatively via _updateProgressBar()
     return x`
       <div class="progress-container">
         <div
           class="progress-bar ${this.config.enableSeek ? 'seekable' : ''}"
           @click=${this.config.enableSeek ? this._handleSeek : null}
         >
-          <div class="progress-fill" style="width: ${progress}%"></div>
+          <div class="progress-fill"></div>
         </div>
         <div class="time-display">
           <span class="time-current"></span>
@@ -1041,22 +1070,18 @@ class XScheduleCard extends i {
   }
 
   _handleSeek(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
     const progressBar = e.currentTarget;
     const rect = progressBar.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     const duration = this._resolveMediaDurationSec() || 0;
     const position = duration * percent;
-    const percentage = Math.min(100, percent * 100);
 
-    // Optimistic DOM update — avoid waiting for backend state round-trip
-    const progressFill = this.shadowRoot?.querySelector('.progress-fill');
-    const timeCurrent = this.shadowRoot?.querySelector('.time-current');
-    if (progressFill) {
-      progressFill.style.width = `${percentage}%`;
-    }
-    if (timeCurrent) {
-      timeCurrent.textContent = this._formatTime(position);
-    }
+    this._seekDisplayPosition = position;
+    this._seekDisplayUntil = Date.now() + 3000;
+    this._updateProgressBar();
 
     this._callService('media_seek', { seek_position: position });
   }

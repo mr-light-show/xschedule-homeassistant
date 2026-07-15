@@ -761,6 +761,57 @@ describe('XScheduleCard', () => {
       expect(timeCurrent.textContent).to.equal('0:50');
     });
 
+    it('should not re-render when only playlist song durations change', async () => {
+      const songs = [
+        { name: 'Song 1', duration: 180000 },
+        { name: 'Song 2', duration: 240000 },
+      ];
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Song 1',
+          media_duration: 180,
+          media_position: 10,
+          media_position_updated_at: new Date().toISOString(),
+          playlist_songs: songs,
+        }
+      );
+
+      const config = createMockCardConfig({ enableSeek: true, showProgressBar: true });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Song 1',
+          media_duration: 180,
+          media_position: 10,
+          media_position_updated_at: new Date().toISOString(),
+          playlist_songs: [
+            { name: 'Song 1', duration: 181000 },
+            { name: 'Song 2', duration: 240000 },
+          ],
+        }
+      );
+
+      element.hass = mockHass;
+      await element.updateComplete;
+      await new Promise((resolve) => queueMicrotask(resolve));
+
+      expect(renderCount).to.equal(0);
+    });
+
     it('should re-render when media title changes', async () => {
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
