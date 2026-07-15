@@ -125,19 +125,14 @@ class TestRegressionV122Pre1:
         }
         media_player_entity._handle_websocket_update(data_background)
 
-        # Wait for async tasks to complete
+        # Debounced publish clears cache and fetches new playlist steps together
         await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
-        # CRITICAL: Cache should be cleared (bug fix verification)
-        # This is the fix from commit db5d0f4
-        assert media_player_entity._current_playlist_steps == []
-
-        # Trigger async_update to fetch new playlist steps
-        await media_player_entity.async_update()
-
-        # Verify new songs loaded
+        # Verify new songs loaded (no stale Halloween steps)
         assert len(media_player_entity._current_playlist_steps) == 1
         assert media_player_entity._current_playlist_steps[0]["name"] == "House lights"
+        mock_api_client.get_playlist_steps.assert_called_with("Halloween Background")
 
     @pytest.mark.asyncio
     async def test_regression_blank_card_on_playlist_start(
