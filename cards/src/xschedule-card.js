@@ -49,6 +49,7 @@ class XScheduleCard extends LitElement {
     this._previousQueue = null;
     this._seekDisplayPosition = null;
     this._seekDisplayUntil = 0;
+    this._configFingerprint = null;
   }
 
   setConfig(config) {
@@ -66,6 +67,12 @@ class XScheduleCard extends LitElement {
       ...modePreset,
       ...config, // User config overrides preset
     };
+    this._configFingerprint = this._computeConfigFingerprint(this.config);
+  }
+
+  _computeConfigFingerprint(config) {
+    if (!config) return '';
+    return JSON.stringify(config);
   }
 
   connectedCallback() {
@@ -259,13 +266,29 @@ class XScheduleCard extends LitElement {
     if (!this._entity) return true;
     if (this._previousState === null) return true;
 
+    const newSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
+    const songsChanged = newSongs !== this._previousSongs;
+    const transientEmptySongs =
+      songsChanged &&
+      newSongs === '' &&
+      this._previousSongs &&
+      (this._entity.state === 'playing' || this._entity.state === 'paused');
+
+    const newQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
+    const queueChanged = newQueue !== this._previousQueue;
+    const transientEmptyQueue =
+      queueChanged &&
+      newQueue === '' &&
+      this._previousQueue &&
+      (this._entity.state === 'playing' || this._entity.state === 'paused');
+
     return (
       this._entity.state !== this._previousState ||
       this._entity.attributes.media_title !== this._previousTitle ||
       this._getTrackedPlaylistOrSource() !== this._previousPlaylist ||
       JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists ||
-      this._normalizeSongNames(this._entity.attributes.playlist_songs) !== this._previousSongs ||
-      this._normalizeQueueIds(this._entity.attributes.internal_queue) !== this._previousQueue
+      (songsChanged && !transientEmptySongs) ||
+      (queueChanged && !transientEmptyQueue)
     );
   }
 
@@ -292,7 +315,13 @@ class XScheduleCard extends LitElement {
 
   shouldUpdate(changedProperties) {
     if (changedProperties.has('config')) {
-      return true;
+      const oldConfig = changedProperties.get('config');
+      if (
+        this._computeConfigFingerprint(oldConfig) !==
+        this._computeConfigFingerprint(this.config)
+      ) {
+        return true;
+      }
     }
 
     if (changedProperties.has('_forceExpandPlaylists')) {
@@ -318,6 +347,9 @@ class XScheduleCard extends LitElement {
 
   updated(changedProperties) {
     super.updated(changedProperties);
+    if (changedProperties.has('config')) {
+      this._configFingerprint = this._computeConfigFingerprint(this.config);
+    }
     this._syncEntityTracking();
     this._updateProgressBar();
   }
@@ -1957,7 +1989,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.3  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.4  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
