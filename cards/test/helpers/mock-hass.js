@@ -135,3 +135,8 @@ export async function createConfiguredElement(elementTag, config, hass) {
 
   return element;
 }
+
+/** Wait for coalesced entity render microtask after set hass */
+export async function flushEntityRenderCoalesce() {
+  await new Promise((resolve) => queueMicrotask(resolve));
+}

@@ -1,7 +1,7 @@
 import { html, fixture, expect } from '@open-wc/testing';
 import { stub } from 'sinon';
 import '../src/xschedule-card.js';
-import { createMockHass, createMockEntityState, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
+import { createMockHass, createMockEntityState, createMockCardConfig, createConfiguredElement, flushEntityRenderCoalesce } from './helpers/mock-hass.js';
 
 describe('XScheduleCard', () => {
   let element;
@@ -944,6 +944,122 @@ describe('XScheduleCard', () => {
       expect(renderCount).to.equal(0);
     });
 
+    it('should not re-render when seek causes brief idle state flicker', async () => {
+      const baseAttrs = {
+        media_title: 'Test Song',
+        media_playlist: 'Test Playlist',
+        playlist: 'Test Playlist',
+        media_duration: 100,
+        media_position: 20,
+        media_position_updated_at: new Date().toISOString(),
+        source_list: ['Test Playlist'],
+        playlist_songs: [{ name: 'Test Song', duration: 100000 }],
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        baseAttrs
+      );
+
+      const config = createMockCardConfig({ enableSeek: true, showProgressBar: true });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      const progressBar = element.shadowRoot.querySelector('.progress-bar.seekable');
+      progressBar.getBoundingClientRect = () => ({
+        left: 0,
+        width: 200,
+        top: 0,
+        height: 10,
+        right: 200,
+        bottom: 10,
+      });
+
+      progressBar.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 150 })
+      );
+      await element.updateComplete;
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'idle',
+        { ...baseAttrs, media_position: 75 }
+      );
+      element.hass = mockHass;
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          ...baseAttrs,
+          media_position: 75,
+          media_position_updated_at: new Date().toISOString(),
+        }
+      );
+      element.hass = mockHass;
+      await element.updateComplete;
+      await new Promise((resolve) => queueMicrotask(resolve));
+
+      expect(renderCount).to.equal(0);
+    });
+
+    it('should coalesce back-to-back song changes into one render', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Song A',
+          media_duration: 100,
+          media_position: 10,
+        }
+      );
+
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Song B',
+          media_duration: 120,
+          media_position: 0,
+        }
+      );
+      element.hass = mockHass;
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Song C',
+          media_duration: 90,
+          media_position: 0,
+        }
+      );
+      element.hass = mockHass;
+      await element.updateComplete;
+      await new Promise((resolve) => queueMicrotask(resolve));
+
+      expect(renderCount).to.equal(1);
+    });
+
     it('should not re-render when only source_list order changes', async () => {
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
@@ -1065,6 +1181,7 @@ describe('XScheduleCard', () => {
       );
 
       element.hass = mockHass;
+      await flushEntityRenderCoalesce();
       await element.updateComplete;
 
       // SHOULD trigger a re-render since meaningful data changed
@@ -1101,10 +1218,38 @@ describe('XScheduleCard', () => {
       );
 
       element.hass = mockHass;
+      await flushEntityRenderCoalesce();
       await element.updateComplete;
 
       // SHOULD trigger a re-render since state changed
       expect(renderCount).to.be.greaterThan(0);
+    });
+
+    it('should not re-render when entity is transiently missing from hass snapshot', async () => {
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      const entityId = config.entity;
+      const saved = mockHass.states[entityId];
+      delete mockHass.states[entityId];
+      element.hass = mockHass;
+      await flushEntityRenderCoalesce();
+      await element.updateComplete;
+
+      mockHass.states[entityId] = saved;
+      element.hass = mockHass;
+      await flushEntityRenderCoalesce();
+      await element.updateComplete;
+
+      expect(renderCount).to.equal(0);
     });
 
     it('should not re-render when playlist_songs array is identical', async () => {
@@ -1961,6 +2106,7 @@ describe('XScheduleCard', () => {
       // Change source
       mockHass.states['media_player.pandora'].attributes.source = 'Station 2';
       element.hass = mockHass;
+      await flushEntityRenderCoalesce();
       await element.updateComplete;
       
       select = element.shadowRoot.querySelector('.playlist-select');

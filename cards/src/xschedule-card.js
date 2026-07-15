@@ -49,6 +49,7 @@ class XScheduleCard extends LitElement {
     this._seekDisplayPosition = null;
     this._seekDisplayUntil = 0;
     this._seekSuppressRenderUntil = 0;
+    this._entityRenderCoalescePending = false;
     this._configFingerprint = null;
   }
 
@@ -181,9 +182,10 @@ class XScheduleCard extends LitElement {
 
     // Get entity
     const entityId = this.config.entity;
-    this._entity = hass.states[entityId];
+    const nextEntity = hass.states[entityId];
 
-    if (this._entity) {
+    if (nextEntity) {
+      this._entity = nextEntity;
       // Extract playlists from source_list and sort alphabetically
       this._playlists = (this._entity.attributes.source_list || []).sort((a, b) => a.localeCompare(b));
 
@@ -210,9 +212,28 @@ class XScheduleCard extends LitElement {
 
       // Extract internal queue (managed by integration)
       this._queue = this._entity.attributes.internal_queue || [];
+    } else if (this._previousState === null) {
+      this._entity = null;
     }
 
     this._maybeFetchSongsForPlaylist();
+    this._scheduleEntityRenderCoalesced();
+  }
+
+  _scheduleEntityRenderCoalesced() {
+    if (this._entityRenderCoalescePending) return;
+    this._entityRenderCoalescePending = true;
+    queueMicrotask(() => {
+      this._entityRenderCoalescePending = false;
+      this._processEntityRenderDecision();
+    });
+  }
+
+  _processEntityRenderDecision() {
+    const entityId = this.config?.entity;
+    if (entityId && !this._hass?.states[entityId] && this._previousState !== null) {
+      return;
+    }
 
     if (this._shouldSuppressRenderDuringSeek()) {
       this._applyNonRenderEntitySync();
@@ -239,12 +260,8 @@ class XScheduleCard extends LitElement {
     }
 
     const state = this._entity?.state;
-    const prev = this._previousState;
-    if (state !== prev) {
-      const terminal = new Set(['idle', 'off', 'unavailable', 'unknown']);
-      if (terminal.has(state) || terminal.has(prev)) {
-        return false;
-      }
+    if (state === 'off' || state === 'unavailable') {
+      return false;
     }
 
     return true;
@@ -303,7 +320,9 @@ class XScheduleCard extends LitElement {
   }
 
   _entityHasMeaningfulChange() {
-    if (!this._entity) return true;
+    if (!this._entity) {
+      return this._previousState === null;
+    }
     if (this._previousState === null) return true;
 
     const newTitle = this._getMediaTitle();
@@ -2063,7 +2082,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.7  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.8  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
