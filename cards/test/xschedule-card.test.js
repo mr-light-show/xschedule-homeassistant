@@ -712,6 +712,31 @@ describe('XScheduleCard', () => {
       expect(timeCurrent.textContent).to.equal('0:45');
     });
 
+    it('should not re-render when showing and hiding toast', async () => {
+      const config = createMockCardConfig();
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      element._showToast('success', 'mdi:check', 'Playlist started');
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(renderCount).to.equal(0);
+
+      const toast = element.shadowRoot.querySelector('.toast-slot.toast.success');
+      expect(toast).to.exist;
+      expect(toast.textContent).to.include('Playlist started');
+
+      await new Promise((resolve) => setTimeout(resolve, 2100));
+      expect(renderCount).to.equal(0);
+      expect(element.shadowRoot.querySelector('.toast-slot[hidden]')).to.exist;
+    });
+
     it('should not re-render on seek click (optimistic DOM update)', async () => {
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',

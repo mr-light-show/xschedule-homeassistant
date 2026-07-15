@@ -129,7 +129,6 @@ class XScheduleCard extends i {
       config: { type: Object },
       _songsExpanded: { type: Boolean },
       _queueExpanded: { type: Boolean },
-      _toast: { type: Object },
       _contextMenu: { type: Object },
       _forceExpandPlaylists: { type: Boolean },
     };
@@ -147,8 +146,8 @@ class XScheduleCard extends i {
     this._queue = [];
     this._songsExpanded = false;
     this._queueExpanded = false;
-    this._toast = null;
     this._contextMenu = null;
+    this._toastTimeout = null;
     this._longPressTimer = null;
     this._progressInterval = null;
     this._lastPlaylist = null;
@@ -447,7 +446,6 @@ class XScheduleCard extends i {
     if (
       changedProperties.has('_songsExpanded') ||
       changedProperties.has('_queueExpanded') ||
-      changedProperties.has('_toast') ||
       changedProperties.has('_contextMenu')
     ) {
       return true;
@@ -505,7 +503,7 @@ class XScheduleCard extends i {
           ${this._supportsQueue() ? this._renderQueue() : ''}
           ${this._renderSongs()}
         </div>
-        ${this._toast ? this._renderToast() : ''}
+        <div class="toast-slot" hidden></div>
         ${this._contextMenu ? this._renderContextMenu() : ''}
       </ha-card>
     `;
@@ -1000,15 +998,6 @@ class XScheduleCard extends i {
     `;
   }
 
-  _renderToast() {
-    return x`
-      <div class="toast ${this._toast.type}">
-        <ha-icon icon=${this._toast.icon}></ha-icon>
-        <span>${this._toast.message}</span>
-      </div>
-    `;
-  }
-
   _renderContextMenu() {
     return x`
       <div class="context-menu-overlay" @click=${this._closeContextMenu}>
@@ -1472,10 +1461,27 @@ class XScheduleCard extends i {
   }
 
   _showToast(type, icon, message) {
-    this._toast = { type, icon, message };
+    const slot = this.shadowRoot?.querySelector('.toast-slot');
+    if (!slot) return;
 
-    setTimeout(() => {
-      this._toast = null;
+    slot.hidden = false;
+    slot.className = `toast-slot toast ${type}`;
+    slot.replaceChildren();
+
+    const iconEl = document.createElement('ha-icon');
+    iconEl.setAttribute('icon', icon);
+    const span = document.createElement('span');
+    span.textContent = message;
+    slot.append(iconEl, span);
+
+    if (this._toastTimeout) {
+      clearTimeout(this._toastTimeout);
+    }
+    this._toastTimeout = setTimeout(() => {
+      slot.hidden = true;
+      slot.className = 'toast-slot';
+      slot.replaceChildren();
+      this._toastTimeout = null;
     }, 2000);
   }
 
@@ -1965,7 +1971,11 @@ class XScheduleCard extends i {
         display: none;
       }
 
-      .toast {
+      .toast-slot[hidden] {
+        display: none;
+      }
+
+      .toast-slot.toast {
         position: fixed;
         bottom: 20px;
         left: 50%;
@@ -2104,7 +2114,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.4  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.5  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
