@@ -7,6 +7,9 @@
 import { LitElement, html, css } from 'lit';
 import { MODE_PRESETS } from './mode-presets.js';
 
+/** Duration to suppress full re-renders after seek (covers HA debounced state churn). */
+const SEEK_WINDOW_MS = 300;
+
 class XScheduleCard extends LitElement {
   static get properties() {
     return {
@@ -1039,8 +1042,8 @@ class XScheduleCard extends LitElement {
     const percentage = Math.min(100, percent * 100);
 
     this._seekDisplayPosition = position;
-    this._seekDisplayUntil = Date.now() + 3000;
-    this._seekSuppressRenderUntil = Date.now() + 3000;
+    this._seekDisplayUntil = Date.now() + SEEK_WINDOW_MS;
+    this._seekSuppressRenderUntil = Date.now() + SEEK_WINDOW_MS;
     this._updateProgressBar();
 
     this._callService('media_seek', { seek_position: position });
@@ -2042,7 +2045,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.11  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.12  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
