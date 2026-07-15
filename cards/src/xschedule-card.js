@@ -48,6 +48,7 @@ class XScheduleCard extends LitElement {
     this._previousQueue = null;
     this._seekDisplayPosition = null;
     this._seekDisplayUntil = 0;
+    this._seekSuppressRenderUntil = 0;
     this._configFingerprint = null;
   }
 
@@ -213,12 +214,13 @@ class XScheduleCard extends LitElement {
 
     this._maybeFetchSongsForPlaylist();
 
+    if (this._shouldSuppressRenderDuringSeek()) {
+      this._applyNonRenderEntitySync();
+      return;
+    }
+
     if (this._entityHasMeaningfulChange()) {
-      if (this._shouldSuppressRenderDuringSeek()) {
-        this._applyNonRenderEntitySync();
-      } else {
-        this.requestUpdate();
-      }
+      this.requestUpdate();
     } else if (this.isConnected) {
       this._applyNonRenderEntitySync();
     }
@@ -232,7 +234,7 @@ class XScheduleCard extends LitElement {
   }
 
   _shouldSuppressRenderDuringSeek() {
-    if (this._seekDisplayPosition == null || Date.now() >= this._seekDisplayUntil) {
+    if (Date.now() >= this._seekSuppressRenderUntil) {
       return false;
     }
 
@@ -395,6 +397,9 @@ class XScheduleCard extends LitElement {
 
     // Entity updates are handled in set hass; ignore stray Lit property churn
     if (this._entity) {
+      if (this._shouldSuppressRenderDuringSeek()) {
+        return false;
+      }
       return this._entityHasMeaningfulChange();
     }
 
@@ -1045,6 +1050,7 @@ class XScheduleCard extends LitElement {
 
     this._seekDisplayPosition = position;
     this._seekDisplayUntil = Date.now() + 3000;
+    this._seekSuppressRenderUntil = Date.now() + 3000;
     this._updateProgressBar();
 
     this._callService('media_seek', { seek_position: position });
@@ -2057,7 +2063,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.6  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.7  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
