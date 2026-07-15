@@ -786,6 +786,120 @@ describe('XScheduleCard', () => {
       expect(timeCurrent.textContent).to.equal('0:50');
     });
 
+    it('should not re-render on hass updates during seek grace window', async () => {
+      const baseAttrs = {
+        media_title: 'Test Song',
+        media_playlist: 'Test Playlist',
+        playlist: 'Test Playlist',
+        media_duration: 100,
+        media_position: 10,
+        media_position_updated_at: new Date().toISOString(),
+        source_list: ['Playlist B', 'Playlist A'],
+        playlist_songs: [{ name: 'Test Song', duration: 100000 }],
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        baseAttrs
+      );
+
+      const config = createMockCardConfig({ enableSeek: true, showProgressBar: true });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      const progressBar = element.shadowRoot.querySelector('.progress-bar.seekable');
+      progressBar.getBoundingClientRect = () => ({
+        left: 0,
+        width: 200,
+        top: 0,
+        height: 10,
+        right: 200,
+        bottom: 10,
+      });
+
+      progressBar.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 150 })
+      );
+      await element.updateComplete;
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          ...baseAttrs,
+          media_position: 75,
+          media_position_updated_at: new Date().toISOString(),
+          source_list: ['Playlist A', 'Playlist B'],
+        }
+      );
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          ...baseAttrs,
+          media_position: 76,
+          media_position_updated_at: new Date().toISOString(),
+          song: 'Test Song',
+          media_title: undefined,
+        }
+      );
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      expect(renderCount).to.equal(0);
+    });
+
+    it('should not re-render when only source_list order changes', async () => {
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          media_duration: 120,
+          media_position: 30,
+          source_list: ['Zebra', 'Alpha'],
+        }
+      );
+
+      const config = createMockCardConfig({ showProgressBar: true });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      let renderCount = 0;
+      const originalRender = element.render.bind(element);
+      element.render = function() {
+        renderCount++;
+        return originalRender();
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        {
+          media_title: 'Test Song',
+          media_duration: 120,
+          media_position: 30,
+          source_list: ['Alpha', 'Zebra'],
+        }
+      );
+
+      element.hass = mockHass;
+      await element.updateComplete;
+
+      expect(renderCount).to.equal(0);
+    });
+
     it('should not re-render when only playlist song durations change', async () => {
       const songs = [
         { name: 'Song 1', duration: 180000 },

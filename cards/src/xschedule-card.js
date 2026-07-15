@@ -213,15 +213,39 @@ class XScheduleCard extends LitElement {
 
     this._maybeFetchSongsForPlaylist();
 
-    // Only re-render when meaningful entity data changed; position uses DOM sync
     if (this._entityHasMeaningfulChange()) {
-      this.requestUpdate();
-    } else if (this.isConnected && this.config?.showProgressBar) {
-      queueMicrotask(() => {
-        this._syncEntityTracking();
-        this._updateProgressBar();
-      });
+      if (this._shouldSuppressRenderDuringSeek()) {
+        this._applyNonRenderEntitySync();
+      } else {
+        this.requestUpdate();
+      }
+    } else if (this.isConnected) {
+      this._applyNonRenderEntitySync();
     }
+  }
+
+  _applyNonRenderEntitySync() {
+    this._syncEntityTracking();
+    if (this.config?.showProgressBar) {
+      this._updateProgressBar();
+    }
+  }
+
+  _shouldSuppressRenderDuringSeek() {
+    if (this._seekDisplayPosition == null || Date.now() >= this._seekDisplayUntil) {
+      return false;
+    }
+
+    const state = this._entity?.state;
+    const prev = this._previousState;
+    if (state !== prev) {
+      const terminal = new Set(['idle', 'off', 'unavailable', 'unknown']);
+      if (terminal.has(state) || terminal.has(prev)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   _maybeFetchSongsForPlaylist() {
@@ -247,9 +271,19 @@ class XScheduleCard extends LitElement {
     return songs.map((song) => song?.name ?? '').join('\0');
   }
 
+  _normalizeSourceList(sourceList) {
+    if (!Array.isArray(sourceList)) return '';
+    return [...sourceList].sort().join('\0');
+  }
+
   _normalizeQueueIds(queue) {
     if (!Array.isArray(queue)) return '';
     return queue.map((item) => item?.id ?? '').join('\0');
+  }
+
+  _getMediaTitle() {
+    if (!this._entity?.attributes) return null;
+    return this._entity.attributes.media_title || this._entity.attributes.song || null;
   }
 
   _getTrackedPlaylistOrSource() {
@@ -257,13 +291,34 @@ class XScheduleCard extends LitElement {
     return (
       this._entity.attributes.media_playlist ||
       this._entity.attributes.playlist ||
-      this._entity.attributes.source
+      this._entity.attributes.source ||
+      null
     );
+  }
+
+  _isActivePlaybackState() {
+    return this._entity?.state === 'playing' || this._entity?.state === 'paused';
   }
 
   _entityHasMeaningfulChange() {
     if (!this._entity) return true;
     if (this._previousState === null) return true;
+
+    const newTitle = this._getMediaTitle();
+    const titleChanged = newTitle !== this._previousTitle;
+    const transientEmptyTitle =
+      titleChanged &&
+      !newTitle &&
+      this._previousTitle &&
+      this._isActivePlaybackState();
+
+    const newPlaylist = this._getTrackedPlaylistOrSource();
+    const playlistChanged = newPlaylist !== this._previousPlaylist;
+    const transientEmptyPlaylist =
+      playlistChanged &&
+      !newPlaylist &&
+      this._previousPlaylist &&
+      this._isActivePlaybackState();
 
     const newSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
     const songsChanged = newSongs !== this._previousSongs;
@@ -271,7 +326,7 @@ class XScheduleCard extends LitElement {
       songsChanged &&
       newSongs === '' &&
       this._previousSongs &&
-      (this._entity.state === 'playing' || this._entity.state === 'paused');
+      this._isActivePlaybackState();
 
     const newQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
     const queueChanged = newQueue !== this._previousQueue;
@@ -279,13 +334,16 @@ class XScheduleCard extends LitElement {
       queueChanged &&
       newQueue === '' &&
       this._previousQueue &&
-      (this._entity.state === 'playing' || this._entity.state === 'paused');
+      this._isActivePlaybackState();
+
+    const newPlaylists = this._normalizeSourceList(this._entity.attributes.source_list);
+    const playlistsChanged = newPlaylists !== this._previousPlaylists;
 
     return (
       this._entity.state !== this._previousState ||
-      this._entity.attributes.media_title !== this._previousTitle ||
-      this._getTrackedPlaylistOrSource() !== this._previousPlaylist ||
-      JSON.stringify(this._entity.attributes.source_list) !== this._previousPlaylists ||
+      (titleChanged && !transientEmptyTitle) ||
+      (playlistChanged && !transientEmptyPlaylist) ||
+      playlistsChanged ||
       (songsChanged && !transientEmptySongs) ||
       (queueChanged && !transientEmptyQueue)
     );
@@ -295,9 +353,9 @@ class XScheduleCard extends LitElement {
     if (!this._entity) return;
 
     this._previousState = this._entity.state;
-    this._previousTitle = this._entity.attributes.media_title;
+    this._previousTitle = this._getMediaTitle();
     this._previousPlaylist = this._getTrackedPlaylistOrSource();
-    this._previousPlaylists = JSON.stringify(this._entity.attributes.source_list);
+    this._previousPlaylists = this._normalizeSourceList(this._entity.attributes.source_list);
     this._previousSongs = this._normalizeSongNames(this._entity.attributes.playlist_songs);
     this._previousQueue = this._normalizeQueueIds(this._entity.attributes.internal_queue);
 
@@ -1999,7 +2057,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.5  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.6  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );
