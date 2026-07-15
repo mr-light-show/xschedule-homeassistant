@@ -208,22 +208,25 @@ class TestInternalQueueRemoval:
     @pytest.mark.asyncio
     async def test_remove_song_by_id(self, media_player_entity):
         """Test removing a song from queue by its UUID."""
+        media_player_entity.async_write_ha_state.reset_mock()
+
         # Add two songs
         await media_player_entity.async_add_to_internal_queue("Song 1")
         await media_player_entity.async_add_to_internal_queue("Song 2")
-        
+        await asyncio.sleep(0)
+
         queue_id = media_player_entity._internal_queue[0]["id"]
-        
+
         # Remove first song
         await media_player_entity.async_remove_from_internal_queue(queue_id)
-        await asyncio.sleep(0)
-        
+        await media_player_entity._async_publish_after_ready()
+
         # Verify song was removed
         assert len(media_player_entity._internal_queue) == 1
         assert media_player_entity._internal_queue[0]["name"] == "Song 2"
-        
-        # Verify state was updated
-        assert media_player_entity.async_write_ha_state.call_count >= 2
+
+        # Verify state was published once for the final queue state
+        assert media_player_entity.async_write_ha_state.call_count == 1
 
     @pytest.mark.asyncio
     async def test_remove_nonexistent_id(self, media_player_entity):
@@ -329,19 +332,22 @@ class TestInternalQueueClear:
     @pytest.mark.asyncio
     async def test_clear_queue(self, media_player_entity):
         """Test clearing the entire queue."""
+        media_player_entity.async_write_ha_state.reset_mock()
+
         # Add songs
         await media_player_entity.async_add_to_internal_queue("Song 1")
         await media_player_entity.async_add_to_internal_queue("Song 2")
-        
+        await asyncio.sleep(0)
+
         # Clear queue
         await media_player_entity.async_clear_internal_queue()
-        await asyncio.sleep(0)
-        
+        await media_player_entity._async_publish_after_ready()
+
         # Verify queue is empty
         assert len(media_player_entity._internal_queue) == 0
-        
-        # Verify state was updated
-        assert media_player_entity.async_write_ha_state.call_count >= 2
+
+        # Verify state was published once for the final queue state
+        assert media_player_entity.async_write_ha_state.call_count == 1
 
     @pytest.mark.asyncio
     async def test_clear_empty_queue(self, media_player_entity):

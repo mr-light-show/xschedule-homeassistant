@@ -129,8 +129,7 @@ class TestBatchedPlaylistPublish:
             }
         )
 
-        await asyncio.sleep(0.25)
-        await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
         mock_api_client.get_playlist_steps.assert_called_once_with("Halloween Background")
         assert media_player_entity.async_write_ha_state.call_count == 1

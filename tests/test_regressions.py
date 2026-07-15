@@ -182,9 +182,7 @@ class TestRegressionV122Pre1:
 
         # Wait for debounced publish after playlist starts
         media_player_entity._handle_websocket_update(data)
-
-        await asyncio.sleep(0.25)
-        await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
         # Verify playlist steps were fetched during debounced publish
         mock_api_client.get_playlist_steps.assert_called_once_with("Halloween")
@@ -374,14 +372,13 @@ class TestRegressionV121CPUOptimizations:
         - Rapid updates (during playback) caused excessive CPU usage
         - Home Assistant state machine updated too frequently
 
-        Fix: media_player.py:317-336
+        Fix: media_player.py debounced publish with dedupe
         - Added: 200ms debounce window
-        - Batches rapid updates into single state update
+        - Batches rapid updates into single async_write_ha_state call
 
         Test verifies:
         1. Multiple rapid WebSocket messages received
-        2. Only one debounced state update scheduled
-        3. State update occurs after 200ms delay
+        2. Only one debounced state publish after 200ms delay
         """
         # Track state updates published to Home Assistant
         update_calls = []
@@ -411,14 +408,8 @@ class TestRegressionV121CPUOptimizations:
         # Wait for all async tasks to complete
         await hass.async_block_till_done()
 
-        # CRITICAL: Should have only 1 state update scheduled (debounced)
-        # Without debouncing, this would be 5 updates
-        assert len(update_calls) <= 2  # Allow for 1-2 updates (debounced)
-
-        # Verify debounce delay
-        if len(update_calls) >= 2:
-            time_diff = update_calls[-1] - update_calls[0]
-            assert time_diff >= 0.15  # At least 150ms between updates
+        # CRITICAL: Should have only 1 state publish (debounced + deduped)
+        assert len(update_calls) == 1
 
 
 class TestRegressionConditionalAPICalls:
