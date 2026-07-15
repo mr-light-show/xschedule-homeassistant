@@ -358,10 +358,23 @@ class XScheduleCard extends i {
   }
 
   _applyNonRenderEntitySync() {
+    if (this._shouldSuppressRenderDuringSeek()) {
+      if (this.config?.showProgressBar) {
+        this._updateProgressBar();
+      }
+      return;
+    }
+
     this._syncEntityTracking();
     if (this.config?.showProgressBar) {
       this._updateProgressBar();
     }
+  }
+
+  _clearSeekRenderSuppress() {
+    this._seekSuppressRenderUntil = 0;
+    this._seekDisplayPosition = null;
+    this._seekDisplayUntil = 0;
   }
 
   _shouldSuppressRenderDuringSeek() {
@@ -371,6 +384,11 @@ class XScheduleCard extends i {
 
     const state = this._entity?.state;
     if (state === 'off' || state === 'unavailable') {
+      return false;
+    }
+
+    // Real pause should update controls; seek idle flicker is brief playing↔idle
+    if (state === 'paused' && this._previousState !== 'paused') {
       return false;
     }
 
@@ -1106,6 +1124,7 @@ class XScheduleCard extends i {
     }
 
     try {
+      this._clearSeekRenderSuppress();
       await this._hass.callService('media_player', 'turn_off', {
         entity_id: this.config.entity,
       });
@@ -1212,6 +1231,8 @@ class XScheduleCard extends i {
   }
 
   _selectPlaylist(playlist) {
+    this._clearSeekRenderSuppress();
+
     const entity = this._entity;
     const features = entity?.attributes?.supported_features || 0;
     
@@ -1296,6 +1317,7 @@ class XScheduleCard extends i {
     }
 
     try {
+      this._clearSeekRenderSuppress();
       // Use standard media_player.play_media command with |||  delimiter
       await this._hass.callService('media_player', 'play_media', {
         entity_id: this.config.entity,
@@ -1317,6 +1339,7 @@ class XScheduleCard extends i {
     }
 
     try {
+      this._clearSeekRenderSuppress();
       // Check if song is already in queue to show appropriate message
       const existingItem = this._queue.find(item => item.name === songName);
       const willBumpPriority = existingItem !== undefined;
@@ -1344,6 +1367,7 @@ class XScheduleCard extends i {
     }
 
     try {
+      this._clearSeekRenderSuppress();
       await this._hass.callService('xschedule', 'clear_internal_queue', {
         entity_id: [this.config.entity],
       });
@@ -1355,6 +1379,7 @@ class XScheduleCard extends i {
 
   async _removeFromQueue(queueItemId) {
     try {
+      this._clearSeekRenderSuppress();
       await this._hass.callService('xschedule', 'remove_from_internal_queue', {
         entity_id: [this.config.entity],
         queue_item_id: queueItemId,
@@ -1368,6 +1393,7 @@ class XScheduleCard extends i {
 
   async _reorderQueue(queueItemIds) {
     try {
+      this._clearSeekRenderSuppress();
       await this._hass.callService('xschedule', 'reorder_internal_queue', {
         entity_id: [this.config.entity],
         queue_item_ids: queueItemIds,
@@ -1482,6 +1508,9 @@ class XScheduleCard extends i {
   // Utility methods
 
   _callService(service, data = {}) {
+    if (service !== 'media_seek') {
+      this._clearSeekRenderSuppress();
+    }
     this._hass.callService('media_player', service, {
       entity_id: this.config.entity,
       ...data,
@@ -2128,7 +2157,7 @@ customElements.define('xschedule-card', XScheduleCard);
 
 // Log card info to console
 console.info(
-  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.9  ',
+  '%c  XSCHEDULE-CARD  \n%c  Version 1.7.8-dev.11  ',
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray'
 );

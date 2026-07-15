@@ -986,6 +986,116 @@ describe('XScheduleCard', () => {
       expect(renderCount).to.equal(0);
     });
 
+    it('should update controls when pausing during seek suppress window', async () => {
+      const attrs = {
+        media_title: 'Test Song',
+        media_playlist: 'Test Playlist',
+        media_duration: 100,
+        media_position: 20,
+        media_position_updated_at: new Date().toISOString(),
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        attrs
+      );
+
+      const config = createMockCardConfig({
+        enableSeek: true,
+        showProgressBar: true,
+        showPlaybackControls: true,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const progressBar = element.shadowRoot.querySelector('.progress-bar.seekable');
+      progressBar.getBoundingClientRect = () => ({
+        left: 0,
+        width: 200,
+        top: 0,
+        height: 10,
+        right: 200,
+        bottom: 10,
+      });
+
+      progressBar.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 150 })
+      );
+      await element.updateComplete;
+      expect(element._seekSuppressRenderUntil).to.be.greaterThan(Date.now());
+
+      element._handlePause();
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'paused',
+        {
+          ...attrs,
+          media_position: 75,
+        }
+      );
+      element.hass = mockHass;
+      await flushEntityRenderCoalesce();
+      await element.updateComplete;
+
+      const playPauseBtn = element.shadowRoot.querySelector('.play-pause');
+      expect(playPauseBtn.getAttribute('title')).to.equal('Play');
+    });
+
+    it('should update now playing when skipping track during seek suppress window', async () => {
+      const attrs = {
+        media_title: 'Song A',
+        media_playlist: 'Test Playlist',
+        media_duration: 100,
+        media_position: 20,
+        media_position_updated_at: new Date().toISOString(),
+      };
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        attrs
+      );
+
+      const config = createMockCardConfig({
+        enableSeek: true,
+        showProgressBar: true,
+        showPlaybackControls: true,
+      });
+      element = await createConfiguredElement('xschedule-card', config, mockHass);
+      await element.updateComplete;
+
+      const progressBar = element.shadowRoot.querySelector('.progress-bar.seekable');
+      progressBar.getBoundingClientRect = () => ({
+        left: 0,
+        width: 200,
+        top: 0,
+        height: 10,
+        right: 200,
+        bottom: 10,
+      });
+      progressBar.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 150 })
+      );
+      await element.updateComplete;
+
+      element._handleNext();
+
+      mockHass.states['media_player.xschedule'] = createMockEntityState(
+        'media_player.xschedule',
+        'playing',
+        { ...attrs, media_title: 'Song B', media_position: 0 }
+      );
+      element.hass = mockHass;
+      await flushEntityRenderCoalesce();
+      await element.updateComplete;
+
+      const songName = element.shadowRoot.querySelector('.song-name');
+      expect(songName).to.exist;
+      expect(songName.textContent).to.equal('Song B');
+    });
+
     it('should coalesce back-to-back song changes into one render', async () => {
       mockHass.states['media_player.xschedule'] = createMockEntityState(
         'media_player.xschedule',
