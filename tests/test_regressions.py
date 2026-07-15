@@ -390,6 +390,7 @@ class TestRegressionV121CPUOptimizations:
             return original_write(*args, **kwargs)
 
         media_player_entity.async_write_ha_state = track_write
+        media_player_entity._last_published_snapshot = None
 
         # Send 5 rapid WebSocket updates (simulate real playback)
         for i in range(5):
@@ -407,6 +408,7 @@ class TestRegressionV121CPUOptimizations:
 
         # Wait for all async tasks to complete
         await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
         # CRITICAL: Should have only 1 state publish (debounced + deduped)
         assert len(update_calls) == 1

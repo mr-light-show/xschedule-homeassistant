@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -59,6 +59,7 @@ class TestPublishDeduping:
     @pytest.mark.asyncio
     async def test_duplicate_publish_skipped(self, media_player_entity):
         """Identical entity snapshots should only publish once."""
+        media_player_entity._last_published_snapshot = None
         media_player_entity.async_write_ha_state = MagicMock()
         publish_calls = []
         original_publish = media_player_entity._publish_state_if_changed
@@ -80,7 +81,8 @@ class TestPublishDeduping:
         self, hass: HomeAssistant, media_player_entity
     ):
         """Back-to-back websocket updates with same meaningful state publish once."""
-        media_player_entity.async_write_ha_state = AsyncMock()
+        media_player_entity._last_published_snapshot = None
+        media_player_entity.async_write_ha_state = MagicMock()
 
         media_player_entity._attr_state = MediaPlayerState.PLAYING
         media_player_entity._attr_media_playlist = "Halloween"
@@ -102,6 +104,7 @@ class TestPublishDeduping:
 
         await asyncio.sleep(0.25)
         await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
         assert media_player_entity.async_write_ha_state.call_count == 1
 
@@ -114,7 +117,8 @@ class TestBatchedPlaylistPublish:
         self, hass: HomeAssistant, media_player_entity, mock_api_client
     ):
         """Playlist changes should fetch songs and publish a single snapshot."""
-        media_player_entity.async_write_ha_state = AsyncMock()
+        media_player_entity._last_published_snapshot = None
+        media_player_entity.async_write_ha_state = MagicMock()
         mock_api_client.get_playlist_steps.return_value = [
             {"name": "House lights", "lengthms": "120000"},
         ]

@@ -219,6 +219,7 @@ class TestInternalQueueRemoval:
 
         # Remove first song
         await media_player_entity.async_remove_from_internal_queue(queue_id)
+        media_player_entity.async_write_ha_state.reset_mock()
         await media_player_entity._async_publish_after_ready()
 
         # Verify song was removed
@@ -341,6 +342,7 @@ class TestInternalQueueClear:
 
         # Clear queue
         await media_player_entity.async_clear_internal_queue()
+        media_player_entity.async_write_ha_state.reset_mock()
         await media_player_entity._async_publish_after_ready()
 
         # Verify queue is empty
