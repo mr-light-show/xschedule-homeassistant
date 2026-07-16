@@ -1,6 +1,7 @@
 """Tests for internal queue management functionality."""
 from __future__ import annotations
 
+import asyncio
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,7 +18,9 @@ def mock_hass():
     """Create a mock Home Assistant instance."""
     hass = MagicMock(spec=HomeAssistant)
     hass.bus = MagicMock()
-    hass.async_create_task = MagicMock(side_effect=lambda coro: coro)
+    hass.async_create_task = MagicMock(
+        side_effect=lambda coro: asyncio.get_running_loop().create_task(coro)
+    )
     return hass
 
 
@@ -71,6 +74,7 @@ class TestInternalQueueAddition:
     async def test_add_first_song_to_empty_queue(self, media_player_entity):
         """Test adding the first song to an empty queue issues jump command."""
         await media_player_entity.async_add_to_internal_queue("Song 1")
+        await asyncio.sleep(0)
         
         # Verify jump command was issued
         media_player_entity._api_client.jump_to_step_at_end.assert_called_once_with("Song 1")
@@ -204,21 +208,26 @@ class TestInternalQueueRemoval:
     @pytest.mark.asyncio
     async def test_remove_song_by_id(self, media_player_entity):
         """Test removing a song from queue by its UUID."""
+        media_player_entity.async_write_ha_state.reset_mock()
+
         # Add two songs
         await media_player_entity.async_add_to_internal_queue("Song 1")
         await media_player_entity.async_add_to_internal_queue("Song 2")
-        
+        await asyncio.sleep(0)
+
         queue_id = media_player_entity._internal_queue[0]["id"]
-        
+
         # Remove first song
         await media_player_entity.async_remove_from_internal_queue(queue_id)
-        
+        media_player_entity.async_write_ha_state.reset_mock()
+        await media_player_entity._async_publish_after_ready()
+
         # Verify song was removed
         assert len(media_player_entity._internal_queue) == 1
         assert media_player_entity._internal_queue[0]["name"] == "Song 2"
-        
-        # Verify state was updated
-        assert media_player_entity.async_write_ha_state.call_count >= 2
+
+        # Verify state was published once for the final queue state
+        assert media_player_entity.async_write_ha_state.call_count == 1
 
     @pytest.mark.asyncio
     async def test_remove_nonexistent_id(self, media_player_entity):
@@ -324,18 +333,23 @@ class TestInternalQueueClear:
     @pytest.mark.asyncio
     async def test_clear_queue(self, media_player_entity):
         """Test clearing the entire queue."""
+        media_player_entity.async_write_ha_state.reset_mock()
+
         # Add songs
         await media_player_entity.async_add_to_internal_queue("Song 1")
         await media_player_entity.async_add_to_internal_queue("Song 2")
-        
+        await asyncio.sleep(0)
+
         # Clear queue
         await media_player_entity.async_clear_internal_queue()
-        
+        media_player_entity.async_write_ha_state.reset_mock()
+        await media_player_entity._async_publish_after_ready()
+
         # Verify queue is empty
         assert len(media_player_entity._internal_queue) == 0
-        
-        # Verify state was updated
-        assert media_player_entity.async_write_ha_state.call_count >= 2
+
+        # Verify state was published once for the final queue state
+        assert media_player_entity.async_write_ha_state.call_count == 1
 
     @pytest.mark.asyncio
     async def test_clear_empty_queue(self, media_player_entity):
@@ -365,8 +379,8 @@ class TestSongChangeDetection:
         assert len(media_player_entity._internal_queue) == 1
         assert media_player_entity._internal_queue[0]["name"] == "Song 2"
         
-        # Verify state was updated
-        media_player_entity.async_write_ha_state.assert_called()
+        # _handle_song_started updates queue in memory; publish happens via websocket debounce
+        media_player_entity.async_write_ha_state.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_song_start_auto_advances_queue(self, media_player_entity):

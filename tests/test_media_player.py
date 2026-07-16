@@ -87,6 +87,7 @@ async def media_player_entity(hass: HomeAssistant, mock_api_client, mock_websock
         )
 
     entity.entity_id = "media_player.xschedule_test"
+    entity.hass = hass
 
     # Add entity to hass so it can fire events and use hass services
     await entity.async_added_to_hass()
@@ -140,8 +141,8 @@ class TestMediaPlayerStateTransitions:
         media_player_entity._time_remaining = 150.0
         media_player_entity._attr_state = MediaPlayerState.PLAYING
 
-        # Now transition to idle
-        data = {"status": "idle"}
+        # Now transition to idle (explicit stop signal from xSchedule)
+        data = {"status": "idle", "outputtolights": "false"}
         media_player_entity._handle_websocket_update(data)
 
         # Verify ALL attributes are cleared
@@ -218,13 +219,9 @@ class TestCacheInvalidation:
         # Cache should not be invalidated for song-only changes
         mock_api_client.invalidate_cache.assert_not_called()
 
-    @pytest.mark.skip(reason="Event firing requires entity to be properly registered with platform")
     @pytest.mark.asyncio
     async def test_cache_invalidation_event_fired(self, hass: HomeAssistant, media_player_entity):
         """Test cache invalidation event is fired (bug fix verification)."""
-        # NOTE: This test is skipped because the entity.hass property requires
-        # proper entity platform registration which is complex to set up in unit tests.
-        # The event firing logic works in production when entity is properly added to platform.
         events = []
 
         def capture_event(event):
@@ -239,6 +236,7 @@ class TestCacheInvalidation:
         # Change state
         data = {
             "status": "idle",
+            "outputtolights": "false",
         }
         media_player_entity._handle_websocket_update(data)
 
@@ -292,7 +290,10 @@ class TestWebSocketUpdates:
 
     @pytest.mark.asyncio
     async def test_position_update_invalid_values(self, media_player_entity):
-        """Test handling of invalid position values."""
+        """Invalid millisecond fields should be ignored, not zero cached values."""
+        media_player_entity._attr_media_position = 45.0
+        media_player_entity._attr_media_duration = 180.0
+
         data = {
             "status": "playing",
             "positionms": "invalid",
@@ -301,9 +302,8 @@ class TestWebSocketUpdates:
 
         media_player_entity._handle_websocket_update(data)
 
-        # Should default to 0 for invalid values
-        assert media_player_entity.media_position == 0.0
-        assert media_player_entity.media_duration == 0.0
+        assert media_player_entity.media_position == 45.0
+        assert media_player_entity.media_duration == 180.0
 
 
 class TestMediaPlayerServices:
@@ -511,7 +511,7 @@ class TestQueueDrivenPlayback:
             {"name": "Song 1", "lengthms": "180000"},
         ]
 
-        media_player_entity._handle_websocket_update({"status": "idle"})
+        media_player_entity._handle_websocket_update({"status": "idle", "outputtolights": "false"})
         await hass.async_block_till_done()
 
         mock_api_client.play_playlist_starting_at_step.assert_called_once_with(

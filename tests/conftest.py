@@ -10,6 +10,7 @@ from custom_components.xschedule.const import (
     CONF_PASSWORD,
     DEFAULT_NAME,
 )
+from custom_components.xschedule.media_player import XScheduleMediaPlayer
 
 # Enable loading custom integrations
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -55,6 +56,7 @@ def mock_api_client():
     client.get_schedules = AsyncMock(return_value=[
         {"name": "Schedule 1", "playlist": "Playlist 1"},
     ])
+    client.invalidate_cache = MagicMock()
     client.close = AsyncMock()
     return client
 
@@ -65,8 +67,44 @@ def mock_websocket():
     ws = MagicMock()
     ws.connect = AsyncMock()
     ws.disconnect = AsyncMock()
-    ws.is_connected = False
+    ws.send_command = AsyncMock()
+    ws.connected = True
     return ws
+
+
+@pytest.fixture
+async def media_player_entity(hass: HomeAssistant, mock_api_client, mock_websocket):
+    """Create a media player entity registered for HA state publish tests."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="xSchedule Test",
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 80,
+            CONF_PASSWORD: "",
+        },
+    )
+
+    with patch(
+        "custom_components.xschedule.media_player.XScheduleWebSocket",
+        return_value=mock_websocket,
+    ):
+        entity = XScheduleMediaPlayer(
+            config_entry=config_entry,
+            api_client=mock_api_client,
+            hass=hass,
+        )
+
+    entity.entity_id = "media_player.xschedule_test"
+    entity.hass = hass
+    await entity.async_added_to_hass()
+
+    if entity._update_debounce_task and not entity._update_debounce_task.done():
+        entity._update_debounce_task.cancel()
+        entity._update_debounce_task = None
+    entity._last_published_snapshot = None
+
+    return entity
 
 
 @pytest.fixture

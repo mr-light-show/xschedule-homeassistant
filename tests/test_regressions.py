@@ -59,6 +59,7 @@ async def media_player_entity(hass: HomeAssistant, mock_api_client, mock_websock
         )
 
     entity.entity_id = "media_player.xschedule_test"
+    entity.hass = hass
     await entity.async_added_to_hass()
 
     return entity
@@ -124,19 +125,14 @@ class TestRegressionV122Pre1:
         }
         media_player_entity._handle_websocket_update(data_background)
 
-        # Wait for async tasks to complete
+        # Debounced publish clears cache and fetches new playlist steps together
         await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
-        # CRITICAL: Cache should be cleared (bug fix verification)
-        # This is the fix from commit db5d0f4
-        assert media_player_entity._current_playlist_steps == []
-
-        # Trigger async_update to fetch new playlist steps
-        await media_player_entity.async_update()
-
-        # Verify new songs loaded
+        # Verify new songs loaded (no stale Halloween steps)
         assert len(media_player_entity._current_playlist_steps) == 1
         assert media_player_entity._current_playlist_steps[0]["name"] == "House lights"
+        mock_api_client.get_playlist_steps.assert_called_with("Halloween Background")
 
     @pytest.mark.asyncio
     async def test_regression_blank_card_on_playlist_start(
@@ -149,14 +145,12 @@ class TestRegressionV122Pre1:
         - Playlist Browser card worked correctly
         - Root cause: should_poll=False + no async_update call = no playlist_songs
 
-        Fix: media_player.py:291-298
-        - Added: asyncio.create_task(fetch_playlist_steps())
-        - Triggers async_update when playlist changes to fetch songs immediately
+        Fix: debounced publish fetches playlist steps before writing state
 
         Test verifies:
         1. Entity is idle (no playlist)
         2. WebSocket message: playlist starts playing
-        3. Verify async task created to fetch playlist steps
+        3. Debounced publish fetches playlist steps
         4. Verify playlist_songs populated after fetch
         """
         # Setup: Entity is idle
@@ -182,14 +176,11 @@ class TestRegressionV122Pre1:
         # Disconnect websocket so async_update fetches playlist steps
         mock_websocket.connected = False
 
-        # The _handle_websocket_update should trigger async_update
+        # Wait for debounced publish after playlist starts
         media_player_entity._handle_websocket_update(data)
+        await media_player_entity._async_publish_after_ready()
 
-        # Wait for async tasks to complete, then manually call async_update to ensure playlist steps are fetched
-        await hass.async_block_till_done()
-        await media_player_entity.async_update()
-
-        # Verify playlist steps were fetched
+        # Verify playlist steps were fetched during debounced publish
         mock_api_client.get_playlist_steps.assert_called_once_with("Halloween")
         
         # Verify songs populated
@@ -377,25 +368,25 @@ class TestRegressionV121CPUOptimizations:
         - Rapid updates (during playback) caused excessive CPU usage
         - Home Assistant state machine updated too frequently
 
-        Fix: media_player.py:317-336
+        Fix: media_player.py debounced publish with dedupe
         - Added: 200ms debounce window
-        - Batches rapid updates into single state update
+        - Batches rapid updates into single async_write_ha_state call
 
         Test verifies:
         1. Multiple rapid WebSocket messages received
-        2. Only one debounced state update scheduled
-        3. State update occurs after 200ms delay
+        2. Only one debounced state publish after 200ms delay
         """
-        # Track state updates scheduled
+        # Track state updates published to Home Assistant
         update_calls = []
 
-        original_schedule = media_player_entity.schedule_update_ha_state
+        original_write = media_player_entity.async_write_ha_state
 
-        def track_schedule(*args, **kwargs):
+        def track_write(*args, **kwargs):
             update_calls.append(asyncio.get_event_loop().time())
-            return original_schedule(*args, **kwargs)
+            return original_write(*args, **kwargs)
 
-        media_player_entity.schedule_update_ha_state = track_schedule
+        media_player_entity.async_write_ha_state = track_write
+        media_player_entity._last_published_snapshot = None
 
         # Send 5 rapid WebSocket updates (simulate real playback)
         for i in range(5):
@@ -413,15 +404,10 @@ class TestRegressionV121CPUOptimizations:
 
         # Wait for all async tasks to complete
         await hass.async_block_till_done()
+        await media_player_entity._async_publish_after_ready()
 
-        # CRITICAL: Should have only 1 state update scheduled (debounced)
-        # Without debouncing, this would be 5 updates
-        assert len(update_calls) <= 2  # Allow for 1-2 updates (debounced)
-
-        # Verify debounce delay
-        if len(update_calls) >= 2:
-            time_diff = update_calls[-1] - update_calls[0]
-            assert time_diff >= 0.15  # At least 150ms between updates
+        # CRITICAL: Should have only 1 state publish (debounced + deduped)
+        assert len(update_calls) == 1
 
 
 class TestRegressionConditionalAPICalls:
