@@ -443,19 +443,20 @@ class TestEdgeCases:
 
     @pytest.mark.asyncio
     async def test_invalid_millisecond_values(self, media_player_entity):
-        """Test handling of invalid millisecond values."""
+        """Invalid millisecond fields should be ignored, not zero cached values."""
+        media_player_entity._attr_media_position = 45.0
+        media_player_entity._attr_media_duration = 185.75
+
         message = {
             "status": "playing",
             "positionms": "invalid",
             "lengthms": "not_a_number",
         }
 
-        # Should not raise exception
         media_player_entity._handle_websocket_update(message)
 
-        # Values default to 0 (media_player.py:222-233)
-        assert media_player_entity.media_position == 0.0
-        assert media_player_entity.media_duration == 0.0
+        assert media_player_entity.media_position == 45.0
+        assert media_player_entity.media_duration == 185.75
 
     @pytest.mark.asyncio
     async def test_message_with_extra_fields(self, media_player_entity):
@@ -487,13 +488,18 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_null_values_in_message(self, media_player_entity):
         """Test handling of null/None values."""
+        media_player_entity._attr_media_playlist = "Halloween"
+        media_player_entity._attr_media_title = "Light Em Up"
+
         message = {
             "status": "playing",
             "playlist": None,
             "step": None,
         }
 
-        # Should not raise exception
+        # Should not raise exception or clear cached media fields
         media_player_entity._handle_websocket_update(message)
 
         assert media_player_entity.state == MediaPlayerState.PLAYING
+        assert media_player_entity.media_playlist == "Halloween"
+        assert media_player_entity.media_title == "Light Em Up"

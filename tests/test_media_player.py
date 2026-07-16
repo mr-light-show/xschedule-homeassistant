@@ -290,7 +290,10 @@ class TestWebSocketUpdates:
 
     @pytest.mark.asyncio
     async def test_position_update_invalid_values(self, media_player_entity):
-        """Test handling of invalid position values."""
+        """Invalid millisecond fields should be ignored, not zero cached values."""
+        media_player_entity._attr_media_position = 45.0
+        media_player_entity._attr_media_duration = 180.0
+
         data = {
             "status": "playing",
             "positionms": "invalid",
@@ -299,9 +302,8 @@ class TestWebSocketUpdates:
 
         media_player_entity._handle_websocket_update(data)
 
-        # Should default to 0 for invalid values
-        assert media_player_entity.media_position == 0.0
-        assert media_player_entity.media_duration == 0.0
+        assert media_player_entity.media_position == 45.0
+        assert media_player_entity.media_duration == 180.0
 
 
 class TestMediaPlayerServices:

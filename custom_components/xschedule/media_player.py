@@ -59,6 +59,25 @@ def _parse_length_ms(value: Any) -> int:
         return 0
 
 
+def _is_meaningful_text(value: Any) -> bool:
+    """Return True when a websocket text field carries a usable value."""
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return bool(value)
+
+
+def _parse_ms_to_seconds(value: Any) -> float | None:
+    """Convert xSchedule millisecond fields to seconds, or None if unusable."""
+    if value is None or value == "":
+        return None
+    try:
+        return int(value) / 1000
+    except (ValueError, TypeError):
+        return None
+
+
 # Define custom TRACE level for very verbose logging
 TRACE_LEVEL = 5
 logging.addLevelName(TRACE_LEVEL, "TRACE")
@@ -320,36 +339,36 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
         else:
             _LOGGER.debug("Ignoring transient non-playing status: %s", status)
 
-        # Update current media info
-        if "playlist" in data:
+        # Merge partial websocket deltas into cached media fields.
+        if "playlist" in data and _is_meaningful_text(data["playlist"]):
             self._attr_media_playlist = data["playlist"]
 
         if "step" in data:
             new_song = data["step"]
-            # Detect song changes for internal queue management
-            if new_song and new_song != self._previous_song:
-                if self._previous_song is not None:  # Skip on first load
-                    _LOGGER.debug("Song changed from '%s' to '%s'", self._previous_song, new_song)
-                    self._handle_song_started(new_song)
-                self._previous_song = new_song
-            self._attr_media_title = new_song
+            if _is_meaningful_text(new_song):
+                # Detect song changes for internal queue management
+                if new_song != self._previous_song:
+                    if self._previous_song is not None:  # Skip on first load
+                        _LOGGER.debug(
+                            "Song changed from '%s' to '%s'",
+                            self._previous_song,
+                            new_song,
+                        )
+                        self._handle_song_started(new_song)
+                    self._previous_song = new_song
+                self._attr_media_title = new_song
 
         # Update position and duration (use millisecond fields)
         if "positionms" in data:
-            # Convert milliseconds to seconds (handle both int and string)
-            try:
-                self._attr_media_position = int(data["positionms"]) / 1000
-                self._attr_media_position_updated_at = dt_util.utcnow()
-            except (ValueError, TypeError):
-                self._attr_media_position = 0
+            position = _parse_ms_to_seconds(data["positionms"])
+            if position is not None:
+                self._attr_media_position = position
                 self._attr_media_position_updated_at = dt_util.utcnow()
 
         if "lengthms" in data:
-            # Convert milliseconds to seconds (handle both int and string)
-            try:
-                self._attr_media_duration = int(data["lengthms"]) / 1000
-            except (ValueError, TypeError):
-                self._attr_media_duration = 0
+            duration = _parse_ms_to_seconds(data["lengthms"])
+            if duration is not None:
+                self._attr_media_duration = duration
 
         if (
             (not self._attr_media_duration or self._attr_media_duration <= 0)
@@ -364,11 +383,9 @@ class XScheduleMediaPlayer(MediaPlayerEntity):
                     break
 
         if "leftms" in data:
-            # Convert milliseconds to seconds (handle both int and string)
-            try:
-                self._time_remaining = int(data["leftms"]) / 1000
-            except (ValueError, TypeError):
-                self._time_remaining = 0
+            time_remaining = _parse_ms_to_seconds(data["leftms"])
+            if time_remaining is not None:
+                self._time_remaining = time_remaining
 
         # Update volume level from status
         if "volume" in data:

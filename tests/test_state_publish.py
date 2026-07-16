@@ -69,6 +69,86 @@ class TestTransientIdleHandling:
         assert media_player_entity.media_duration is None
 
 
+class TestPartialDeltaMerge:
+    """Verify partial websocket deltas merge into cached state without clearing."""
+
+    @pytest.mark.asyncio
+    async def test_null_playlist_and_step_preserve_cache(self, media_player_entity):
+        """Explicit null playlist/step keys must not wipe cached now playing."""
+        media_player_entity._attr_state = MediaPlayerState.PLAYING
+        media_player_entity._attr_media_playlist = "Hanau Pa"
+        media_player_entity._attr_media_title = "The Tiki Tiki Tiki Room"
+        media_player_entity._attr_media_position = 90.349
+        media_player_entity._attr_media_duration = 180.0
+
+        media_player_entity._handle_websocket_update(
+            {
+                "status": "playing",
+                "playlist": None,
+                "step": None,
+                "positionms": None,
+                "lengthms": None,
+            }
+        )
+
+        assert media_player_entity.state == MediaPlayerState.PLAYING
+        assert media_player_entity.media_playlist == "Hanau Pa"
+        assert media_player_entity.media_title == "The Tiki Tiki Tiki Room"
+        assert media_player_entity.media_position == 90.349
+        assert media_player_entity.media_duration == 180.0
+
+    @pytest.mark.asyncio
+    async def test_empty_playlist_and_step_preserve_cache(self, media_player_entity):
+        """Empty-string playlist/step keys must not wipe cached now playing."""
+        media_player_entity._attr_state = MediaPlayerState.PAUSED
+        media_player_entity._attr_media_playlist = "Halloween"
+        media_player_entity._attr_media_title = "The Munsters"
+        media_player_entity._attr_media_position = 26.0
+        media_player_entity._attr_media_duration = 180.0
+
+        media_player_entity._handle_websocket_update(
+            {
+                "status": "paused",
+                "playlist": "",
+                "step": "",
+                "positionms": "",
+                "lengthms": "",
+            }
+        )
+
+        assert media_player_entity.state == MediaPlayerState.PAUSED
+        assert media_player_entity.media_playlist == "Halloween"
+        assert media_player_entity.media_title == "The Munsters"
+        assert media_player_entity.media_position == 26.0
+        assert media_player_entity.media_duration == 180.0
+
+    @pytest.mark.asyncio
+    async def test_transient_idle_with_null_fields_preserves_cache(
+        self, media_player_entity
+    ):
+        """Seek gaps may include idle plus null media fields; cache must persist."""
+        media_player_entity._attr_state = MediaPlayerState.PAUSED
+        media_player_entity._attr_media_playlist = "Hanau Pa"
+        media_player_entity._attr_media_title = "The Tiki Tiki Tiki Room"
+        media_player_entity._attr_media_position = 90.349
+        media_player_entity._attr_media_duration = 180.0
+
+        media_player_entity._handle_websocket_update(
+            {
+                "status": "idle",
+                "playlist": None,
+                "step": None,
+                "positionms": None,
+            }
+        )
+
+        assert media_player_entity.state == MediaPlayerState.PAUSED
+        assert media_player_entity.media_playlist == "Hanau Pa"
+        assert media_player_entity.media_title == "The Tiki Tiki Tiki Room"
+        assert media_player_entity.media_position == 90.349
+        assert media_player_entity.media_duration == 180.0
+
+
 class TestPublishDeduping:
     """Verify duplicate snapshots are not published to Home Assistant."""
 
