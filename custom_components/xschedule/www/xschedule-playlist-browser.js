@@ -33,6 +33,12 @@ const t=globalThis,i$1=t.trustedTypes,s$1=i$1?i$1.createPolicy("lit-html",{creat
 const FEATURE_PLAY_MEDIA = 0x200;    // MediaPlayerEntityFeature.PLAY_MEDIA
 const FEATURE_SELECT_SOURCE = 0x800; // MediaPlayerEntityFeature.SELECT_SOURCE
 const FEATURE_BROWSE_MEDIA = 0x20000; // MediaPlayerEntityFeature.BROWSE_MEDIA
+const COLLAPSE_MODES = new Set(['expanded', 'collapsed', 'playing', 'playing_soon']);
+
+function normalizeNonNegativeInteger(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? Math.floor(number) : fallback;
+}
 
 class XSchedulePlaylistBrowser extends i {
   static get properties() {
@@ -45,6 +51,7 @@ class XSchedulePlaylistBrowser extends i {
       _loading: { type: Boolean },
       _expandedPlaylist: { type: String },
       _playlistSongs: { type: Object },
+      _showAllPlaylists: { type: Boolean },
     };
   }
 
@@ -55,6 +62,7 @@ class XSchedulePlaylistBrowser extends i {
     this._loading = false;
     this._expandedPlaylist = null; // Track which playlist is expanded
     this._playlistSongs = {}; // Cache of songs for each playlist
+    this._showAllPlaylists = false;
     this._updateInterval = null; // Timer for time display updates only
     this._initialLoad = true; // Track if this is the first load
 
@@ -65,6 +73,7 @@ class XSchedulePlaylistBrowser extends i {
     this._previousExpandedPlaylist = null;
     this._previousPlaylistSongs = null;
     this._previousTimeUpdate = null;
+    this._previousCurrentPlaylist = null;
     this._lastTimeUpdate = Date.now();
   }
 
@@ -97,6 +106,7 @@ class XSchedulePlaylistBrowser extends i {
       throw new Error('You need to define an entity');
     }
 
+    const previousCollapseMode = this.config?.collapse_mode;
     this.config = {
       entity: config.entity,
       sort_by: config.sort_by || 'schedule',
@@ -106,7 +116,14 @@ class XSchedulePlaylistBrowser extends i {
       confirm_play: config.confirm_play !== false,
       expandable_playlists: config.expandable_playlists !== false,  // Default to true
       ...config,
+      collapse_mode: COLLAPSE_MODES.has(config.collapse_mode) ? config.collapse_mode : 'expanded',
+      playing_soon_days: normalizeNonNegativeInteger(config.playing_soon_days, 1),
+      playing_soon_hours: normalizeNonNegativeInteger(config.playing_soon_hours, 0),
     };
+
+    if (previousCollapseMode !== this.config.collapse_mode) {
+      this._showAllPlaylists = false;
+    }
   }
 
   set hass(hass) {
@@ -156,6 +173,13 @@ class XSchedulePlaylistBrowser extends i {
       const expandedChanged = this._expandedPlaylist !== this._previousExpandedPlaylist;
       const songsChanged = JSON.stringify(this._playlistSongs) !== this._previousPlaylistSongs;
       const timeElapsed = this._lastTimeUpdate !== this._previousTimeUpdate;
+      const configChanged = changedProperties.has('config');
+      const listToggleChanged = changedProperties.has('_showAllPlaylists');
+      const currentPlaylist = this._entity.attributes.media_playlist ||
+        this._entity.attributes.playlist ||
+        this._entity.attributes.source ||
+        null;
+      const currentPlaylistChanged = currentPlaylist !== this._previousCurrentPlaylist;
 
       // Update tracking variables
       this._previousState = this._entity.state;
@@ -164,10 +188,12 @@ class XSchedulePlaylistBrowser extends i {
       this._previousExpandedPlaylist = this._expandedPlaylist;
       this._previousPlaylistSongs = JSON.stringify(this._playlistSongs);
       this._previousTimeUpdate = this._lastTimeUpdate;
+      this._previousCurrentPlaylist = currentPlaylist;
 
       // Allow first render, or only if something meaningful changed
       return isFirstRender || stateChanged || playlistsChanged || schedulesChanged ||
-             expandedChanged || songsChanged || timeElapsed;
+             expandedChanged || songsChanged || timeElapsed || configChanged || listToggleChanged ||
+             currentPlaylistChanged;
     }
 
     return super.shouldUpdate(changedProperties);
@@ -286,20 +312,19 @@ class XSchedulePlaylistBrowser extends i {
 
             // First, look for active schedule
             const activeSchedule = schedules.find(s => s.active === "TRUE" || s.nextactive === "NOW!");
+            const upcomingSchedules = schedules
+              .filter(s => {
+                const na = s.nextactive;
+                return na && na !== "A long time from now" && na !== "N/A" && na.match(/\d{4}-\d{2}-\d{2}/);
+              })
+              .sort((a, b) => {
+                // Sort by nextactive date (earliest first)
+                return new Date(a.nextactive) - new Date(b.nextactive);
+              });
             if (activeSchedule) {
               schedule = activeSchedule;
             } else {
               // Find soonest upcoming schedule (skip "A long time from now" and invalid dates)
-              const upcomingSchedules = schedules
-                .filter(s => {
-                  const na = s.nextactive;
-                  return na && na !== "A long time from now" && na !== "N/A" && na.match(/\d{4}-\d{2}-\d{2}/);
-                })
-                .sort((a, b) => {
-                  // Sort by nextactive date (earliest first)
-                  return new Date(a.nextactive) - new Date(b.nextactive);
-                });
-
               schedule = upcomingSchedules.length > 0 ? upcomingSchedules[0] : schedules[0];
             }
 
@@ -313,8 +338,15 @@ class XSchedulePlaylistBrowser extends i {
               totalDuration = parseInt(playlistsMetadata[playlist].lengthms) / 1000;
             }
 
+            const enabledActiveTimes = upcomingSchedules
+              .filter(candidate =>
+                candidate.enabled !== false && String(candidate.enabled).toUpperCase() !== 'FALSE'
+              )
+              .map(candidate => candidate.nextactive);
+
             newSchedules[playlist] = {
               nextActiveTime: schedule.nextactive,  // Fixed: field is "nextactive" not "nextactivetime"
+              enabledActiveTimes,
               enabled: schedule.enabled,
               active: schedule.active,
               duration: totalDuration,
@@ -414,14 +446,85 @@ class XSchedulePlaylistBrowser extends i {
     const currentPlaylist = this._entity.attributes.media_playlist || 
                            this._entity.attributes.playlist ||
                            this._entity.attributes.source;
+    const primaryPlaylists = this._getPrimaryPlaylists(sortedPlaylists, currentPlaylist);
+    const visiblePlaylists = this._showAllPlaylists ? sortedPlaylists : primaryPlaylists;
+    const hiddenPlaylistCount = sortedPlaylists.length - primaryPlaylists.length;
+    const hasCollapsedPlaylists = this.config.collapse_mode !== 'expanded' && hiddenPlaylistCount > 0;
 
     return x`
       <div class="playlist-list">
-        ${sortedPlaylists.map((playlist) =>
+        ${visiblePlaylists.map((playlist) =>
           this._renderPlaylistItem(playlist, playlist === currentPlaylist)
         )}
+        ${hasCollapsedPlaylists ? x`
+          <button class="playlist-list-toggle" @click=${this._toggleAllPlaylists}>
+            ${this._showAllPlaylists
+              ? 'Hide playlists'
+              : `Show all playlists (${hiddenPlaylistCount})`}
+          </button>
+        ` : ''}
       </div>
     `;
+  }
+
+  _getPrimaryPlaylists(sortedPlaylists, currentPlaylist) {
+    if (this.config.collapse_mode === 'collapsed') {
+      return [];
+    }
+
+    if (this.config.collapse_mode === 'playing') {
+      return sortedPlaylists.filter(playlist =>
+        this._isPlaylistPlaying(playlist, currentPlaylist)
+      );
+    }
+
+    if (this.config.collapse_mode === 'playing_soon') {
+      return sortedPlaylists.filter(playlist =>
+        this._isPlaylistPlaying(playlist, currentPlaylist) ||
+        this._isPlaylistPlayingSoon(playlist)
+      );
+    }
+
+    return sortedPlaylists;
+  }
+
+  _isPlaylistPlaying(playlistName, currentPlaylist) {
+    const scheduleInfo = this._playlistSchedules[playlistName];
+    return playlistName === currentPlaylist ||
+      scheduleInfo?.nextActiveTime === 'NOW!' ||
+      String(scheduleInfo?.active).toUpperCase() === 'TRUE';
+  }
+
+  _isPlaylistPlayingSoon(playlistName) {
+    const scheduleInfo = this._playlistSchedules[playlistName];
+    const hasEnabledScheduleTimes = Object.prototype.hasOwnProperty.call(
+      scheduleInfo || {},
+      'enabledActiveTimes'
+    );
+    const enabled = scheduleInfo?.enabled;
+    if (!hasEnabledScheduleTimes &&
+        (enabled === false || String(enabled).toUpperCase() === 'FALSE')) {
+      return false;
+    }
+
+    const now = Date.now();
+    const windowMilliseconds = (
+      (this.config.playing_soon_days * 24) + this.config.playing_soon_hours
+    ) * 60 * 60 * 1000;
+    const candidateTimes = hasEnabledScheduleTimes
+      ? scheduleInfo.enabledActiveTimes
+      : [scheduleInfo?.nextActiveTime];
+
+    return candidateTimes.some(candidateTime => {
+      const scheduledTime = Date.parse(candidateTime);
+      return Number.isFinite(scheduledTime) &&
+        scheduledTime >= now &&
+        scheduledTime <= now + windowMilliseconds;
+    });
+  }
+
+  _toggleAllPlaylists() {
+    this._showAllPlaylists = !this._showAllPlaylists;
   }
 
   _renderPlaylistItem(playlistName, isPlaying) {
@@ -784,6 +887,16 @@ class XSchedulePlaylistBrowser extends i {
         gap: 8px;
       }
 
+      .playlist-list-toggle {
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--primary-color);
+        cursor: pointer;
+        font: inherit;
+      }
+
       .playlist-item {
         background: var(--primary-background-color);
         border-radius: 8px;
@@ -956,7 +1069,14 @@ class XSchedulePlaylistBrowserEditor extends i {
       return;
     }
     const target = ev.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
+    let value;
+    if (target.type === 'checkbox') {
+      value = target.checked;
+    } else if (target.type === 'number') {
+      value = normalizeNonNegativeInteger(target.value, 0);
+    } else {
+      value = target.value;
+    }
 
     if (this.config[target.configValue] === value) {
       return;
@@ -1028,6 +1148,53 @@ class XSchedulePlaylistBrowserEditor extends i {
             <option value="alphabetical">Alphabetical</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label for="collapse_mode">Playlist Visibility</label>
+          <select
+            id="collapse_mode"
+            .configValue=${'collapse_mode'}
+            .value=${this.config.collapse_mode || 'expanded'}
+            @change=${this._valueChanged}
+          >
+            <option value="expanded">All Playlists</option>
+            <option value="collapsed">Fully Collapsed</option>
+            <option value="playing">Playing</option>
+            <option value="playing_soon">Playing Soon</option>
+          </select>
+          <div class="helper-text no-indent">
+            Keep all playlists visible, or place some or all behind a toggle.
+          </div>
+        </div>
+
+        ${this.config.collapse_mode === 'playing_soon' ? x`
+          <div class="time-window-inputs">
+            <div class="form-group">
+              <label for="playing_soon_days">Playing Soon Days</label>
+              <input
+                id="playing_soon_days"
+                type="number"
+                min="0"
+                step="1"
+                .configValue=${'playing_soon_days'}
+                .value=${String(this.config.playing_soon_days ?? 1)}
+                @change=${this._valueChanged}
+              />
+            </div>
+            <div class="form-group">
+              <label for="playing_soon_hours">Playing Soon Hours</label>
+              <input
+                id="playing_soon_hours"
+                type="number"
+                min="0"
+                step="1"
+                .configValue=${'playing_soon_hours'}
+                .value=${String(this.config.playing_soon_hours ?? 0)}
+                @change=${this._valueChanged}
+              />
+            </div>
+          </div>
+        ` : ''}
 
         <div class="form-group">
           <label>
@@ -1113,7 +1280,8 @@ class XSchedulePlaylistBrowserEditor extends i {
       }
 
       .form-group select,
-      .form-group input[type="text"] {
+      .form-group input[type="text"],
+      .form-group input[type="number"] {
         width: 100%;
         padding: 8px;
         border: 1px solid var(--divider-color);
@@ -1132,6 +1300,16 @@ class XSchedulePlaylistBrowserEditor extends i {
         color: var(--secondary-text-color);
         margin-top: 4px;
         margin-left: 24px;
+      }
+
+      .helper-text.no-indent {
+        margin-left: 0;
+      }
+
+      .time-window-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
       }
     `;
   }
@@ -1161,6 +1339,9 @@ XSchedulePlaylistBrowser.getStubConfig = function() {
     show_status: true,
     compact_mode: false,
     confirm_play: true,
+    collapse_mode: 'expanded',
+    playing_soon_days: 1,
+    playing_soon_hours: 0,
   };
 };
 

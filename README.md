@@ -358,10 +358,18 @@ sort_by: schedule  # schedule (default) or alphabetical
 show_duration: true
 show_status: true
 expandable_playlists: true  # Enable/disable playlist expansion (default: true)
+collapse_mode: playing_soon  # expanded (default), collapsed, playing, or playing_soon
+playing_soon_days: 1         # Look-ahead window used by playing_soon
+playing_soon_hours: 0
 ```
 
 **Configuration Options:**
 - `expandable_playlists` (boolean, default: `true`): Enable to show songs when expanding playlists. Set to `false` if your media player has broken browse_media implementation (e.g., shows playlists instead of songs when expanded).
+- `collapse_mode` (string, default: `expanded`): Controls which playlist rows remain visible. `collapsed` hides all playlists, `playing` keeps current or active playlists visible, and `playing_soon` also includes enabled playlists scheduled within the configured look-ahead window. Hidden playlists remain available through the card's toggle.
+- `playing_soon_days` (non-negative integer, default: `1`): Days in the `playing_soon` look-ahead window.
+- `playing_soon_hours` (non-negative integer, default: `0`): Additional hours in the `playing_soon` look-ahead window.
+
+These settings are also available in the card's visual configuration editor. The day and hour fields appear when **Playing Soon** is selected.
 
 ## Advanced Features
 
