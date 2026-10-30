@@ -364,7 +364,8 @@ playing_soon_hours: 0
 ```
 
 **Configuration Options:**
-- `expandable_playlists` (boolean, default: `true`): Enable to show songs when expanding playlists. Set to `false` if your media player has broken browse_media implementation (e.g., shows playlists instead of songs when expanded).
+- `show_status` (boolean, default: `true`): Show the bracketed playing and next-scheduled-time badges. Duration remains controlled separately by `show_duration`.
+- `expandable_playlists` (boolean, default: `true`): Allow playlist rows to expand and show songs. When disabled, rows have no expansion chevron or expansion action.
 - `collapse_mode` (string, default: `expanded`): Controls which playlist rows remain visible. `collapsed` hides all playlists, `playing` keeps current or active playlists visible, and `playing_soon` also includes enabled playlists scheduled within the configured look-ahead window. Hidden playlists remain available through the card's toggle.
 - `playing_soon_days` (non-negative integer, default: `1`): Days in the `playing_soon` look-ahead window.
 - `playing_soon_hours` (non-negative integer, default: `0`): Additional hours in the `playing_soon` look-ahead window.
