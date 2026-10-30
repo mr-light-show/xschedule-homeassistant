@@ -556,7 +556,8 @@ class XSchedulePlaylistBrowser extends LitElement {
 
     // Always show playing status first
     // Check both isPlaying (current playlist) AND nextActiveTime === "NOW!" (schedule is active)
-    if (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!")) {
+    if (this.config.show_status !== false &&
+        (isPlaying || (scheduleInfo && scheduleInfo.nextActiveTime === "NOW!"))) {
       parts.push(html`<span class="schedule-info playing-status">[Playing]</span>`);
     }
 
@@ -567,7 +568,9 @@ class XSchedulePlaylistBrowser extends LitElement {
     }
 
     // Show schedule time second (if not playing)
-    if (!isPlaying && scheduleInfo && scheduleInfo.nextActiveTime && scheduleInfo.nextActiveTime !== "NOW!") {
+    if (this.config.show_status !== false &&
+        !isPlaying && scheduleInfo && scheduleInfo.nextActiveTime &&
+        scheduleInfo.nextActiveTime !== "NOW!") {
       // Skip special values that aren't parseable dates
       if (scheduleInfo.nextActiveTime !== "A long time from now" && scheduleInfo.nextActiveTime !== "N/A") {
         const timeStr = this._formatScheduleTime(scheduleInfo.nextActiveTime);

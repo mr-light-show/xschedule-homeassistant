@@ -94,6 +94,24 @@ describe('XSchedulePlaylistBrowser', () => {
       element._error = 'Test error';
       expect(element._error).to.equal('Test error');
     });
+
+    it('hides playing and schedule badges while preserving duration when show_status is false', () => {
+      const renderer = document.createElement('xschedule-playlist-browser');
+      renderer.setConfig(createMockCardConfig({ show_status: false, show_duration: true }));
+
+      const info = [
+        ...renderer._renderScheduleInfo(true, { nextActiveTime: 'NOW!', duration: 120 }),
+        ...renderer._renderScheduleInfo(false, {
+          nextActiveTime: '2026-10-31T20:00:00Z',
+          duration: 180,
+        }),
+      ];
+      const markup = info.map(part => part.strings.join('')).join('');
+
+      expect(markup).to.not.include('playing-status');
+      expect(markup).to.not.include('schedule-time');
+      expect(markup.match(/class="schedule-info duration"/g)).to.have.lengthOf(2);
+    });
   });
 
   describe('Playlist Selection', () => {
