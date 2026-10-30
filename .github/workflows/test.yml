@@ -9,7 +9,7 @@ on:
 jobs:
   backend-tests:
     name: Backend Tests (Python)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -45,7 +45,7 @@ jobs:
 
   frontend-tests:
     name: Frontend Tests (JavaScript)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -66,6 +66,15 @@ jobs:
 
       - name: Run frontend tests
         run: cd cards && npm test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./cards/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Build project
         run: cd cards && npm run build
