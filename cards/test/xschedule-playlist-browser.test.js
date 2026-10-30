@@ -1,4 +1,5 @@
 import { html, fixture, expect, oneEvent, waitUntil } from '@open-wc/testing';
+import { render } from 'lit';
 import { stub, useFakeTimers } from 'sinon';
 import '../src/xschedule-playlist-browser.js';
 import { createMockHass, createMockEntityState, createMockCardConfig, createConfiguredElement } from './helpers/mock-hass.js';
@@ -106,11 +107,13 @@ describe('XSchedulePlaylistBrowser', () => {
           duration: 180,
         }),
       ];
-      const markup = info.map(part => part.strings.join('')).join('');
+      const container = document.createElement('div');
+      render(info, container);
 
-      expect(markup).to.not.include('playing-status');
-      expect(markup).to.not.include('schedule-time');
-      expect(markup.match(/class="schedule-info duration"/g)).to.have.lengthOf(2);
+      expect(container.querySelector('.playing-status')).to.not.exist;
+      expect(container.querySelector('.schedule-time')).to.not.exist;
+      const durations = [...container.querySelectorAll('.duration')];
+      expect(durations.map(badge => badge.textContent)).to.deep.equal(['[2:00]', '[3:00]']);
     });
   });
 
@@ -738,6 +741,36 @@ describe('XSchedulePlaylistBrowser', () => {
       });
 
       expect(element._canExpandPlaylists()).to.be.false;
+    });
+
+    it('suppresses expansion controls, header clicks, and cached songs when expansion is disabled', () => {
+      const renderer = document.createElement('xschedule-playlist-browser');
+      renderer.setConfig(createMockCardConfig({ expandable_playlists: false }));
+      renderer._entity = createMockEntityState('media_player.xschedule', 'idle', {
+        integration: 'xschedule',
+        supported_features: 0x200,
+        source_list: ['Playlist 1'],
+      });
+      renderer._playlistSongs = {
+        'Playlist 1': [{ name: 'Cached Song', duration: 180000 }],
+      };
+      const container = document.createElement('div');
+
+      // Cover both a collapsed row and a row expanded before the setting changed.
+      for (const expandedPlaylist of [null, 'Playlist 1']) {
+        renderer._expandedPlaylist = expandedPlaylist;
+        render(renderer._renderPlaylistItem('Playlist 1', false), container);
+
+        const header = container.querySelector('.playlist-header');
+        expect(header).to.exist;
+        expect(container.querySelector('.playlist-name').textContent).to.equal('Playlist 1');
+        expect(container.querySelector('.expand-icon')).to.not.exist;
+        expect(container.querySelector('.song-list')).to.not.exist;
+        expect(container.textContent).to.not.include('Cached Song');
+
+        header.click();
+        expect(renderer._expandedPlaylist).to.equal(expandedPlaylist);
+      }
     });
     
     it('should allow expansion for generic player with BROWSE_MEDIA', async () => {
