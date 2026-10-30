@@ -727,6 +727,18 @@ describe('XSchedulePlaylistBrowser', () => {
       const rendered = element.shadowRoot.innerHTML;
       expect(rendered).to.include('chevron');
     });
+
+    it('disables expansion for xSchedule when configured off', () => {
+      element = document.createElement('xschedule-playlist-browser');
+      element.setConfig(createMockCardConfig({ expandable_playlists: false }));
+      element._entity = createMockEntityState('media_player.xschedule', 'idle', {
+        integration: 'xschedule',
+        supported_features: 0x200,
+        source_list: ['Playlist 1'],
+      });
+
+      expect(element._canExpandPlaylists()).to.be.false;
+    });
     
     it('should allow expansion for generic player with BROWSE_MEDIA', async () => {
       const config = { entity: 'media_player.spotify' };

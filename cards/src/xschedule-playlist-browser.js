@@ -198,6 +198,11 @@ class XSchedulePlaylistBrowser extends LitElement {
     );
   }
 
+  _canExpandPlaylists() {
+    return this.config.expandable_playlists !== false &&
+      (this._isXSchedulePlayer() || this._supportsBrowseMedia());
+  }
+
   _supportsBrowseMedia() {
     if (!this._entity) return false;
     
@@ -520,7 +525,7 @@ class XSchedulePlaylistBrowser extends LitElement {
     const hasSchedule = scheduleInfo && scheduleInfo.nextActiveTime;
     const isExpanded = this._expandedPlaylist === playlistName;
     const isXSchedule = this._isXSchedulePlayer();
-    const canExpand = isXSchedule || this._supportsBrowseMedia();
+    const canExpand = this._canExpandPlaylists();
 
     return html`
       <div class="playlist-item ${isPlaying ? 'playing' : ''} ${this.config.compact_mode ? 'compact' : ''} ${isExpanded ? 'expanded' : ''}">
